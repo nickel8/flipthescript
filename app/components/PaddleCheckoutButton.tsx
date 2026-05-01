@@ -1,4 +1,5 @@
 "use client";
+import { usePaddle } from "./PaddleProvider";
 
 interface Props {
   priceId: string;
@@ -7,9 +8,10 @@ interface Props {
 }
 
 export default function PaddleCheckoutButton({ priceId, className, children }: Props) {
+  const paddle = usePaddle();
+
   const handleClick = () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).Paddle?.Checkout.open({
+    paddle?.Checkout.open({
       items: [{ priceId, quantity: 1 }],
     });
   };
