@@ -1,0 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap');
+@import "tailwindcss";
+
+* { box-sizing: border-box; }
+
+html {
+  font-family: 'Courier Prime', 'Courier New', Courier, monospace;
+  background: #fff;
+  color: #0a0a0a;
+  -webkit-font-smoothing: antialiased;
+}
