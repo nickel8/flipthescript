@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import PaddleInit from "./components/PaddleInit";
 
 export const metadata: Metadata = {
   title: "FlipTheScript — Script breakdown software for art departments",
@@ -19,7 +20,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full">
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <PaddleInit />
+        {children}
+      </body>
     </html>
   );
 }

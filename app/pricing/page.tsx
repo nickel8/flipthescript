@@ -1,6 +1,9 @@
 import SiteShell from "../components/SiteShell";
+import PaddleCheckoutButton from "../components/PaddleCheckoutButton";
 
 const DOWNLOAD_URL = "/downloads/FlipTheScript.dmg";
+const MONTHLY_PRICE_ID = process.env.NEXT_PUBLIC_PADDLE_MONTHLY_PRICE_ID!;
+const ANNUAL_PRICE_ID  = process.env.NEXT_PUBLIC_PADDLE_ANNUAL_PRICE_ID!;
 
 export const metadata = {
   title: "Pricing — FlipTheScript",
@@ -59,12 +62,12 @@ export default function PricingPage() {
             <li>✓ Email support</li>
           </ul>
           <div className="mt-10">
-            <a
-              href="#"
-              className="inline-block bg-black text-white text-sm font-bold px-6 py-3 hover:opacity-75 transition-opacity"
+            <PaddleCheckoutButton
+              priceId={MONTHLY_PRICE_ID}
+              className="bg-black text-white text-sm font-bold px-6 py-3 hover:opacity-75 transition-opacity cursor-pointer"
             >
               Get started →
-            </a>
+            </PaddleCheckoutButton>
           </div>
         </div>
 
@@ -84,12 +87,12 @@ export default function PricingPage() {
             <li>✓ One invoice for accounting</li>
           </ul>
           <div className="mt-10">
-            <a
-              href="#"
-              className="inline-block bg-black text-white text-sm font-bold px-6 py-3 hover:opacity-75 transition-opacity"
+            <PaddleCheckoutButton
+              priceId={ANNUAL_PRICE_ID}
+              className="bg-black text-white text-sm font-bold px-6 py-3 hover:opacity-75 transition-opacity cursor-pointer"
             >
               Get started →
-            </a>
+            </PaddleCheckoutButton>
           </div>
         </div>
 
