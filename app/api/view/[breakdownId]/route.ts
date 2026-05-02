@@ -56,9 +56,10 @@ export async function GET(
   let snapshot: unknown;
   try {
     const blobResult = await get(breakdown.blob_key, { access: "private" });
-    const snapshotRes = await fetch(blobResult.downloadUrl);
-    if (!snapshotRes.ok) throw new Error("blob fetch failed");
-    snapshot = await snapshotRes.json();
+    if (!blobResult || blobResult.statusCode !== 200 || !blobResult.stream) {
+      throw new Error(`unexpected blob status: ${blobResult?.statusCode}`);
+    }
+    snapshot = await new Response(blobResult.stream).json();
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("blob fetch error:", msg);
