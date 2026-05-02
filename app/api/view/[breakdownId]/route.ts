@@ -59,8 +59,10 @@ export async function GET(
     const snapshotRes = await fetch(blobResult.downloadUrl);
     if (!snapshotRes.ok) throw new Error("blob fetch failed");
     snapshot = await snapshotRes.json();
-  } catch {
-    return NextResponse.json({ error: "Could not load breakdown data" }, { status: 500 });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("blob fetch error:", msg);
+    return NextResponse.json({ error: "Could not load breakdown data", detail: msg }, { status: 500 });
   }
 
   // Mark token as used (only after successful data load)
