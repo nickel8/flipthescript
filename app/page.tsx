@@ -45,13 +45,18 @@ export default function Home() {
         <span className="font-bold text-sm tracking-widest uppercase">
           FlipTheScript
         </span>
-        <a
-          href={DOWNLOAD_URL}
-          download
-          className="text-sm font-bold border border-black px-4 py-1.5 hover:bg-black hover:text-white transition-colors"
-        >
-          Download →
-        </a>
+        <nav className="flex items-center gap-6">
+          <a href="/pricing" className="text-sm opacity-60 hover:opacity-100 transition-opacity">
+            Pricing
+          </a>
+          <a
+            href={DOWNLOAD_URL}
+            download
+            className="text-sm font-bold border border-black px-4 py-1.5 hover:bg-black hover:text-white transition-colors"
+          >
+            Download →
+          </a>
+        </nav>
       </header>
 
       <main className="flex-1">
@@ -69,12 +74,17 @@ export default function Home() {
             tag your elements, export your breakdown. When the next draft lands,
             your work carries over automatically.
           </p>
-          <a
-            href={DOWNLOAD_URL}
-            className="inline-block bg-black text-white font-bold text-sm tracking-wide px-8 py-4 hover:opacity-75 transition-opacity"
-          >
-            Download for Mac →
-          </a>
+          <div className="flex flex-wrap items-center gap-4">
+            <a
+              href={DOWNLOAD_URL}
+              className="inline-block bg-black text-white font-bold text-sm tracking-wide px-8 py-4 hover:opacity-75 transition-opacity"
+            >
+              Download for Mac →
+            </a>
+            <a href="/pricing" className="text-sm font-bold opacity-40 hover:opacity-100 transition-opacity">
+              See pricing →
+            </a>
+          </div>
         </section>
 
         {/* Benefits grid */}
@@ -156,7 +166,12 @@ export default function Home() {
 
       <footer className="px-6 py-5 flex items-center justify-between text-xs opacity-35 border-t border-black">
         <span>© {new Date().getFullYear()} FlipTheScript</span>
-        <span>macOS 14+</span>
+        <nav className="flex gap-5">
+          <a href="/pricing" className="hover:opacity-100 transition-opacity">Pricing</a>
+          <a href="/terms" className="hover:opacity-100 transition-opacity">Terms</a>
+          <a href="/privacy" className="hover:opacity-100 transition-opacity">Privacy</a>
+          <a href="/refunds" className="hover:opacity-100 transition-opacity">Refunds</a>
+        </nav>
       </footer>
 
     </div>
