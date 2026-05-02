@@ -20,6 +20,7 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const RESEND_KEY   = process.env.RESEND_API_KEY!;
 
 export async function POST(req: NextRequest) {
+  try {
   const body = await req.json();
   const { adEmail, productionName, scriptVersion, colleagues, breakdown } = body;
 
@@ -57,6 +58,11 @@ export async function POST(req: NextRequest) {
   await Promise.all(emails.map(email => inviteColleague(breakdownId, email, productionName, scriptVersion)));
 
   return NextResponse.json({ breakdownId });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("POST /api/share error:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
 
 // ---------------------------------------------------------------------------
