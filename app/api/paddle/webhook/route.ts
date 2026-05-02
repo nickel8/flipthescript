@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   }
 
   const event = JSON.parse(body);
-  if (event.event_type !== "transaction.completed") {
+  if (event.event_type !== "subscription.activated") {
     return NextResponse.json({ received: true });
   }
 
