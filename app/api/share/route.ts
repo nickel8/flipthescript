@@ -32,9 +32,7 @@ export async function POST(req: NextRequest) {
   const blob = await put(
     `breakdowns/${randomUUID()}.json`,
     JSON.stringify(breakdown),
-    { access: "public", contentType: "application/json" }
-    // Note: Vercel Blob "public" here means the URL is unguessable but accessible
-    // via our signed URL pattern. We control access at the token layer.
+    { access: "private", contentType: "application/json" }
   );
 
   // 2. Create shared_breakdown record
@@ -85,7 +83,7 @@ export async function PATCH(req: NextRequest) {
   await put(
     new URL(record.blob_key).pathname.slice(1),
     JSON.stringify(breakdown),
-    { access: "public", contentType: "application/json" }
+    { access: "private", contentType: "application/json" }
   );
 
   // Update metadata
