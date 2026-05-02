@@ -1,4 +1,4 @@
-import { download } from "@vercel/blob";
+import { getDownloadUrl } from "@vercel/blob";
 import { NextRequest, NextResponse } from "next/server";
 
 // ---------------------------------------------------------------------------
@@ -63,8 +63,9 @@ export async function GET(
     return NextResponse.json({ error: "Breakdown not found" }, { status: 404 });
   }
 
-  // Fetch the snapshot from private Vercel Blob storage
-  const snapshotRes = await download(breakdown.blob_key);
+  // Fetch the snapshot from private Vercel Blob storage via signed URL
+  const signedUrl = await getDownloadUrl(breakdown.blob_key);
+  const snapshotRes = await fetch(signedUrl);
   if (!snapshotRes.ok) {
     return NextResponse.json({ error: "Could not load breakdown data" }, { status: 500 });
   }
