@@ -1,4 +1,4 @@
-import { getDownloadUrl } from "@vercel/blob";
+import { get } from "@vercel/blob";
 import { NextRequest, NextResponse } from "next/server";
 
 // ---------------------------------------------------------------------------
@@ -39,18 +39,6 @@ export async function GET(
     return NextResponse.json({ error: "This link has expired. Request a new one." }, { status: 401 });
   }
 
-  // Mark token as used
-  await supabase("PATCH", `/rest/v1/magic_tokens?id=eq.${record.id}`, {
-    used_at: new Date().toISOString(),
-  });
-
-  // Update last_accessed on access list
-  await supabase(
-    "PATCH",
-    `/rest/v1/breakdown_access?breakdown_id=eq.${breakdownId}&email=eq.${encodeURIComponent(record.email)}`,
-    { last_accessed: new Date().toISOString() }
-  );
-
   // Fetch breakdown metadata + blob URL
   const bdRes = await supabase(
     "GET",
@@ -63,13 +51,29 @@ export async function GET(
     return NextResponse.json({ error: "Breakdown not found" }, { status: 404 });
   }
 
-  // Fetch the snapshot from private Vercel Blob storage via signed URL
-  const signedUrl = await getDownloadUrl(breakdown.blob_key);
-  const snapshotRes = await fetch(signedUrl);
-  if (!snapshotRes.ok) {
+  // Fetch the snapshot from private Vercel Blob storage
+  // (do this before burning the token so a transient failure doesn't strand the user)
+  let snapshot: unknown;
+  try {
+    const blobResult = await get(breakdown.blob_key, { access: "private" });
+    const snapshotRes = await fetch(blobResult.downloadUrl);
+    if (!snapshotRes.ok) throw new Error("blob fetch failed");
+    snapshot = await snapshotRes.json();
+  } catch {
     return NextResponse.json({ error: "Could not load breakdown data" }, { status: 500 });
   }
-  const snapshot = await snapshotRes.json();
+
+  // Mark token as used (only after successful data load)
+  await supabase("PATCH", `/rest/v1/magic_tokens?id=eq.${record.id}`, {
+    used_at: new Date().toISOString(),
+  });
+
+  // Update last_accessed on access list
+  await supabase(
+    "PATCH",
+    `/rest/v1/breakdown_access?breakdown_id=eq.${breakdownId}&email=eq.${encodeURIComponent(record.email)}`,
+    { last_accessed: new Date().toISOString() }
+  );
 
   return NextResponse.json({
     email: record.email,
