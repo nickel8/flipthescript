@@ -26,6 +26,12 @@ interface Snapshot {
   scenes: Scene[];
 }
 
+// Old blobs were serialised as a bare array — normalise on load
+function normaliseSnapshot(raw: unknown): Snapshot {
+  if (Array.isArray(raw)) return { scenes: raw as Scene[] };
+  return raw as Snapshot;
+}
+
 interface ViewData {
   email: string;
   productionName: string;
@@ -55,7 +61,7 @@ export default function ViewBreakdown() {
       .then(r => r.json())
       .then(json => {
         if (json.error) { setState("error"); setError(json.error); }
-        else { setData(json); setState("ready"); }
+        else { setData({ ...json, snapshot: normaliseSnapshot(json.snapshot) }); setState("ready"); }
       })
       .catch(() => { setState("error"); setError("Something went wrong loading this breakdown."); });
   }, [breakdownId, token]);
