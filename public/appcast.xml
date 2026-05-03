@@ -2,18 +2,17 @@
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
     <title>FlipTheScript</title>
-    <link>https://flipthescript.app/appcast.xml</link>
+    <link>https://www.flip-the-script.app/appcast.xml</link>
     <language>en</language>
 
     <item>
       <title>Version 1.0</title>
-      <sparkle:releaseNotesLink>https://flipthescript.app/release-notes/1.0</sparkle:releaseNotesLink>
       <sparkle:version>1</sparkle:version>
       <sparkle:shortVersionString>1.0</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-      <pubDate>Thu, 01 May 2026 00:00:00 +0000</pubDate>
+      <pubDate>Sat, 03 May 2026 00:00:00 +0000</pubDate>
       <enclosure
-        url="https://flipthescript.app/downloads/FlipTheScript-1.0.dmg"
+        url="https://github.com/nickel8/flipthescript/releases/download/v1.0/FlipTheScript.zip"
         sparkle:edSignature="REPLACE_WITH_SIGNATURE"
         length="REPLACE_WITH_BYTE_LENGTH"
         type="application/octet-stream"

@@ -54,7 +54,7 @@ export default function Home() {
             download
             className="text-sm font-bold border border-black px-4 py-1.5 hover:bg-black hover:text-white transition-colors"
           >
-            Download →
+            Try free →
           </a>
         </nav>
       </header>
@@ -79,7 +79,7 @@ export default function Home() {
               href={DOWNLOAD_URL}
               className="inline-block bg-black text-white font-bold text-sm tracking-wide px-8 py-4 hover:opacity-75 transition-opacity"
             >
-              Download for Mac →
+              Try free →
             </a>
             <a href="/pricing" className="text-sm font-bold opacity-40 hover:opacity-100 transition-opacity">
               See pricing →
@@ -151,9 +151,10 @@ export default function Home() {
               download
               className="inline-block bg-black text-white font-bold text-sm tracking-wide px-8 py-4 hover:opacity-75 transition-opacity"
             >
-              Download for Mac →
+              Try free →
             </a>
-            <p className="mt-8 text-sm opacity-35">
+            <p className="mt-4 text-sm opacity-40">1-day free trial. <a href="/pricing" className="underline underline-offset-4">See pricing</a> for full access.</p>
+            <p className="mt-6 text-sm opacity-35">
               Questions?{" "}
               <a href="mailto:hello@flipthescript.app" className="underline underline-offset-4">
                 hello@flipthescript.app
