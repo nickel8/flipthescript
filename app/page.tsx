@@ -1,4 +1,4 @@
-const DOWNLOAD_URL = "/downloads/FlipTheScript.dmg";
+const DOWNLOAD_URL = "https://github.com/nickel8/flipthescript/releases/download/v1.0/FlipTheScript.zip";
 
 const benefits = [
   {
