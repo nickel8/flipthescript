@@ -154,6 +154,7 @@ export default function Home() {
               Try free →
             </a>
             <p className="mt-4 text-sm opacity-40">1-day free trial. <a href="/pricing" className="underline underline-offset-4">See pricing</a> for full access.</p>
+            <p className="mt-2 text-sm opacity-40">First time? <a href="/open" className="underline underline-offset-4">How to open the app on macOS →</a></p>
             <p className="mt-6 text-sm opacity-35">
               Questions?{" "}
               <a href="mailto:hello@flipthescript.app" className="underline underline-offset-4">

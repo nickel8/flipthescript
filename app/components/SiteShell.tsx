@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const DOWNLOAD_URL = "/downloads/FlipTheScript.dmg";
+const DOWNLOAD_URL = "https://github.com/nickel8/flipthescript/releases/download/v1.0/FlipTheScript.zip";
 
 export default function SiteShell({ children }: { children: React.ReactNode }) {
   return (
@@ -14,7 +14,7 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
           download
           className="text-sm font-bold border border-black px-4 py-1.5 hover:bg-black hover:text-white transition-colors"
         >
-          Download →
+          Try free →
         </a>
       </header>
 
