@@ -1,6 +1,6 @@
 import SiteShell from "../components/SiteShell";
 
-const DOWNLOAD_URL = "https://github.com/nickel8/flipthescript/releases/download/v1.0/FlipTheScript.zip";
+const DOWNLOAD_URL = "https://github.com/nickel8/flipthescript/releases/download/v1.1/FlipTheScript.zip";
 
 export const metadata = {
   title: "How to open FlipTheScript — macOS setup guide",
@@ -15,7 +15,7 @@ const steps = [
   {
     n: "02",
     heading: "Move it to your Applications folder",
-    body: "Drag FlipTheScript.app into your Applications folder. This isn't strictly required, but it keeps things tidy and makes sure Sparkle auto-updates work correctly.",
+    body: "Drag FlipTheScript.app into your Applications folder. This isn't strictly required, but it keeps things tidy.",
   },
   {
     n: "03",
@@ -35,7 +35,7 @@ const steps = [
   {
     n: "06",
     heading: "You're in",
-    body: "FlipTheScript opens. You only need to do this once — from now on it opens normally. Apple notarisation is on the roadmap and will remove this step entirely for future users.",
+    body: "FlipTheScript opens. You only need to do this once — from now on it opens normally. When a new version is available, download it from this page and repeat these steps. Apple notarisation is on the roadmap and will remove this step entirely.",
   },
 ];
 
