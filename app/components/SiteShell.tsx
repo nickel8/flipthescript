@@ -1,7 +1,5 @@
 import Link from "next/link";
 
-const DOWNLOAD_URL = "https://github.com/nickel8/flipthescript/releases/download/v1.0/FlipTheScript.zip";
-
 export default function SiteShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col min-h-screen">
@@ -9,13 +7,12 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
         <Link href="/" className="font-bold text-sm tracking-widest uppercase">
           FlipTheScript
         </Link>
-        <a
-          href={DOWNLOAD_URL}
-          download
+        <Link
+          href="/open"
           className="text-sm font-bold border border-black px-4 py-1.5 hover:bg-black hover:text-white transition-colors"
         >
           Try free →
-        </a>
+        </Link>
       </header>
 
       <main className="flex-1">{children}</main>

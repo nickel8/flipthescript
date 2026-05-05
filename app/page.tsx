@@ -1,4 +1,4 @@
-const DOWNLOAD_URL = "https://github.com/nickel8/flipthescript/releases/download/v1.0/FlipTheScript.zip";
+const DOWNLOAD_URL = "/open";
 
 const benefits = [
   {
@@ -51,7 +51,6 @@ export default function Home() {
           </a>
           <a
             href={DOWNLOAD_URL}
-            download
             className="text-sm font-bold border border-black px-4 py-1.5 hover:bg-black hover:text-white transition-colors"
           >
             Try free →
@@ -148,7 +147,6 @@ export default function Home() {
             </p>
             <a
               href={DOWNLOAD_URL}
-              download
               className="inline-block bg-black text-white font-bold text-sm tracking-wide px-8 py-4 hover:opacity-75 transition-opacity"
             >
               Try free →

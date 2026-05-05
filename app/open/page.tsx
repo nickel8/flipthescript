@@ -1,5 +1,7 @@
 import SiteShell from "../components/SiteShell";
 
+const DOWNLOAD_URL = "https://github.com/nickel8/flipthescript/releases/download/v1.0/FlipTheScript.zip";
+
 export const metadata = {
   title: "How to open FlipTheScript — macOS setup guide",
 };
@@ -43,11 +45,18 @@ export default function OpenPage() {
       <section className="border-b border-black px-6 py-16">
         <p className="text-xs tracking-widest uppercase opacity-40 mb-8">Getting started</p>
         <h1 className="text-4xl font-bold mb-4">How to open FlipTheScript</h1>
-        <p className="text-lg opacity-55 max-w-xl leading-relaxed">
+        <p className="text-lg opacity-55 max-w-xl leading-relaxed mb-10">
           macOS will show a security warning the first time you open FlipTheScript.
           This is normal for apps distributed outside the App Store.
           It takes about 30 seconds to get past it.
         </p>
+        <a
+          href={DOWNLOAD_URL}
+          download
+          className="inline-block bg-black text-white font-bold text-sm tracking-wide px-8 py-4 hover:opacity-75 transition-opacity"
+        >
+          Download FlipTheScript →
+        </a>
       </section>
 
       <section className="px-6 py-16 max-w-2xl">
