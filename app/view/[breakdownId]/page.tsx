@@ -40,6 +40,42 @@ interface ViewData {
 }
 
 // ---------------------------------------------------------------------------
+// Conversion actions shown on each scene card
+// ---------------------------------------------------------------------------
+
+const ACTIONS = [
+  { label: "Add a note",     icon: "✏️" },
+  { label: "Raise a flag",   icon: "🚩" },
+  { label: "Add a comment",  icon: "💬" },
+  { label: "Add to to-dos",  icon: "☑️" },
+];
+
+// ---------------------------------------------------------------------------
+// Sign-up prompt modal
+// ---------------------------------------------------------------------------
+
+function SignUpModal({ action, onClose }: { action: string; onClose: () => void }) {
+  return (
+    <div style={styles.overlay} onClick={onClose}>
+      <div style={styles.modal} onClick={e => e.stopPropagation()}>
+        <p style={styles.modalEyebrow}>FlipTheScript</p>
+        <h2 style={styles.modalTitle}>Work collaboratively on this breakdown</h2>
+        <p style={styles.modalBody}>
+          <strong>{action}</strong> — and see notes from the whole department, raise flags for the AD, manage your own to-do list across scenes, and get notified when the breakdown changes.
+        </p>
+        <a
+          href="https://www.flip-the-script.app/pricing"
+          style={styles.modalCTA}
+        >
+          See plans & sign up →
+        </a>
+        <button onClick={onClose} style={styles.modalDismiss}>Maybe later</button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -53,6 +89,7 @@ export default function ViewBreakdown() {
   const [error, setError] = useState("");
   const [requestEmail, setRequestEmail] = useState("");
   const [requestSent, setRequestSent] = useState(false);
+  const [promptAction, setPromptAction] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) { setState("error"); setError("No access token in this link."); return; }
@@ -118,6 +155,11 @@ export default function ViewBreakdown() {
 
   return (
     <div style={styles.page}>
+      {/* Sign-up modal */}
+      {promptAction && (
+        <SignUpModal action={promptAction} onClose={() => setPromptAction(null)} />
+      )}
+
       {/* Header */}
       <header style={styles.header}>
         <div style={styles.headerInner}>
@@ -154,6 +196,21 @@ export default function ViewBreakdown() {
                 ))}
               </div>
             )}
+
+            {/* Conversion action buttons */}
+            <div style={styles.actions}>
+              {ACTIONS.map(({ label, icon }) => (
+                <button
+                  key={label}
+                  style={styles.actionBtn}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#f0f0f0")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                  onClick={() => setPromptAction(label)}
+                >
+                  <span style={{ marginRight: 5 }}>{icon}</span>{label}
+                </button>
+              ))}
+            </div>
           </div>
         ))}
       </main>
@@ -166,32 +223,43 @@ export default function ViewBreakdown() {
 }
 
 // ---------------------------------------------------------------------------
-// Inline styles (no Tailwind dependency for this public-facing page)
+// Inline styles
 // ---------------------------------------------------------------------------
 
 const styles: Record<string, React.CSSProperties> = {
-  center:       { minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, background: "#f9f9f9" },
-  card:         { background: "#fff", borderRadius: 12, padding: 32, maxWidth: 400, width: "100%", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" },
-  title:        { margin: "0 0 8px", fontSize: 20, fontWeight: 700 },
-  muted:        { margin: 0, color: "#666", fontSize: 14 },
-  input:        { display: "block", width: "100%", marginTop: 8, padding: "10px 12px", border: "1px solid #ddd", borderRadius: 8, fontSize: 14, boxSizing: "border-box" },
-  button:       { display: "inline-block", marginTop: 12, padding: "10px 20px", background: "#141417", color: "#fff", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer" },
-  page:         { minHeight: "100vh", background: "#f5f5f5", fontFamily: "system-ui, sans-serif" },
-  header:       { background: "#141417", color: "#fff", padding: "20px 0" },
-  headerInner:  { maxWidth: 760, margin: "0 auto", padding: "0 24px", display: "flex", justifyContent: "space-between", alignItems: "center" },
-  prodName:     { margin: 0, fontSize: 20, fontWeight: 700, color: "#fff" },
-  version:      { margin: "2px 0 0", fontSize: 13, color: "rgba(255,255,255,0.6)" },
-  emailBadge:   { fontSize: 12, color: "rgba(255,255,255,0.5)", margin: 0 },
-  main:         { maxWidth: 760, margin: "0 auto", padding: "24px 24px 48px" },
-  sceneCard:    { background: "#fff", borderRadius: 10, padding: 20, marginBottom: 12, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" },
-  sceneHeader:  { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 },
-  sceneNum:     { fontWeight: 700, fontSize: 15 },
-  shootDate:    { fontSize: 12, color: "#888" },
-  slugLine:     { margin: "0 0 8px", fontSize: 13, color: "#444", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.03em" },
-  synopsis:     { margin: "0 0 12px", fontSize: 14, color: "#555", lineHeight: 1.5 },
-  elements:     { borderTop: "1px solid #f0f0f0", paddingTop: 10, display: "flex", flexDirection: "column", gap: 4 },
-  elementGroup: { display: "flex", gap: 8, fontSize: 13 },
-  elementCat:   { color: "#888", minWidth: 90, flexShrink: 0 },
-  elementItems: { color: "#333" },
-  footer:       { textAlign: "center", padding: "24px 0", fontSize: 12, color: "#aaa" },
+  center:        { minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, background: "#f9f9f9" },
+  card:          { background: "#fff", borderRadius: 12, padding: 32, maxWidth: 400, width: "100%", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" },
+  title:         { margin: "0 0 8px", fontSize: 20, fontWeight: 700 },
+  muted:         { margin: 0, color: "#666", fontSize: 14 },
+  input:         { display: "block", width: "100%", marginTop: 8, padding: "10px 12px", border: "1px solid #ddd", borderRadius: 8, fontSize: 14, boxSizing: "border-box" },
+  button:        { display: "inline-block", marginTop: 12, padding: "10px 20px", background: "#141417", color: "#fff", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer" },
+  page:          { minHeight: "100vh", background: "#f5f5f5", fontFamily: "system-ui, sans-serif" },
+  header:        { background: "#141417", color: "#fff", padding: "20px 0" },
+  headerInner:   { maxWidth: 760, margin: "0 auto", padding: "0 24px", display: "flex", justifyContent: "space-between", alignItems: "center" },
+  prodName:      { margin: 0, fontSize: 20, fontWeight: 700, color: "#fff" },
+  version:       { margin: "2px 0 0", fontSize: 13, color: "rgba(255,255,255,0.6)" },
+  emailBadge:    { fontSize: 12, color: "rgba(255,255,255,0.5)", margin: 0 },
+  main:          { maxWidth: 760, margin: "0 auto", padding: "24px 24px 48px" },
+  sceneCard:     { background: "#fff", borderRadius: 10, padding: 20, marginBottom: 12, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" },
+  sceneHeader:   { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 },
+  sceneNum:      { fontWeight: 700, fontSize: 15 },
+  shootDate:     { fontSize: 12, color: "#888" },
+  slugLine:      { margin: "0 0 8px", fontSize: 13, color: "#444", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.03em" },
+  synopsis:      { margin: "0 0 12px", fontSize: 14, color: "#555", lineHeight: 1.5 },
+  elements:      { borderTop: "1px solid #f0f0f0", paddingTop: 10, display: "flex", flexDirection: "column", gap: 4 },
+  elementGroup:  { display: "flex", gap: 8, fontSize: 13 },
+  elementCat:    { color: "#888", minWidth: 90, flexShrink: 0 },
+  elementItems:  { color: "#333" },
+  actions:       { display: "flex", flexWrap: "wrap", gap: 6, marginTop: 14, paddingTop: 12, borderTop: "1px solid #f0f0f0" },
+  actionBtn:     { display: "inline-flex", alignItems: "center", fontSize: 12, color: "#555", background: "transparent", border: "1px solid #e0e0e0", borderRadius: 6, padding: "5px 10px", cursor: "pointer", transition: "background 0.15s" },
+  footer:        { textAlign: "center", padding: "24px 0", fontSize: 12, color: "#aaa" },
+
+  // Modal
+  overlay:       { position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, zIndex: 100 },
+  modal:         { background: "#fff", borderRadius: 14, padding: 36, maxWidth: 420, width: "100%", boxShadow: "0 8px 40px rgba(0,0,0,0.18)", display: "flex", flexDirection: "column", gap: 0 },
+  modalEyebrow:  { fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#aaa", margin: "0 0 12px" },
+  modalTitle:    { fontSize: 22, fontWeight: 800, margin: "0 0 12px", lineHeight: 1.2, color: "#141417" },
+  modalBody:     { fontSize: 14, color: "#555", lineHeight: 1.6, margin: "0 0 24px" },
+  modalCTA:      { display: "block", textAlign: "center", background: "#141417", color: "#fff", fontWeight: 700, fontSize: 14, padding: "13px 0", borderRadius: 8, textDecoration: "none", marginBottom: 10 },
+  modalDismiss:  { display: "block", width: "100%", textAlign: "center", background: "none", border: "none", fontSize: 13, color: "#aaa", cursor: "pointer", padding: "6px 0" },
 };
