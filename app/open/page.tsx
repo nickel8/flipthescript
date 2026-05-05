@@ -27,7 +27,7 @@ const steps = [
   },
   {
     n: "05",
-    heading: "Click "Open Anyway"",
+    heading: 'Click "Open Anyway"',
     body: 'Click the "Open Anyway" button next to the FlipTheScript message. macOS will ask you to confirm with your Mac password or Touch ID.',
   },
   {
