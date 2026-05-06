@@ -1,41 +1,26 @@
 import SiteShell from "../components/SiteShell";
 
-const DOWNLOAD_URL = "https://github.com/nickel8/flipthescript/releases/download/v1.1/FlipTheScript.zip";
+const DOWNLOAD_URL = "https://github.com/nickel8/flipthescript/releases/download/v1.2/FlipTheScript-1.2.zip";
 
 export const metadata = {
-  title: "How to open FlipTheScript — macOS setup guide",
+  title: "Download FlipTheScript — macOS",
 };
 
 const steps = [
   {
     n: "01",
     heading: "Download and unzip",
-    body: "Click the download button and wait for FlipTheScript.zip to finish downloading. Double-click the zip to unzip it — you'll see FlipTheScript.app appear.",
+    body: "Click the download button and wait for FlipTheScript-1.2.zip to finish downloading. Double-click the zip to unzip it — you'll see FlipTheScript.app appear.",
   },
   {
     n: "02",
     heading: "Move it to your Applications folder",
-    body: "Drag FlipTheScript.app into your Applications folder. This isn't strictly required, but it keeps things tidy.",
+    body: "Drag FlipTheScript.app into your Applications folder. This keeps things tidy and ensures automatic updates work correctly.",
   },
   {
     n: "03",
-    heading: "Try to open it",
-    body: 'Double-click FlipTheScript in Applications. You\'ll see a warning from macOS saying it "could not be verified". Click Done — don\'t move it to bin. This warning appears because the app isn\'t yet notarised with Apple (that\'s coming). It\'s safe to proceed.',
-  },
-  {
-    n: "04",
-    heading: "Open System Settings → Privacy & Security",
-    body: 'Go to the Apple menu → System Settings. Click "Privacy & Security" in the sidebar. Scroll down to the Security section — you\'ll see a message that FlipTheScript was blocked.',
-  },
-  {
-    n: "05",
-    heading: 'Click "Open Anyway"',
-    body: 'Click the "Open Anyway" button next to the FlipTheScript message. macOS will ask you to confirm with your Mac password or Touch ID.',
-  },
-  {
-    n: "06",
-    heading: "You're in",
-    body: "FlipTheScript opens. You only need to do this once — from now on it opens normally. When a new version is available, download it from this page and repeat these steps. Apple notarisation is on the roadmap and will remove this step entirely.",
+    heading: "Open it",
+    body: "Double-click FlipTheScript in your Applications folder. It'll open straight away — no security warnings, no extra steps. FlipTheScript is notarised by Apple.",
   },
 ];
 
@@ -44,11 +29,9 @@ export default function OpenPage() {
     <SiteShell>
       <section className="border-b border-black px-6 py-16">
         <p className="text-xs tracking-widest uppercase opacity-40 mb-8">Getting started</p>
-        <h1 className="text-4xl font-bold mb-4">How to open FlipTheScript</h1>
+        <h1 className="text-4xl font-bold mb-4">Download FlipTheScript</h1>
         <p className="text-lg opacity-55 max-w-xl leading-relaxed mb-10">
-          macOS will show a security warning the first time you open FlipTheScript.
-          This is normal for apps distributed outside the App Store.
-          It takes about 30 seconds to get past it.
+          macOS · Requires macOS 13 or later · Free to try
         </p>
         <a
           href={DOWNLOAD_URL}
