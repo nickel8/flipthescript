@@ -15,7 +15,11 @@ export async function POST(req: NextRequest) {
   }
 
   const event = JSON.parse(body);
-  if (event.event_type !== "subscription.activated") {
+
+  // Handle both subscription purchases and one-time/lifetime transactions
+  const isSubscription = event.event_type === "subscription.activated";
+  const isTransaction   = event.event_type === "transaction.completed";
+  if (!isSubscription && !isTransaction) {
     return NextResponse.json({ received: true });
   }
 
