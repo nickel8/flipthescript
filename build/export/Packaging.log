@@ -1,174 +1,174 @@
-2026-05-05 21:11:21 +0000 [MT] Initial pipeline context: <IDEDistributionProcessingPipelineContext: 0x70c035e00; archive(resolved)="<IDEArchive: 0x70a6e7480>", distributionTask(resolved)="2", distributionDestination(resolved)="1", distributionMethod(resolved)="<IDEDistributionMethodDeveloperID: 0x70bf01670>", team(resolved)="<IDEProvisioningBasicTeam: 0x70bf5e100; teamID='CA889WK9CJ', teamName='(null)'>">
+2026-05-07 08:56:57 +0000 [MT] Initial pipeline context: <IDEDistributionProcessingPipelineContext: 0xae4009200; archive(resolved)="<IDEArchive: 0xae26d7480>", distributionTask(resolved)="2", distributionDestination(resolved)="1", distributionMethod(resolved)="<IDEDistributionMethodDeveloperID: 0xae3b91d80>", team(resolved)="<IDEProvisioningBasicTeam: 0xae4104540; teamID='CA889WK9CJ', teamName='(null)'>">
 	Chain (12, self inclusive):
-	<IDEDistributionProcessingPipelineContext: 0x70c035e00; archive = "<IDEArchive: 0x70a6e7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x70bf01670>", team="<IDEProvisioningBasicTeam: 0x70bf5e100; teamID='CA889WK9CJ', teamName='(null)'>">
-	<IDEDistributionProcessingPipelineContext: 0x70c036100; archive = "<IDEArchive: 0x70a6e7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x70bf01670>", team="<IDEProvisioningBasicTeam: 0x70bf5e100; teamID='CA889WK9CJ', teamName='(null)'>">
-	<IDEDistributionContext: 0x70a7c2300; archive = "<IDEArchive: 0x70a6e7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x70bf01670>", team="<IDEProvisioningBasicTeam: 0x70bf5e100; teamID='CA889WK9CJ', teamName='(null)'>">
-	<IDEDistributionContext: 0x70a7c1e00; archive = "<IDEArchive: 0x70a6e7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x70bf01670>", team="<IDEProvisioningBasicTeam: 0x70bf5e100; teamID='CA889WK9CJ', teamName='(null)'>">
-	<IDEDistributionContext: 0x70a7c1b80; archive = "<IDEArchive: 0x70a6e7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x70bf01670>", team="<IDEProvisioningBasicTeam: 0x70bf5e100; teamID='CA889WK9CJ', teamName='(null)'>">
-	<IDEDistributionContext: 0x70a7c1900; archive = "<IDEArchive: 0x70a6e7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x70bf01670>", team="<IDEProvisioningBasicTeam: 0x70bf5e100; teamID='CA889WK9CJ', teamName='(null)'>">
-	<IDEDistributionContext: 0x70a7c0a00; archive = "<IDEArchive: 0x70a6e7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x70bf01670>", team="<IDEProvisioningBasicTeam: 0x70bf5e100; teamID='CA889WK9CJ', teamName='(null)'>">
-	<IDEDistributionContext: 0x70a7c0780; archive = "<IDEArchive: 0x70a6e7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x70bf01670>", team="<IDEProvisioningBasicTeam: 0x70bf5e100; teamID='CA889WK9CJ', teamName='(null)'>">
-	<IDEDistributionContext: 0x70a7c0500; archive = "<IDEArchive: 0x70a6e7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x70bf01670>", team="<IDEProvisioningBasicTeam: 0x70bf5e100; teamID='CA889WK9CJ', teamName='(null)'>">
-	<IDEDistributionContext: 0x70a7c0280; archive = "<IDEArchive: 0x70a6e7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x70bf01670>", team="(null)">
-	<IDEDistributionContext: 0x70a7c0000; archive = "<IDEArchive: 0x70a6e7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0x70bf01670>", team="(null)">
-	<IDEDistributionContext: 0x102cba730; archive = "<IDEArchive: 0x70a6e7480>", distributionMethod="(null)", team="(null)">
-</IDEDistributionProcessingPipelineContext: 0x70c035e00>
-2026-05-05 21:11:21 +0000 [MT] Processing step: IDEDistributionCreateDestRootStep
-2026-05-05 21:11:21 +0000 [MT] Processing step: IDEDistributionCopyItemStep
-2026-05-05 21:11:21 +0000 [MT] Running /usr/bin/ditto '-V' '/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app' '/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app'
-2026-05-05 21:11:21 +0000  >>> Copying /Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app 
-2026-05-05 21:11:21 +0000  copying file ./Contents/_CodeSignature/CodeResources ... 
-2026-05-05 21:11:21 +0000  3062 bytes for ./Contents/_CodeSignature/CodeResources
-2026-05-05 21:11:21 +0000  copying file ./Contents/MacOS/FlipTheScript ... 
-2026-05-05 21:11:21 +0000  1884400 bytes for ./Contents/MacOS/FlipTheScript
-2026-05-05 21:11:21 +0000  copying file ./Contents/Resources/AppIcon.icns ... 
-2026-05-05 21:11:21 +0000  17149 bytes for ./Contents/Resources/AppIcon.icns
-2026-05-05 21:11:21 +0000  copying file ./Contents/Resources/Assets.car ... 
-2026-05-05 21:11:21 +0000  77512 bytes for ./Contents/Resources/Assets.car
-2026-05-05 21:11:21 +0000  copying symlink ./Contents/Frameworks/Sparkle.framework/Resources ... 
-2026-05-05 21:11:21 +0000  linked ./Contents/Frameworks/Sparkle.framework/Resources
-2026-05-05 21:11:21 +0000  copying symlink ./Contents/Frameworks/Sparkle.framework/Versions/Current ... 
-2026-05-05 21:11:21 +0000  linked ./Contents/Frameworks/Sparkle.framework/Versions/Current
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/_CodeSignature/CodeResources ... 
-2026-05-05 21:11:21 +0000  17887 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/_CodeSignature/CodeResources
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/de.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  11559 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/de.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/he.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  9657 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/he.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ar.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  3554 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ar.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/el.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  5934 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/el.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ja.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  8697 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ja.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/fa.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  5716 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/fa.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/uk.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  5842 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/uk.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/zh_CN.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  7475 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/zh_CN.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/nb.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  5539 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/nb.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/es.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  7040 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/es.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/is.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  3954 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/is.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/sl.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  5646 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/sl.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/da.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  4882 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/da.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/it.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  10956 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/it.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/sk.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  5675 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/sk.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/sv.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  5160 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/sv.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ReleaseNotesColorStyle.css ... 
-2026-05-05 21:11:21 +0000  231 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ReleaseNotesColorStyle.css
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/cs.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  10774 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/cs.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ko.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  7797 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ko.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/Base.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  6249 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/Base.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/hu.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  4449 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/hu.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/zh_HK.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  6469 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/zh_HK.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/tr.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  6183 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/tr.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/pl.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  5453 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/pl.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/zh_TW.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  7625 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/zh_TW.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/pt-BR.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  9976 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/pt-BR.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/vi.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  12418 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/vi.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ru.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  5784 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ru.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUUpdatePermissionPrompt.nib/keyedobjects-110000.nib ... 
-2026-05-05 21:11:21 +0000  25401 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUUpdatePermissionPrompt.nib/keyedobjects-110000.nib
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUUpdatePermissionPrompt.nib/keyedobjects-101300.nib ... 
-2026-05-05 21:11:21 +0000  25424 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUUpdatePermissionPrompt.nib/keyedobjects-101300.nib
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUStatus.nib ... 
-2026-05-05 21:11:21 +0000  13016 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUStatus.nib
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUUpdateAlert.nib ... 
-2026-05-05 21:11:21 +0000  18490 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUUpdateAlert.nib
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/fr.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  7855 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/fr.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/fi.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  3252 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/fi.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/nl.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  9574 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/nl.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/th.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  5339 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/th.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/nn.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  5671 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/nn.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/pt-PT.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  5984 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/pt-PT.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ro.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  6115 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ro.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/Info.plist ... 
-2026-05-05 21:11:21 +0000  1341 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/Info.plist
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/hr.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  6367 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/hr.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ca.lproj/Sparkle.strings ... 
-2026-05-05 21:11:21 +0000  3501 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ca.lproj/Sparkle.strings
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate ... 
-2026-05-05 21:11:21 +0000  709584 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/_CodeSignature/CodeResources ... 
-2026-05-05 21:11:21 +0000  2446 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/_CodeSignature/CodeResources
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater ... 
-2026-05-05 21:11:21 +0000  290560 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/Resources/SUStatus.nib ... 
-2026-05-05 21:11:21 +0000  13016 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/Resources/SUStatus.nib
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/Info.plist ... 
-2026-05-05 21:11:21 +0000  2400 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/Info.plist
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/PkgInfo ... 
-2026-05-05 21:11:21 +0000  8 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/PkgInfo
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/_CodeSignature/CodeResources ... 
-2026-05-05 21:11:21 +0000  2200 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/_CodeSignature/CodeResources
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/MacOS/Downloader ... 
-2026-05-05 21:11:21 +0000  172240 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/MacOS/Downloader
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/Info.plist ... 
-2026-05-05 21:11:21 +0000  1717 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/Info.plist
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/_CodeSignature/CodeResources ... 
-2026-05-05 21:11:21 +0000  2200 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/_CodeSignature/CodeResources
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer ... 
-2026-05-05 21:11:21 +0000  223472 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/Info.plist ... 
-2026-05-05 21:11:21 +0000  1605 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/Info.plist
-2026-05-05 21:11:21 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle ... 
-2026-05-05 21:11:21 +0000  977808 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle
-2026-05-05 21:11:21 +0000  copying symlink ./Contents/Frameworks/Sparkle.framework/Autoupdate ... 
-2026-05-05 21:11:21 +0000  linked ./Contents/Frameworks/Sparkle.framework/Autoupdate
-2026-05-05 21:11:21 +0000  copying symlink ./Contents/Frameworks/Sparkle.framework/Updater.app ... 
-2026-05-05 21:11:21 +0000  linked ./Contents/Frameworks/Sparkle.framework/Updater.app
-2026-05-05 21:11:21 +0000  copying symlink ./Contents/Frameworks/Sparkle.framework/XPCServices ... 
-2026-05-05 21:11:21 +0000  linked ./Contents/Frameworks/Sparkle.framework/XPCServices
-2026-05-05 21:11:21 +0000  copying symlink ./Contents/Frameworks/Sparkle.framework/Sparkle ... 
-2026-05-05 21:11:21 +0000  linked ./Contents/Frameworks/Sparkle.framework/Sparkle
-2026-05-05 21:11:21 +0000  copying file ./Contents/Info.plist ... 
-2026-05-05 21:11:21 +0000  2248 bytes for ./Contents/Info.plist
-2026-05-05 21:11:21 +0000  copying file ./Contents/PkgInfo ... 
-2026-05-05 21:11:21 +0000  8 bytes for ./Contents/PkgInfo
-2026-05-05 21:11:21 +0000 [MT] /usr/bin/ditto exited with 0
-2026-05-05 21:11:21 +0000 [MT] Processing step: IDEDistributionEmbedProfileStep
-2026-05-05 21:11:21 +0000 [MT] Skipping profile for item: <IDEDistributionItem: 0x70a7f4300; bundleID='org.sparkle-project.DownloaderService', path='<DVTFilePath:0x70a7e2b20:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f42a0; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
-}', teamID='(null)', identifier='org.sparkle-project.DownloaderService', executablePath='<DVTFilePath:0x70a7e2f40:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/MacOS/Downloader'>', hardenedRuntime='1'>'>
-2026-05-05 21:11:21 +0000 [MT] Skipping profile for item: <IDEDistributionItem: 0x70a7f4480; bundleID='org.sparkle-project.InstallerLauncher', path='<DVTFilePath:0x70a7e31e0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f4420; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
-}', teamID='(null)', identifier='org.sparkle-project.InstallerLauncher', executablePath='<DVTFilePath:0x70a7e3600:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer'>', hardenedRuntime='1'>'>
-2026-05-05 21:11:21 +0000 [MT] Skipping profile for item: <IDEDistributionItem: 0x70a7f43c0; bundleID='(null)', path='<DVTFilePath:0x70a7e2040:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f4360; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+	<IDEDistributionProcessingPipelineContext: 0xae4009200; archive = "<IDEArchive: 0xae26d7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0xae3b91d80>", team="<IDEProvisioningBasicTeam: 0xae4104540; teamID='CA889WK9CJ', teamName='(null)'>">
+	<IDEDistributionProcessingPipelineContext: 0xae4008f00; archive = "<IDEArchive: 0xae26d7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0xae3b91d80>", team="<IDEProvisioningBasicTeam: 0xae4104540; teamID='CA889WK9CJ', teamName='(null)'>">
+	<IDEDistributionContext: 0xae27b6300; archive = "<IDEArchive: 0xae26d7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0xae3b91d80>", team="<IDEProvisioningBasicTeam: 0xae4104540; teamID='CA889WK9CJ', teamName='(null)'>">
+	<IDEDistributionContext: 0xae27b5e00; archive = "<IDEArchive: 0xae26d7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0xae3b91d80>", team="<IDEProvisioningBasicTeam: 0xae4104540; teamID='CA889WK9CJ', teamName='(null)'>">
+	<IDEDistributionContext: 0xae27b5b80; archive = "<IDEArchive: 0xae26d7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0xae3b91d80>", team="<IDEProvisioningBasicTeam: 0xae4104540; teamID='CA889WK9CJ', teamName='(null)'>">
+	<IDEDistributionContext: 0xae27b5900; archive = "<IDEArchive: 0xae26d7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0xae3b91d80>", team="<IDEProvisioningBasicTeam: 0xae4104540; teamID='CA889WK9CJ', teamName='(null)'>">
+	<IDEDistributionContext: 0xae27b4a00; archive = "<IDEArchive: 0xae26d7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0xae3b91d80>", team="<IDEProvisioningBasicTeam: 0xae4104540; teamID='CA889WK9CJ', teamName='(null)'>">
+	<IDEDistributionContext: 0xae27b4780; archive = "<IDEArchive: 0xae26d7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0xae3b91d80>", team="<IDEProvisioningBasicTeam: 0xae4104540; teamID='CA889WK9CJ', teamName='(null)'>">
+	<IDEDistributionContext: 0xae27b4500; archive = "<IDEArchive: 0xae26d7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0xae3b91d80>", team="<IDEProvisioningBasicTeam: 0xae4104540; teamID='CA889WK9CJ', teamName='(null)'>">
+	<IDEDistributionContext: 0xae27b4280; archive = "<IDEArchive: 0xae26d7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0xae3b91d80>", team="(null)">
+	<IDEDistributionContext: 0xae27b4000; archive = "<IDEArchive: 0xae26d7480>", distributionMethod="<IDEDistributionMethodDeveloperID: 0xae3b91d80>", team="(null)">
+	<IDEDistributionContext: 0x10173e730; archive = "<IDEArchive: 0xae26d7480>", distributionMethod="(null)", team="(null)">
+</IDEDistributionProcessingPipelineContext: 0xae4009200>
+2026-05-07 08:56:57 +0000 [MT] Processing step: IDEDistributionCreateDestRootStep
+2026-05-07 08:56:57 +0000 [MT] Processing step: IDEDistributionCopyItemStep
+2026-05-07 08:56:57 +0000 [MT] Running /usr/bin/ditto '-V' '/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app' '/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app'
+2026-05-07 08:56:57 +0000  >>> Copying /Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app 
+2026-05-07 08:56:57 +0000  copying file ./Contents/_CodeSignature/CodeResources ... 
+2026-05-07 08:56:57 +0000  3062 bytes for ./Contents/_CodeSignature/CodeResources
+2026-05-07 08:56:57 +0000  copying file ./Contents/MacOS/FlipTheScript ... 
+2026-05-07 08:56:57 +0000  1918896 bytes for ./Contents/MacOS/FlipTheScript
+2026-05-07 08:56:57 +0000  copying file ./Contents/Resources/AppIcon.icns ... 
+2026-05-07 08:56:57 +0000  17149 bytes for ./Contents/Resources/AppIcon.icns
+2026-05-07 08:56:57 +0000  copying file ./Contents/Resources/Assets.car ... 
+2026-05-07 08:56:57 +0000  77512 bytes for ./Contents/Resources/Assets.car
+2026-05-07 08:56:57 +0000  copying symlink ./Contents/Frameworks/Sparkle.framework/Resources ... 
+2026-05-07 08:56:57 +0000  linked ./Contents/Frameworks/Sparkle.framework/Resources
+2026-05-07 08:56:57 +0000  copying symlink ./Contents/Frameworks/Sparkle.framework/Versions/Current ... 
+2026-05-07 08:56:57 +0000  linked ./Contents/Frameworks/Sparkle.framework/Versions/Current
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/_CodeSignature/CodeResources ... 
+2026-05-07 08:56:57 +0000  17887 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/_CodeSignature/CodeResources
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/de.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  11559 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/de.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/he.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  9657 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/he.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ar.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  3554 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ar.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/el.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  5934 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/el.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ja.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  8697 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ja.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/fa.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  5716 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/fa.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/uk.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  5842 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/uk.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/zh_CN.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  7475 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/zh_CN.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/nb.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  5539 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/nb.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/es.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  7040 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/es.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/is.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  3954 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/is.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/sl.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  5646 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/sl.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/da.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  4882 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/da.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/it.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  10956 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/it.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/sk.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  5675 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/sk.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/sv.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  5160 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/sv.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ReleaseNotesColorStyle.css ... 
+2026-05-07 08:56:57 +0000  231 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ReleaseNotesColorStyle.css
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/cs.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  10774 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/cs.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ko.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  7797 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ko.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/Base.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  6249 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/Base.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/hu.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  4449 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/hu.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/zh_HK.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  6469 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/zh_HK.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/tr.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  6183 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/tr.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/pl.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  5453 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/pl.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/zh_TW.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  7625 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/zh_TW.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/pt-BR.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  9976 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/pt-BR.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/vi.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  12418 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/vi.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ru.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  5784 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ru.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUUpdatePermissionPrompt.nib/keyedobjects-110000.nib ... 
+2026-05-07 08:56:57 +0000  25401 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUUpdatePermissionPrompt.nib/keyedobjects-110000.nib
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUUpdatePermissionPrompt.nib/keyedobjects-101300.nib ... 
+2026-05-07 08:56:57 +0000  25424 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUUpdatePermissionPrompt.nib/keyedobjects-101300.nib
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUStatus.nib ... 
+2026-05-07 08:56:57 +0000  13016 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUStatus.nib
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUUpdateAlert.nib ... 
+2026-05-07 08:56:57 +0000  18490 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/SUUpdateAlert.nib
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/fr.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  7855 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/fr.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/fi.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  3252 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/fi.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/nl.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  9574 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/nl.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/th.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  5339 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/th.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/nn.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  5671 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/nn.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/pt-PT.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  5984 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/pt-PT.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ro.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  6115 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ro.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/Info.plist ... 
+2026-05-07 08:56:57 +0000  1341 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/Info.plist
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/hr.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  6367 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/hr.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ca.lproj/Sparkle.strings ... 
+2026-05-07 08:56:57 +0000  3501 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Resources/ca.lproj/Sparkle.strings
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate ... 
+2026-05-07 08:56:57 +0000  709584 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/_CodeSignature/CodeResources ... 
+2026-05-07 08:56:57 +0000  2446 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/_CodeSignature/CodeResources
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater ... 
+2026-05-07 08:56:57 +0000  290560 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/Resources/SUStatus.nib ... 
+2026-05-07 08:56:57 +0000  13016 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/Resources/SUStatus.nib
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/Info.plist ... 
+2026-05-07 08:56:57 +0000  2400 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/Info.plist
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/PkgInfo ... 
+2026-05-07 08:56:57 +0000  8 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/PkgInfo
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/_CodeSignature/CodeResources ... 
+2026-05-07 08:56:57 +0000  2200 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/_CodeSignature/CodeResources
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/MacOS/Downloader ... 
+2026-05-07 08:56:57 +0000  172240 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/MacOS/Downloader
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/Info.plist ... 
+2026-05-07 08:56:57 +0000  1717 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/Info.plist
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/_CodeSignature/CodeResources ... 
+2026-05-07 08:56:57 +0000  2200 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/_CodeSignature/CodeResources
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer ... 
+2026-05-07 08:56:57 +0000  223472 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/Info.plist ... 
+2026-05-07 08:56:57 +0000  1605 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/Info.plist
+2026-05-07 08:56:57 +0000  copying file ./Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle ... 
+2026-05-07 08:56:57 +0000  977808 bytes for ./Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle
+2026-05-07 08:56:57 +0000  copying symlink ./Contents/Frameworks/Sparkle.framework/Autoupdate ... 
+2026-05-07 08:56:57 +0000  linked ./Contents/Frameworks/Sparkle.framework/Autoupdate
+2026-05-07 08:56:57 +0000  copying symlink ./Contents/Frameworks/Sparkle.framework/Updater.app ... 
+2026-05-07 08:56:57 +0000  linked ./Contents/Frameworks/Sparkle.framework/Updater.app
+2026-05-07 08:56:57 +0000  copying symlink ./Contents/Frameworks/Sparkle.framework/XPCServices ... 
+2026-05-07 08:56:57 +0000  linked ./Contents/Frameworks/Sparkle.framework/XPCServices
+2026-05-07 08:56:57 +0000  copying symlink ./Contents/Frameworks/Sparkle.framework/Sparkle ... 
+2026-05-07 08:56:57 +0000  linked ./Contents/Frameworks/Sparkle.framework/Sparkle
+2026-05-07 08:56:57 +0000  copying file ./Contents/Info.plist ... 
+2026-05-07 08:56:57 +0000  2248 bytes for ./Contents/Info.plist
+2026-05-07 08:56:57 +0000  copying file ./Contents/PkgInfo ... 
+2026-05-07 08:56:57 +0000  8 bytes for ./Contents/PkgInfo
+2026-05-07 08:56:57 +0000 [MT] /usr/bin/ditto exited with 0
+2026-05-07 08:56:57 +0000 [MT] Processing step: IDEDistributionEmbedProfileStep
+2026-05-07 08:56:57 +0000 [MT] Skipping profile for item: <IDEDistributionItem: 0xae18645a0; bundleID='org.sparkle-project.DownloaderService', path='<DVTFilePath:0xae180aca0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae1864540; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.DownloaderService', executablePath='<DVTFilePath:0xae180b0c0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/MacOS/Downloader'>', hardenedRuntime='1'>'>
+2026-05-07 08:56:57 +0000 [MT] Skipping profile for item: <IDEDistributionItem: 0xae1864720; bundleID='org.sparkle-project.InstallerLauncher', path='<DVTFilePath:0xae180b360:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae18646c0; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.InstallerLauncher', executablePath='<DVTFilePath:0xae180b780:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer'>', hardenedRuntime='1'>'>
+2026-05-07 08:56:57 +0000 [MT] Skipping profile for item: <IDEDistributionItem: 0xae1864660; bundleID='(null)', path='<DVTFilePath:0xae180a1c0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae1864600; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
     "com.apple.application-identifier" = "org.sparkle-project.Sparkle.Autoupdate";
-}', teamID='(null)', identifier='Autoupdate-55554944c885cecb77e63656933767b4dcfffd2f', executablePath='<DVTFilePath:0x70a7e2040:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', hardenedRuntime='1'>'>
-2026-05-05 21:11:21 +0000 [MT] Skipping profile for item: <IDEDistributionItem: 0x70a7f4240; bundleID='org.sparkle-project.Sparkle.Updater', path='<DVTFilePath:0x70a7e2100:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f41e0; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
-}', teamID='(null)', identifier='org.sparkle-project.Sparkle.Updater', executablePath='<DVTFilePath:0x70a7e2520:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater'>', hardenedRuntime='1'>'>
-2026-05-05 21:11:21 +0000 [MT] Skipping profile for item: <IDEDistributionItem: 0x70a7f4540; bundleID='org.sparkle-project.Sparkle', path='<DVTFilePath:0x70a7657a0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f44e0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x7096c4e40; name='Apple Development: Nick Kelly (ABRZ5S85A3)', hash='BCD7E23D71479E15A9DFC3971644E9E814E70BDE', serialNumber='4DF3738AA1B421F6372BD0BEF442F3E7', certificateKinds='(
+}', teamID='(null)', identifier='Autoupdate-55554944c885cecb77e63656933767b4dcfffd2f', executablePath='<DVTFilePath:0xae180a1c0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', hardenedRuntime='1'>'>
+2026-05-07 08:56:57 +0000 [MT] Skipping profile for item: <IDEDistributionItem: 0xae1864480; bundleID='org.sparkle-project.Sparkle.Updater', path='<DVTFilePath:0xae180a280:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae1864420; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.Sparkle.Updater', executablePath='<DVTFilePath:0xae180a6a0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater'>', hardenedRuntime='1'>'>
+2026-05-07 08:56:57 +0000 [MT] Skipping profile for item: <IDEDistributionItem: 0xae18647e0; bundleID='org.sparkle-project.Sparkle', path='<DVTFilePath:0xae2759920:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae1864780; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xae267ea00; name='Apple Development: Nick Kelly (ABRZ5S85A3)', hash='BCD7E23D71479E15A9DFC3971644E9E814E70BDE', serialNumber='4DF3738AA1B421F6372BD0BEF442F3E7', certificateKinds='(
     "1.2.840.113635.100.6.1.12",
     "1.2.840.113635.100.6.1.2"
-), issueDate='2026-05-05 19:18:48 +0000''>', entitlements='(null)', teamID='CA889WK9CJ', identifier='org.sparkle-project.Sparkle', executablePath='<DVTFilePath:0x70a7e3900:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle'>', hardenedRuntime='1'>'>
-2026-05-05 21:11:21 +0000 [MT] Skipping profile for item: <IDEDistributionItem: 0x70a7f45a0; bundleID='Hoddy.FlipTheScript', path='<DVTFilePath:0x70a6e74f0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f4600; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x7096c4e40; name='Apple Development: Nick Kelly (ABRZ5S85A3)', hash='BCD7E23D71479E15A9DFC3971644E9E814E70BDE', serialNumber='4DF3738AA1B421F6372BD0BEF442F3E7', certificateKinds='(
+), issueDate='2026-05-05 19:18:48 +0000''>', entitlements='(null)', teamID='CA889WK9CJ', identifier='org.sparkle-project.Sparkle', executablePath='<DVTFilePath:0xae180ba80:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle'>', hardenedRuntime='1'>'>
+2026-05-07 08:56:57 +0000 [MT] Skipping profile for item: <IDEDistributionItem: 0xae1864840; bundleID='Hoddy.FlipTheScript', path='<DVTFilePath:0xae26d74f0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae18648a0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xae267ea00; name='Apple Development: Nick Kelly (ABRZ5S85A3)', hash='BCD7E23D71479E15A9DFC3971644E9E814E70BDE', serialNumber='4DF3738AA1B421F6372BD0BEF442F3E7', certificateKinds='(
     "1.2.840.113635.100.6.1.12",
     "1.2.840.113635.100.6.1.2"
 ), issueDate='2026-05-05 19:18:48 +0000''>', entitlements='{
@@ -179,172 +179,172 @@
     "com.apple.security.files.downloads.read-write" = 1;
     "com.apple.security.files.user-selected.read-write" = 1;
     "com.apple.security.network.client" = 1;
-}', teamID='CA889WK9CJ', identifier='Hoddy.FlipTheScript', executablePath='<DVTFilePath:0x70a765080:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/MacOS/FlipTheScript'>', hardenedRuntime='1'>'>
-2026-05-05 21:11:21 +0000 [MT] Processing step: IDEDistributionInfoPlistStep
-2026-05-05 21:11:21 +0000 [MT] Skipping step: IDEDistributionInfoPlistStep because it said so
-2026-05-05 21:11:21 +0000 [MT] Skipping step: IDEDistributionInfoPlistStep because it said so
-2026-05-05 21:11:21 +0000 [MT] Skipping step: IDEDistributionInfoPlistStep because it said so
-2026-05-05 21:11:21 +0000 [MT] Skipping step: IDEDistributionInfoPlistStep because it said so
-2026-05-05 21:11:21 +0000 [MT] Skipping step: IDEDistributionInfoPlistStep because it said so
-2026-05-05 21:11:21 +0000 [MT] Skipping step: IDEDistributionInfoPlistStep because it said so
-2026-05-05 21:11:21 +0000 [MT] Processing step: IDEDistributionAppThinningPlistStep
-2026-05-05 21:11:21 +0000 [MT] Processing step: IDEDistributionSymbolsStep
-2026-05-05 21:11:21 +0000 [MT] Skipping step: IDEDistributionSymbolsStep because it said so
-2026-05-05 21:11:21 +0000 [MT] Processing step: IDEDistributionAppThinningStep
-2026-05-05 21:11:21 +0000 [MT] Skipping step: IDEDistributionAppThinningStep because it said so
-2026-05-05 21:11:21 +0000 [MT] Processing step: IDEDistributionArchThinningStep
-2026-05-05 21:11:21 +0000 [MT] Archs to thin for item /Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc are []
-2026-05-05 21:11:21 +0000 [MT] Archs to thin for item /Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc are []
-2026-05-05 21:11:21 +0000 [MT] Archs to thin for item /Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate are []
-2026-05-05 21:11:21 +0000 [MT] Archs to thin for item /Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app are []
-2026-05-05 21:11:21 +0000 [MT] Archs to thin for item /Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B are []
-2026-05-05 21:11:21 +0000 [MT] Archs to thin for item /Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app are []
-2026-05-05 21:11:21 +0000 [MT] Processing step: IDEDistributionODRStep
-2026-05-05 21:11:21 +0000 [MT] Processing step: IDEDistributionStripXattrsStep
-2026-05-05 21:11:21 +0000 [MT] Skipping stripping extended attributes because the codesign step will strip them.
-2026-05-05 21:11:21 +0000 [MT] Skipping stripping extended attributes because the codesign step will strip them.
-2026-05-05 21:11:21 +0000 [MT] Skipping stripping extended attributes because the codesign step will strip them.
-2026-05-05 21:11:21 +0000 [MT] Skipping stripping extended attributes because the codesign step will strip them.
-2026-05-05 21:11:21 +0000 [MT] Skipping stripping extended attributes because the codesign step will strip them.
-2026-05-05 21:11:21 +0000 [MT] Skipping stripping extended attributes because the codesign step will strip them.
-2026-05-05 21:11:21 +0000 [MT] Processing step: IDEDistributionCodesignStep
-2026-05-05 21:11:21 +0000 [MT] Entitlements for <IDEDistributionItem: 0x70a7f4300; bundleID='org.sparkle-project.DownloaderService', path='<DVTFilePath:0x70a7e2b20:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f42a0; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
-}', teamID='(null)', identifier='org.sparkle-project.DownloaderService', executablePath='<DVTFilePath:0x70a7e2f40:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/MacOS/Downloader'>', hardenedRuntime='1'>'>: {
+}', teamID='CA889WK9CJ', identifier='Hoddy.FlipTheScript', executablePath='<DVTFilePath:0xae2759200:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/MacOS/FlipTheScript'>', hardenedRuntime='1'>'>
+2026-05-07 08:56:57 +0000 [MT] Processing step: IDEDistributionInfoPlistStep
+2026-05-07 08:56:57 +0000 [MT] Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-05-07 08:56:57 +0000 [MT] Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-05-07 08:56:57 +0000 [MT] Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-05-07 08:56:57 +0000 [MT] Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-05-07 08:56:57 +0000 [MT] Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-05-07 08:56:57 +0000 [MT] Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-05-07 08:56:57 +0000 [MT] Processing step: IDEDistributionAppThinningPlistStep
+2026-05-07 08:56:57 +0000 [MT] Processing step: IDEDistributionSymbolsStep
+2026-05-07 08:56:57 +0000 [MT] Skipping step: IDEDistributionSymbolsStep because it said so
+2026-05-07 08:56:57 +0000 [MT] Processing step: IDEDistributionAppThinningStep
+2026-05-07 08:56:57 +0000 [MT] Skipping step: IDEDistributionAppThinningStep because it said so
+2026-05-07 08:56:57 +0000 [MT] Processing step: IDEDistributionArchThinningStep
+2026-05-07 08:56:57 +0000 [MT] Archs to thin for item /Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc are []
+2026-05-07 08:56:57 +0000 [MT] Archs to thin for item /Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc are []
+2026-05-07 08:56:57 +0000 [MT] Archs to thin for item /Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate are []
+2026-05-07 08:56:57 +0000 [MT] Archs to thin for item /Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app are []
+2026-05-07 08:56:57 +0000 [MT] Archs to thin for item /Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B are []
+2026-05-07 08:56:57 +0000 [MT] Archs to thin for item /Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app are []
+2026-05-07 08:56:57 +0000 [MT] Processing step: IDEDistributionODRStep
+2026-05-07 08:56:57 +0000 [MT] Processing step: IDEDistributionStripXattrsStep
+2026-05-07 08:56:57 +0000 [MT] Skipping stripping extended attributes because the codesign step will strip them.
+2026-05-07 08:56:57 +0000 [MT] Skipping stripping extended attributes because the codesign step will strip them.
+2026-05-07 08:56:57 +0000 [MT] Skipping stripping extended attributes because the codesign step will strip them.
+2026-05-07 08:56:57 +0000 [MT] Skipping stripping extended attributes because the codesign step will strip them.
+2026-05-07 08:56:57 +0000 [MT] Skipping stripping extended attributes because the codesign step will strip them.
+2026-05-07 08:56:57 +0000 [MT] Skipping stripping extended attributes because the codesign step will strip them.
+2026-05-07 08:56:57 +0000 [MT] Processing step: IDEDistributionCodesignStep
+2026-05-07 08:56:57 +0000 [MT] Entitlements for <IDEDistributionItem: 0xae18645a0; bundleID='org.sparkle-project.DownloaderService', path='<DVTFilePath:0xae180aca0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae1864540; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.DownloaderService', executablePath='<DVTFilePath:0xae180b0c0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/MacOS/Downloader'>', hardenedRuntime='1'>'>: {
 }
-2026-05-05 21:11:21 +0000 [MT] Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
-2026-05-05 21:11:21 +0000 [MT] Entitlements for <IDEDistributionItem: 0x70a7f4300; bundleID='org.sparkle-project.DownloaderService', path='<DVTFilePath:0x70a7e2b20:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f42a0; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
-}', teamID='(null)', identifier='org.sparkle-project.DownloaderService', executablePath='<DVTFilePath:0x70a7e2f40:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/MacOS/Downloader'>', hardenedRuntime='1'>'> are: {
+2026-05-07 08:56:57 +0000 [MT] Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-05-07 08:56:57 +0000 [MT] Entitlements for <IDEDistributionItem: 0xae18645a0; bundleID='org.sparkle-project.DownloaderService', path='<DVTFilePath:0xae180aca0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae1864540; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.DownloaderService', executablePath='<DVTFilePath:0xae180b0c0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/MacOS/Downloader'>', hardenedRuntime='1'>'> are: {
 }
-2026-05-05 21:11:21 +0000 [MT] Writing entitlements for <IDEDistributionItem: 0x70a7f4300; bundleID='org.sparkle-project.DownloaderService', path='<DVTFilePath:0x70a7e2b20:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f42a0; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
-}', teamID='(null)', identifier='org.sparkle-project.DownloaderService', executablePath='<DVTFilePath:0x70a7e2f40:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/MacOS/Downloader'>', hardenedRuntime='1'>'> to: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/entitlements~~~txWjss
-2026-05-05 21:11:21 +0000 [MT] invoking codesign: <NSConcreteTask: 0x7096ce300; launchPath='/usr/bin/codesign', arguments='(
+2026-05-07 08:56:57 +0000 [MT] Writing entitlements for <IDEDistributionItem: 0xae18645a0; bundleID='org.sparkle-project.DownloaderService', path='<DVTFilePath:0xae180aca0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae1864540; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.DownloaderService', executablePath='<DVTFilePath:0xae180b0c0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/MacOS/Downloader'>', hardenedRuntime='1'>'> to: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/entitlements~~~gd5iAP
+2026-05-07 08:56:57 +0000 [MT] invoking codesign: <NSConcreteTask: 0xae1a919f0; launchPath='/usr/bin/codesign', arguments='(
     "-f",
     "-s",
     58455BEA430B2DE4126E936ACEA8F0E7A7BE3B3C,
     "--entitlements",
-    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/entitlements~~~txWjss",
+    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/entitlements~~~gd5iAP",
     "--requirements",
     "=designated => anchor apple generic  and identifier \"$self.identifier\" and ((cert leaf[field.1.2.840.113635.100.6.1.9] exists) or ( certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists  and certificate leaf[subject.OU] = \"CA889WK9CJ\" ))",
     "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
     "--generate-entitlement-der",
     "--strip-disallowed-xattrs",
     "-vvv",
-    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc"
+    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc"
 )'>
-2026-05-05 21:11:22 +0000 [MT] codesign output: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc: replacing existing signature
-/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc: signed bundle with Mach-O universal (x86_64 arm64) [org.sparkle-project.DownloaderService]
-2026-05-05 21:11:22 +0000 [MT] Entitlements for <IDEDistributionItem: 0x70a7f4480; bundleID='org.sparkle-project.InstallerLauncher', path='<DVTFilePath:0x70a7e31e0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f4420; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
-}', teamID='(null)', identifier='org.sparkle-project.InstallerLauncher', executablePath='<DVTFilePath:0x70a7e3600:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer'>', hardenedRuntime='1'>'>: {
+2026-05-07 08:56:58 +0000 [MT] codesign output: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc: replacing existing signature
+/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc: signed bundle with Mach-O universal (x86_64 arm64) [org.sparkle-project.DownloaderService]
+2026-05-07 08:56:58 +0000 [MT] Entitlements for <IDEDistributionItem: 0xae1864720; bundleID='org.sparkle-project.InstallerLauncher', path='<DVTFilePath:0xae180b360:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae18646c0; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.InstallerLauncher', executablePath='<DVTFilePath:0xae180b780:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer'>', hardenedRuntime='1'>'>: {
 }
-2026-05-05 21:11:22 +0000 [MT] Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
-2026-05-05 21:11:22 +0000 [MT] Entitlements for <IDEDistributionItem: 0x70a7f4480; bundleID='org.sparkle-project.InstallerLauncher', path='<DVTFilePath:0x70a7e31e0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f4420; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
-}', teamID='(null)', identifier='org.sparkle-project.InstallerLauncher', executablePath='<DVTFilePath:0x70a7e3600:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer'>', hardenedRuntime='1'>'> are: {
+2026-05-07 08:56:58 +0000 [MT] Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-05-07 08:56:58 +0000 [MT] Entitlements for <IDEDistributionItem: 0xae1864720; bundleID='org.sparkle-project.InstallerLauncher', path='<DVTFilePath:0xae180b360:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae18646c0; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.InstallerLauncher', executablePath='<DVTFilePath:0xae180b780:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer'>', hardenedRuntime='1'>'> are: {
 }
-2026-05-05 21:11:22 +0000 [MT] Writing entitlements for <IDEDistributionItem: 0x70a7f4480; bundleID='org.sparkle-project.InstallerLauncher', path='<DVTFilePath:0x70a7e31e0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f4420; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
-}', teamID='(null)', identifier='org.sparkle-project.InstallerLauncher', executablePath='<DVTFilePath:0x70a7e3600:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer'>', hardenedRuntime='1'>'> to: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/entitlements~~~78iGMQ
-2026-05-05 21:11:22 +0000 [MT] invoking codesign: <NSConcreteTask: 0x709486a80; launchPath='/usr/bin/codesign', arguments='(
+2026-05-07 08:56:58 +0000 [MT] Writing entitlements for <IDEDistributionItem: 0xae1864720; bundleID='org.sparkle-project.InstallerLauncher', path='<DVTFilePath:0xae180b360:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae18646c0; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.InstallerLauncher', executablePath='<DVTFilePath:0xae180b780:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer'>', hardenedRuntime='1'>'> to: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/entitlements~~~hRBOub
+2026-05-07 08:56:58 +0000 [MT] invoking codesign: <NSConcreteTask: 0xae1a919f0; launchPath='/usr/bin/codesign', arguments='(
     "-f",
     "-s",
     58455BEA430B2DE4126E936ACEA8F0E7A7BE3B3C,
     "--entitlements",
-    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/entitlements~~~78iGMQ",
+    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/entitlements~~~hRBOub",
     "--requirements",
     "=designated => anchor apple generic  and identifier \"$self.identifier\" and ((cert leaf[field.1.2.840.113635.100.6.1.9] exists) or ( certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists  and certificate leaf[subject.OU] = \"CA889WK9CJ\" ))",
     "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
     "--generate-entitlement-der",
     "--strip-disallowed-xattrs",
     "-vvv",
-    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc"
+    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc"
 )'>
-2026-05-05 21:11:22 +0000 [MT] codesign output: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc: replacing existing signature
-/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc: signed bundle with Mach-O universal (x86_64 arm64) [org.sparkle-project.InstallerLauncher]
-2026-05-05 21:11:22 +0000 [MT] Entitlements for <IDEDistributionItem: 0x70a7f43c0; bundleID='(null)', path='<DVTFilePath:0x70a7e2040:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f4360; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+2026-05-07 08:56:58 +0000 [MT] codesign output: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc: replacing existing signature
+/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc: signed bundle with Mach-O universal (x86_64 arm64) [org.sparkle-project.InstallerLauncher]
+2026-05-07 08:56:58 +0000 [MT] Entitlements for <IDEDistributionItem: 0xae1864660; bundleID='(null)', path='<DVTFilePath:0xae180a1c0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae1864600; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
     "com.apple.application-identifier" = "org.sparkle-project.Sparkle.Autoupdate";
-}', teamID='(null)', identifier='Autoupdate-55554944c885cecb77e63656933767b4dcfffd2f', executablePath='<DVTFilePath:0x70a7e2040:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', hardenedRuntime='1'>'>: {
-    "com.apple.application-identifier" = "org.sparkle-project.Sparkle.Autoupdate";
-}
-2026-05-05 21:11:22 +0000 [MT] Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
-2026-05-05 21:11:22 +0000 [MT] Entitlements for <IDEDistributionItem: 0x70a7f43c0; bundleID='(null)', path='<DVTFilePath:0x70a7e2040:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f4360; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
-    "com.apple.application-identifier" = "org.sparkle-project.Sparkle.Autoupdate";
-}', teamID='(null)', identifier='Autoupdate-55554944c885cecb77e63656933767b4dcfffd2f', executablePath='<DVTFilePath:0x70a7e2040:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', hardenedRuntime='1'>'> are: {
+}', teamID='(null)', identifier='Autoupdate-55554944c885cecb77e63656933767b4dcfffd2f', executablePath='<DVTFilePath:0xae180a1c0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', hardenedRuntime='1'>'>: {
     "com.apple.application-identifier" = "org.sparkle-project.Sparkle.Autoupdate";
 }
-2026-05-05 21:11:22 +0000 [MT] Writing entitlements for <IDEDistributionItem: 0x70a7f43c0; bundleID='(null)', path='<DVTFilePath:0x70a7e2040:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f4360; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+2026-05-07 08:56:58 +0000 [MT] Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-05-07 08:56:58 +0000 [MT] Entitlements for <IDEDistributionItem: 0xae1864660; bundleID='(null)', path='<DVTFilePath:0xae180a1c0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae1864600; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
     "com.apple.application-identifier" = "org.sparkle-project.Sparkle.Autoupdate";
-}', teamID='(null)', identifier='Autoupdate-55554944c885cecb77e63656933767b4dcfffd2f', executablePath='<DVTFilePath:0x70a7e2040:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', hardenedRuntime='1'>'> to: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/entitlements~~~zCioaA
-2026-05-05 21:11:22 +0000 [MT] invoking codesign: <NSConcreteTask: 0x709486a80; launchPath='/usr/bin/codesign', arguments='(
+}', teamID='(null)', identifier='Autoupdate-55554944c885cecb77e63656933767b4dcfffd2f', executablePath='<DVTFilePath:0xae180a1c0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', hardenedRuntime='1'>'> are: {
+    "com.apple.application-identifier" = "org.sparkle-project.Sparkle.Autoupdate";
+}
+2026-05-07 08:56:58 +0000 [MT] Writing entitlements for <IDEDistributionItem: 0xae1864660; bundleID='(null)', path='<DVTFilePath:0xae180a1c0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae1864600; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+    "com.apple.application-identifier" = "org.sparkle-project.Sparkle.Autoupdate";
+}', teamID='(null)', identifier='Autoupdate-55554944c885cecb77e63656933767b4dcfffd2f', executablePath='<DVTFilePath:0xae180a1c0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>', hardenedRuntime='1'>'> to: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/entitlements~~~GcRQIC
+2026-05-07 08:56:58 +0000 [MT] invoking codesign: <NSConcreteTask: 0xae2ca8910; launchPath='/usr/bin/codesign', arguments='(
     "-f",
     "-s",
     58455BEA430B2DE4126E936ACEA8F0E7A7BE3B3C,
     "--entitlements",
-    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/entitlements~~~zCioaA",
+    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/entitlements~~~GcRQIC",
     "--requirements",
     "=designated => anchor apple generic  and identifier \"$self.identifier\" and ((cert leaf[field.1.2.840.113635.100.6.1.9] exists) or ( certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists  and certificate leaf[subject.OU] = \"CA889WK9CJ\" ))",
     "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
     "--generate-entitlement-der",
     "--strip-disallowed-xattrs",
     "-vvv",
-    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate"
+    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate"
 )'>
-2026-05-05 21:11:22 +0000 [MT] codesign output: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate: replacing existing signature
-/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate: signed Mach-O universal (x86_64 arm64) [Autoupdate-55554944c885cecb77e63656933767b4dcfffd2f]
-2026-05-05 21:11:22 +0000 [MT] Entitlements for <IDEDistributionItem: 0x70a7f4240; bundleID='org.sparkle-project.Sparkle.Updater', path='<DVTFilePath:0x70a7e2100:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f41e0; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
-}', teamID='(null)', identifier='org.sparkle-project.Sparkle.Updater', executablePath='<DVTFilePath:0x70a7e2520:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater'>', hardenedRuntime='1'>'>: {
+2026-05-07 08:56:59 +0000 [MT] codesign output: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate: replacing existing signature
+/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate: signed Mach-O universal (x86_64 arm64) [Autoupdate-55554944c885cecb77e63656933767b4dcfffd2f]
+2026-05-07 08:56:59 +0000 [MT] Entitlements for <IDEDistributionItem: 0xae1864480; bundleID='org.sparkle-project.Sparkle.Updater', path='<DVTFilePath:0xae180a280:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae1864420; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.Sparkle.Updater', executablePath='<DVTFilePath:0xae180a6a0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater'>', hardenedRuntime='1'>'>: {
 }
-2026-05-05 21:11:22 +0000 [MT] Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
-2026-05-05 21:11:22 +0000 [MT] Entitlements for <IDEDistributionItem: 0x70a7f4240; bundleID='org.sparkle-project.Sparkle.Updater', path='<DVTFilePath:0x70a7e2100:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f41e0; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
-}', teamID='(null)', identifier='org.sparkle-project.Sparkle.Updater', executablePath='<DVTFilePath:0x70a7e2520:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater'>', hardenedRuntime='1'>'> are: {
+2026-05-07 08:56:59 +0000 [MT] Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-05-07 08:56:59 +0000 [MT] Entitlements for <IDEDistributionItem: 0xae1864480; bundleID='org.sparkle-project.Sparkle.Updater', path='<DVTFilePath:0xae180a280:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae1864420; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.Sparkle.Updater', executablePath='<DVTFilePath:0xae180a6a0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater'>', hardenedRuntime='1'>'> are: {
 }
-2026-05-05 21:11:22 +0000 [MT] Writing entitlements for <IDEDistributionItem: 0x70a7f4240; bundleID='org.sparkle-project.Sparkle.Updater', path='<DVTFilePath:0x70a7e2100:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f41e0; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
-}', teamID='(null)', identifier='org.sparkle-project.Sparkle.Updater', executablePath='<DVTFilePath:0x70a7e2520:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater'>', hardenedRuntime='1'>'> to: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/entitlements~~~6RNlO1
-2026-05-05 21:11:22 +0000 [MT] invoking codesign: <NSConcreteTask: 0x7096ce300; launchPath='/usr/bin/codesign', arguments='(
+2026-05-07 08:56:59 +0000 [MT] Writing entitlements for <IDEDistributionItem: 0xae1864480; bundleID='org.sparkle-project.Sparkle.Updater', path='<DVTFilePath:0xae180a280:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae1864420; isSigned='1', isAdHocSigned='1', signingCertificate='(null)', entitlements='{
+}', teamID='(null)', identifier='org.sparkle-project.Sparkle.Updater', executablePath='<DVTFilePath:0xae180a6a0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater'>', hardenedRuntime='1'>'> to: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/entitlements~~~BgE7xu
+2026-05-07 08:56:59 +0000 [MT] invoking codesign: <NSConcreteTask: 0xae2ca8910; launchPath='/usr/bin/codesign', arguments='(
     "-f",
     "-s",
     58455BEA430B2DE4126E936ACEA8F0E7A7BE3B3C,
     "--entitlements",
-    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/entitlements~~~6RNlO1",
+    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/entitlements~~~BgE7xu",
     "--requirements",
     "=designated => anchor apple generic  and identifier \"$self.identifier\" and ((cert leaf[field.1.2.840.113635.100.6.1.9] exists) or ( certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists  and certificate leaf[subject.OU] = \"CA889WK9CJ\" ))",
     "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
     "--generate-entitlement-der",
     "--strip-disallowed-xattrs",
     "-vvv",
-    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app"
+    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app"
 )'>
-2026-05-05 21:11:23 +0000 [MT] codesign output: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app: replacing existing signature
-/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app: signed app bundle with Mach-O universal (x86_64 arm64) [org.sparkle-project.Sparkle.Updater]
-2026-05-05 21:11:23 +0000 [MT] Entitlements for <IDEDistributionItem: 0x70a7f4540; bundleID='org.sparkle-project.Sparkle', path='<DVTFilePath:0x70a7657a0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f44e0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x7096c4e40; name='Apple Development: Nick Kelly (ABRZ5S85A3)', hash='BCD7E23D71479E15A9DFC3971644E9E814E70BDE', serialNumber='4DF3738AA1B421F6372BD0BEF442F3E7', certificateKinds='(
+2026-05-07 08:56:59 +0000 [MT] codesign output: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app: replacing existing signature
+/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app: signed app bundle with Mach-O universal (x86_64 arm64) [org.sparkle-project.Sparkle.Updater]
+2026-05-07 08:56:59 +0000 [MT] Entitlements for <IDEDistributionItem: 0xae18647e0; bundleID='org.sparkle-project.Sparkle', path='<DVTFilePath:0xae2759920:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae1864780; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xae267ea00; name='Apple Development: Nick Kelly (ABRZ5S85A3)', hash='BCD7E23D71479E15A9DFC3971644E9E814E70BDE', serialNumber='4DF3738AA1B421F6372BD0BEF442F3E7', certificateKinds='(
     "1.2.840.113635.100.6.1.12",
     "1.2.840.113635.100.6.1.2"
-), issueDate='2026-05-05 19:18:48 +0000''>', entitlements='(null)', teamID='CA889WK9CJ', identifier='org.sparkle-project.Sparkle', executablePath='<DVTFilePath:0x70a7e3900:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle'>', hardenedRuntime='1'>'>: {
+), issueDate='2026-05-05 19:18:48 +0000''>', entitlements='(null)', teamID='CA889WK9CJ', identifier='org.sparkle-project.Sparkle', executablePath='<DVTFilePath:0xae180ba80:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle'>', hardenedRuntime='1'>'>: {
 }
-2026-05-05 21:11:23 +0000 [MT] Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
-2026-05-05 21:11:23 +0000 [MT] Entitlements for <IDEDistributionItem: 0x70a7f4540; bundleID='org.sparkle-project.Sparkle', path='<DVTFilePath:0x70a7657a0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f44e0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x7096c7240; name='Apple Development: Nick Kelly (ABRZ5S85A3)', hash='BCD7E23D71479E15A9DFC3971644E9E814E70BDE', serialNumber='4DF3738AA1B421F6372BD0BEF442F3E7', certificateKinds='(
+2026-05-07 08:56:59 +0000 [MT] Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-05-07 08:56:59 +0000 [MT] Entitlements for <IDEDistributionItem: 0xae18647e0; bundleID='org.sparkle-project.Sparkle', path='<DVTFilePath:0xae2759920:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae1864780; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xae267eac0; name='Apple Development: Nick Kelly (ABRZ5S85A3)', hash='BCD7E23D71479E15A9DFC3971644E9E814E70BDE', serialNumber='4DF3738AA1B421F6372BD0BEF442F3E7', certificateKinds='(
     "1.2.840.113635.100.6.1.12",
     "1.2.840.113635.100.6.1.2"
-), issueDate='2026-05-05 19:18:48 +0000''>', entitlements='(null)', teamID='CA889WK9CJ', identifier='org.sparkle-project.Sparkle', executablePath='<DVTFilePath:0x70a7e3900:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle'>', hardenedRuntime='1'>'> are: {
+), issueDate='2026-05-05 19:18:48 +0000''>', entitlements='(null)', teamID='CA889WK9CJ', identifier='org.sparkle-project.Sparkle', executablePath='<DVTFilePath:0xae180ba80:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle'>', hardenedRuntime='1'>'> are: {
 }
-2026-05-05 21:11:23 +0000 [MT] Writing entitlements for <IDEDistributionItem: 0x70a7f4540; bundleID='org.sparkle-project.Sparkle', path='<DVTFilePath:0x70a7657a0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f44e0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x7096c7240; name='Apple Development: Nick Kelly (ABRZ5S85A3)', hash='BCD7E23D71479E15A9DFC3971644E9E814E70BDE', serialNumber='4DF3738AA1B421F6372BD0BEF442F3E7', certificateKinds='(
+2026-05-07 08:56:59 +0000 [MT] Writing entitlements for <IDEDistributionItem: 0xae18647e0; bundleID='org.sparkle-project.Sparkle', path='<DVTFilePath:0xae2759920:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae1864780; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xae267eac0; name='Apple Development: Nick Kelly (ABRZ5S85A3)', hash='BCD7E23D71479E15A9DFC3971644E9E814E70BDE', serialNumber='4DF3738AA1B421F6372BD0BEF442F3E7', certificateKinds='(
     "1.2.840.113635.100.6.1.12",
     "1.2.840.113635.100.6.1.2"
-), issueDate='2026-05-05 19:18:48 +0000''>', entitlements='(null)', teamID='CA889WK9CJ', identifier='org.sparkle-project.Sparkle', executablePath='<DVTFilePath:0x70a7e3900:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle'>', hardenedRuntime='1'>'> to: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/entitlements~~~3JmnYH
-2026-05-05 21:11:23 +0000 [MT] invoking codesign: <NSConcreteTask: 0x709486a80; launchPath='/usr/bin/codesign', arguments='(
+), issueDate='2026-05-05 19:18:48 +0000''>', entitlements='(null)', teamID='CA889WK9CJ', identifier='org.sparkle-project.Sparkle', executablePath='<DVTFilePath:0xae180ba80:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle'>', hardenedRuntime='1'>'> to: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/entitlements~~~flrjiO
+2026-05-07 08:56:59 +0000 [MT] invoking codesign: <NSConcreteTask: 0xae2ca8910; launchPath='/usr/bin/codesign', arguments='(
     "-f",
     "-s",
     58455BEA430B2DE4126E936ACEA8F0E7A7BE3B3C,
     "--entitlements",
-    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/entitlements~~~3JmnYH",
+    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/entitlements~~~flrjiO",
     "--requirements",
     "=designated => anchor apple generic  and identifier \"$self.identifier\" and ((cert leaf[field.1.2.840.113635.100.6.1.9] exists) or ( certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists  and certificate leaf[subject.OU] = \"CA889WK9CJ\" ))",
     "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
     "--generate-entitlement-der",
     "--strip-disallowed-xattrs",
     "-vvv",
-    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B"
+    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B"
 )'>
-2026-05-05 21:11:23 +0000 [MT] codesign output: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B: replacing existing signature
-/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B: signed bundle with Mach-O universal (x86_64 arm64) [org.sparkle-project.Sparkle]
-2026-05-05 21:11:23 +0000 [MT] Entitlements for <IDEDistributionItem: 0x70a7f45a0; bundleID='Hoddy.FlipTheScript', path='<DVTFilePath:0x70a6e74f0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f4600; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x7096c4e40; name='Apple Development: Nick Kelly (ABRZ5S85A3)', hash='BCD7E23D71479E15A9DFC3971644E9E814E70BDE', serialNumber='4DF3738AA1B421F6372BD0BEF442F3E7', certificateKinds='(
+2026-05-07 08:56:59 +0000 [MT] codesign output: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B: replacing existing signature
+/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B: signed bundle with Mach-O universal (x86_64 arm64) [org.sparkle-project.Sparkle]
+2026-05-07 08:56:59 +0000 [MT] Entitlements for <IDEDistributionItem: 0xae1864840; bundleID='Hoddy.FlipTheScript', path='<DVTFilePath:0xae26d74f0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae18648a0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xae267ea00; name='Apple Development: Nick Kelly (ABRZ5S85A3)', hash='BCD7E23D71479E15A9DFC3971644E9E814E70BDE', serialNumber='4DF3738AA1B421F6372BD0BEF442F3E7', certificateKinds='(
     "1.2.840.113635.100.6.1.12",
     "1.2.840.113635.100.6.1.2"
 ), issueDate='2026-05-05 19:18:48 +0000''>', entitlements='{
@@ -355,7 +355,7 @@
     "com.apple.security.files.downloads.read-write" = 1;
     "com.apple.security.files.user-selected.read-write" = 1;
     "com.apple.security.network.client" = 1;
-}', teamID='CA889WK9CJ', identifier='Hoddy.FlipTheScript', executablePath='<DVTFilePath:0x70a765080:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/MacOS/FlipTheScript'>', hardenedRuntime='1'>'>: {
+}', teamID='CA889WK9CJ', identifier='Hoddy.FlipTheScript', executablePath='<DVTFilePath:0xae2759200:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/MacOS/FlipTheScript'>', hardenedRuntime='1'>'>: {
     "com.apple.security.app-sandbox" = 1;
     "com.apple.security.assets.movies.read-write" = 1;
     "com.apple.security.assets.music.read-write" = 1;
@@ -364,8 +364,8 @@
     "com.apple.security.files.user-selected.read-write" = 1;
     "com.apple.security.network.client" = 1;
 }
-2026-05-05 21:11:23 +0000 [MT] Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
-2026-05-05 21:11:23 +0000 [MT] Entitlements for <IDEDistributionItem: 0x70a7f45a0; bundleID='Hoddy.FlipTheScript', path='<DVTFilePath:0x70a6e74f0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f4600; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x7096c7240; name='Apple Development: Nick Kelly (ABRZ5S85A3)', hash='BCD7E23D71479E15A9DFC3971644E9E814E70BDE', serialNumber='4DF3738AA1B421F6372BD0BEF442F3E7', certificateKinds='(
+2026-05-07 08:56:59 +0000 [MT] Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-05-07 08:56:59 +0000 [MT] Entitlements for <IDEDistributionItem: 0xae1864840; bundleID='Hoddy.FlipTheScript', path='<DVTFilePath:0xae26d74f0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae18648a0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xae267eac0; name='Apple Development: Nick Kelly (ABRZ5S85A3)', hash='BCD7E23D71479E15A9DFC3971644E9E814E70BDE', serialNumber='4DF3738AA1B421F6372BD0BEF442F3E7', certificateKinds='(
     "1.2.840.113635.100.6.1.12",
     "1.2.840.113635.100.6.1.2"
 ), issueDate='2026-05-05 19:18:48 +0000''>', entitlements='{
@@ -376,7 +376,7 @@
     "com.apple.security.files.downloads.read-write" = 1;
     "com.apple.security.files.user-selected.read-write" = 1;
     "com.apple.security.network.client" = 1;
-}', teamID='CA889WK9CJ', identifier='Hoddy.FlipTheScript', executablePath='<DVTFilePath:0x70a765080:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/MacOS/FlipTheScript'>', hardenedRuntime='1'>'> are: {
+}', teamID='CA889WK9CJ', identifier='Hoddy.FlipTheScript', executablePath='<DVTFilePath:0xae2759200:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/MacOS/FlipTheScript'>', hardenedRuntime='1'>'> are: {
     "com.apple.security.app-sandbox" = 1;
     "com.apple.security.assets.movies.read-write" = 1;
     "com.apple.security.assets.music.read-write" = 1;
@@ -385,7 +385,7 @@
     "com.apple.security.files.user-selected.read-write" = 1;
     "com.apple.security.network.client" = 1;
 }
-2026-05-05 21:11:23 +0000 [MT] Writing entitlements for <IDEDistributionItem: 0x70a7f45a0; bundleID='Hoddy.FlipTheScript', path='<DVTFilePath:0x70a6e74f0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x70a7f4600; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x7096c7240; name='Apple Development: Nick Kelly (ABRZ5S85A3)', hash='BCD7E23D71479E15A9DFC3971644E9E814E70BDE', serialNumber='4DF3738AA1B421F6372BD0BEF442F3E7', certificateKinds='(
+2026-05-07 08:56:59 +0000 [MT] Writing entitlements for <IDEDistributionItem: 0xae1864840; bundleID='Hoddy.FlipTheScript', path='<DVTFilePath:0xae26d74f0:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xae18648a0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xae267eac0; name='Apple Development: Nick Kelly (ABRZ5S85A3)', hash='BCD7E23D71479E15A9DFC3971644E9E814E70BDE', serialNumber='4DF3738AA1B421F6372BD0BEF442F3E7', certificateKinds='(
     "1.2.840.113635.100.6.1.12",
     "1.2.840.113635.100.6.1.2"
 ), issueDate='2026-05-05 19:18:48 +0000''>', entitlements='{
@@ -396,45 +396,45 @@
     "com.apple.security.files.downloads.read-write" = 1;
     "com.apple.security.files.user-selected.read-write" = 1;
     "com.apple.security.network.client" = 1;
-}', teamID='CA889WK9CJ', identifier='Hoddy.FlipTheScript', executablePath='<DVTFilePath:0x70a765080:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/MacOS/FlipTheScript'>', hardenedRuntime='1'>'> to: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/entitlements~~~A4QXib
-2026-05-05 21:11:23 +0000 [MT] invoking codesign: <NSConcreteTask: 0x709486a80; launchPath='/usr/bin/codesign', arguments='(
+}', teamID='CA889WK9CJ', identifier='Hoddy.FlipTheScript', executablePath='<DVTFilePath:0xae2759200:'/Users/nickkelly/Documents/FlipTheScript/build/FlipTheScript.xcarchive/Products/Applications/FlipTheScript.app/Contents/MacOS/FlipTheScript'>', hardenedRuntime='1'>'> to: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/entitlements~~~InKZCV
+2026-05-07 08:56:59 +0000 [MT] invoking codesign: <NSConcreteTask: 0xae2ca8910; launchPath='/usr/bin/codesign', arguments='(
     "-f",
     "-s",
     58455BEA430B2DE4126E936ACEA8F0E7A7BE3B3C,
     "--entitlements",
-    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/entitlements~~~A4QXib",
+    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/entitlements~~~InKZCV",
     "--requirements",
     "=designated => anchor apple generic  and identifier \"$self.identifier\" and ((cert leaf[field.1.2.840.113635.100.6.1.9] exists) or ( certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists  and certificate leaf[subject.OU] = \"CA889WK9CJ\" ))",
     "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
     "--generate-entitlement-der",
     "--strip-disallowed-xattrs",
     "-vvv",
-    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app"
+    "/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app"
 )'>
-2026-05-05 21:11:24 +0000 [MT] codesign output: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app: replacing existing signature
-/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app: signed app bundle with Mach-O universal (x86_64 arm64) [Hoddy.FlipTheScript]
-2026-05-05 21:11:24 +0000 [MT] Processing step: IDEDistributionZipODRItemStep
-2026-05-05 21:11:24 +0000 [MT] Skipping step: IDEDistributionZipODRItemStep because it said so
-2026-05-05 21:11:24 +0000 [MT] Skipping step: IDEDistributionZipODRItemStep because it said so
-2026-05-05 21:11:24 +0000 [MT] Skipping step: IDEDistributionZipODRItemStep because it said so
-2026-05-05 21:11:24 +0000 [MT] Skipping step: IDEDistributionZipODRItemStep because it said so
-2026-05-05 21:11:24 +0000 [MT] Skipping step: IDEDistributionZipODRItemStep because it said so
-2026-05-05 21:11:24 +0000 [MT] Skipping step: IDEDistributionZipODRItemStep because it said so
-2026-05-05 21:11:24 +0000 [MT] Processing step: IDEDistributionSkipPackagingStep
-2026-05-05 21:11:24 +0000 [MT] Processing step: IDEDistributionAppStoreInformationStep
-2026-05-05 21:11:24 +0000 [MT] Skipping step: IDEDistributionAppStoreInformationStep because it said so
-2026-05-05 21:11:24 +0000 [MT] Processing step: IDEDistributionGenerateProcessedDistributionItems
-2026-05-05 21:11:24 +0000 [MT] IDEDistributionItem init <DVTFilePath:0x70a7f7480:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc'>
-2026-05-05 21:11:24 +0000 [MT] [OPTIONAL] Didn't find embedded provisioning profile for <DVTFilePath:0x70a7f7480:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc'>: Error Domain=NSCocoaErrorDomain Code=4 "No file at <DVTFilePath:0x709739490:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/embedded.provisionprofile'>" UserInfo={NSLocalizedDescription=No file at <DVTFilePath:0x709739490:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/embedded.provisionprofile'>}
-2026-05-05 21:11:24 +0000 [MT] IDEDistributionItem init <DVTFilePath:0x70a7f73c0:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc'>
-2026-05-05 21:11:24 +0000 [MT] [OPTIONAL] Didn't find embedded provisioning profile for <DVTFilePath:0x70a7f73c0:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc'>: Error Domain=NSCocoaErrorDomain Code=4 "No file at <DVTFilePath:0x709739c00:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/embedded.provisionprofile'>" UserInfo={NSLocalizedDescription=No file at <DVTFilePath:0x709739c00:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/embedded.provisionprofile'>}
-2026-05-05 21:11:24 +0000 [MT] IDEDistributionItem init <DVTFilePath:0x7097b0600:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>
-2026-05-05 21:11:24 +0000 [MT] [OPTIONAL] Didn't find info dictionary for <DVTFilePath:0x7097b0600:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>: Error Domain=DVTFoundationNSBundleAdditionsErrorDomain Code=1 "Couldn't load Info dictionary for <DVTFilePath:0x7097b0600:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>" UserInfo={NSLocalizedDescription=Couldn't load Info dictionary for <DVTFilePath:0x7097b0600:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>}
-2026-05-05 21:11:24 +0000 [MT] [OPTIONAL] Can't have a profile, not a bundle at <DVTFilePath:0x7097b0600:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>
-2026-05-05 21:11:24 +0000 [MT] IDEDistributionItem init <DVTFilePath:0x70a7f7540:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app'>
-2026-05-05 21:11:24 +0000 [MT] [OPTIONAL] Didn't find embedded provisioning profile for <DVTFilePath:0x70a7f7540:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app'>: Error Domain=NSCocoaErrorDomain Code=4 "No file at <DVTFilePath:0x709739650:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/embedded.provisionprofile'>" UserInfo={NSLocalizedDescription=No file at <DVTFilePath:0x709739650:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/embedded.provisionprofile'>}
-2026-05-05 21:11:24 +0000 [MT] IDEDistributionItem init <DVTFilePath:0x70a7f7120:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B'>
-2026-05-05 21:11:24 +0000 [MT] IDEDistributionItem init <DVTFilePath:0x709739570:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app'>
-2026-05-05 21:11:24 +0000 [MT] [OPTIONAL] Didn't find embedded provisioning profile for <DVTFilePath:0x709739570:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app'>: Error Domain=NSCocoaErrorDomain Code=4 "No file at <DVTFilePath:0x7097392d0:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/embedded.provisionprofile'>" UserInfo={NSLocalizedDescription=No file at <DVTFilePath:0x7097392d0:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~r561vH/Root/Applications/FlipTheScript.app/Contents/embedded.provisionprofile'>}
-2026-05-05 21:11:24 +0000 [MT] Processing step: IDEDistributionCreateManifestStep
-2026-05-05 21:11:24 +0000 [MT] Skipping step: IDEDistributionCreateManifestStep because it said so
+2026-05-07 08:57:00 +0000 [MT] codesign output: /var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app: replacing existing signature
+/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app: signed app bundle with Mach-O universal (x86_64 arm64) [Hoddy.FlipTheScript]
+2026-05-07 08:57:00 +0000 [MT] Processing step: IDEDistributionZipODRItemStep
+2026-05-07 08:57:00 +0000 [MT] Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-05-07 08:57:00 +0000 [MT] Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-05-07 08:57:00 +0000 [MT] Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-05-07 08:57:00 +0000 [MT] Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-05-07 08:57:00 +0000 [MT] Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-05-07 08:57:00 +0000 [MT] Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-05-07 08:57:00 +0000 [MT] Processing step: IDEDistributionSkipPackagingStep
+2026-05-07 08:57:00 +0000 [MT] Processing step: IDEDistributionAppStoreInformationStep
+2026-05-07 08:57:00 +0000 [MT] Skipping step: IDEDistributionAppStoreInformationStep because it said so
+2026-05-07 08:57:00 +0000 [MT] Processing step: IDEDistributionGenerateProcessedDistributionItems
+2026-05-07 08:57:00 +0000 [MT] IDEDistributionItem init <DVTFilePath:0xae1ac04e0:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app'>
+2026-05-07 08:57:00 +0000 [MT] [OPTIONAL] Didn't find embedded provisioning profile for <DVTFilePath:0xae1ac04e0:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app'>: Error Domain=NSCocoaErrorDomain Code=4 "No file at <DVTFilePath:0xae1af4fc0:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/embedded.provisionprofile'>" UserInfo={NSLocalizedDescription=No file at <DVTFilePath:0xae1af4fc0:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app/Contents/embedded.provisionprofile'>}
+2026-05-07 08:57:00 +0000 [MT] IDEDistributionItem init <DVTFilePath:0xae1ac0480:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc'>
+2026-05-07 08:57:00 +0000 [MT] [OPTIONAL] Didn't find embedded provisioning profile for <DVTFilePath:0xae1ac0480:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc'>: Error Domain=NSCocoaErrorDomain Code=4 "No file at <DVTFilePath:0xae1af4bd0:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/embedded.provisionprofile'>" UserInfo={NSLocalizedDescription=No file at <DVTFilePath:0xae1af4bd0:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc/Contents/embedded.provisionprofile'>}
+2026-05-07 08:57:00 +0000 [MT] IDEDistributionItem init <DVTFilePath:0xae1ac1680:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>
+2026-05-07 08:57:00 +0000 [MT] [OPTIONAL] Didn't find info dictionary for <DVTFilePath:0xae1ac1680:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>: Error Domain=DVTFoundationNSBundleAdditionsErrorDomain Code=1 "Couldn't load Info dictionary for <DVTFilePath:0xae1ac1680:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>" UserInfo={NSLocalizedDescription=Couldn't load Info dictionary for <DVTFilePath:0xae1ac1680:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>}
+2026-05-07 08:57:00 +0000 [MT] [OPTIONAL] Can't have a profile, not a bundle at <DVTFilePath:0xae1ac1680:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate'>
+2026-05-07 08:57:00 +0000 [MT] IDEDistributionItem init <DVTFilePath:0xae1ac0420:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc'>
+2026-05-07 08:57:00 +0000 [MT] [OPTIONAL] Didn't find embedded provisioning profile for <DVTFilePath:0xae1ac0420:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc'>: Error Domain=NSCocoaErrorDomain Code=4 "No file at <DVTFilePath:0xae1af5650:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/embedded.provisionprofile'>" UserInfo={NSLocalizedDescription=No file at <DVTFilePath:0xae1af5650:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc/Contents/embedded.provisionprofile'>}
+2026-05-07 08:57:00 +0000 [MT] IDEDistributionItem init <DVTFilePath:0xae1ac0000:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/Frameworks/Sparkle.framework/Versions/B'>
+2026-05-07 08:57:00 +0000 [MT] IDEDistributionItem init <DVTFilePath:0xae1af4230:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app'>
+2026-05-07 08:57:00 +0000 [MT] [OPTIONAL] Didn't find embedded provisioning profile for <DVTFilePath:0xae1af4230:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app'>: Error Domain=NSCocoaErrorDomain Code=4 "No file at <DVTFilePath:0xae1af47e0:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/embedded.provisionprofile'>" UserInfo={NSLocalizedDescription=No file at <DVTFilePath:0xae1af47e0:'/var/folders/wk/m5jvpdmd7gl1dkqdpf7ln3mr0000gn/T/XcodeDistPipeline.~~~N8gaFz/Root/Applications/FlipTheScript.app/Contents/embedded.provisionprofile'>}
+2026-05-07 08:57:00 +0000 [MT] Processing step: IDEDistributionCreateManifestStep
+2026-05-07 08:57:00 +0000 [MT] Skipping step: IDEDistributionCreateManifestStep because it said so
