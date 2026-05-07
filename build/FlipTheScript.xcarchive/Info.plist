@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ApplicationProperties</key>
+	<dict>
+		<key>ApplicationPath</key>
+		<string>Applications/FlipTheScript.app</string>
+		<key>Architectures</key>
+		<array>
+			<string>x86_64</string>
+			<string>arm64</string>
+		</array>
+		<key>CFBundleIdentifier</key>
+		<string>Hoddy.FlipTheScript</string>
+		<key>CFBundleShortVersionString</key>
+		<string>1.2</string>
+		<key>CFBundleVersion</key>
+		<string>3</string>
+		<key>SigningIdentity</key>
+		<string>Apple Development: Nick Kelly (ABRZ5S85A3)</string>
+		<key>Team</key>
+		<string>CA889WK9CJ</string>
+	</dict>
+	<key>ArchiveVersion</key>
+	<integer>2</integer>
+	<key>CreationDate</key>
+	<date>2026-05-05T21:10:57Z</date>
+	<key>Name</key>
+	<string>FlipTheScript</string>
+	<key>SchemeName</key>
+	<string>FlipTheScript</string>
+</dict>
+</plist>

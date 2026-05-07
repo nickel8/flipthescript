@@ -1,66 +1,70 @@
-//
-//  ContentView.swift
-//  FlipTheScript
-//
-//  Created by Nick Kelly on 30/04/2026.
-//
-
 import SwiftUI
-import SwiftData
+import CoreData
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @State private var selectedProduction: Production?
+    @State private var selectedScene: ScriptScene?
 
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+        LicenseGate {
+            VStack(spacing: 0) {
+                NavigationSplitView {
+                    ProductionListView(
+                        selectedProduction: $selectedProduction,
+                        selectedScene: $selectedScene
+                    )
+                } content: {
+                    if let production = selectedProduction {
+                        SceneListView(
+                            production: production,
+                            selectedScene: $selectedScene
+                        )
+                    } else {
+                        ContentUnavailableView(
+                            "No Production Selected",
+                            systemImage: "film",
+                            description: Text("Create or select a production from the sidebar.")
+                        )
+                    }
+                } detail: {
+                    if let scene = selectedScene {
+                        SceneSplitView(scene: scene)
+                    } else {
+                        ContentUnavailableView(
+                            "No Scene Selected",
+                            systemImage: "doc.text",
+                            description: Text("Select a scene to begin the breakdown.")
+                        )
                     }
                 }
-                .onDelete(perform: deleteItems)
-            }
-#if os(macOS)
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-#endif
-            .toolbar {
-#if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-#endif
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-            }
-        } detail: {
-            Text("Select an item")
-        }
-    }
+                .navigationSplitViewStyle(.balanced)
 
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
+                TrialBanner()
             }
         }
     }
 }
 
-#Preview {
-    ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+// MARK: - Split detail: PDF left, breakdown right
+
+struct SceneSplitView: View {
+    let scene: ScriptScene
+
+    var body: some View {
+        #if os(macOS)
+        HSplitView {
+            // Left — script PDF scrolled to this scene's page
+            if let pdfData = scene.script?.pdfData {
+                PDFKitView(data: pdfData, page: Int(scene.pageStart))
+                    .frame(minWidth: 300)
+            }
+
+            // Right — breakdown form
+            SceneBreakdownView(scene: scene)
+                .frame(minWidth: 320)
+        }
+        #else
+        SceneBreakdownView(scene: scene)
+        #endif
+    }
 }
