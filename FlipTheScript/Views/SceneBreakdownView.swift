@@ -4,38 +4,75 @@ import CoreData
 struct SceneBreakdownView: View {
     @Environment(\.managedObjectContext) private var context
     @ObservedObject var scene: ScriptScene
-
-    private var sheet: BreakdownSheet {
-        if let existing = scene.breakdownSheet { return existing }
-        let new = BreakdownSheet(context: context)
-        scene.breakdownSheet = new
-        PersistenceController.shared.save()
-        return new
-    }
+    @State private var sheet: BreakdownSheet? = nil
+    @State private var showingElementPicker = false
+    @State private var pickerCategory: ElementCategory = .characters
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                sceneHeader
-                Divider()
-                BreakdownBody(sheet: sheet, scene: scene)
-            }
-        }
-        .navigationTitle("Sc. \(scene.sceneNumber)")
-        #if os(macOS)
-        .navigationSubtitle(scene.slugLine)
-        #endif
-        .toolbar {
-            if scene.revisionStatus == .modified {
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Mark Reviewed") {
-                        sheet.isReviewed = true
-                        scene.revisionStatus = .unchanged
-                        PersistenceController.shared.save()
+        mainContent
+            .onAppear { ensureSheet() }
+            .navigationTitle(showingElementPicker ? "Add Element" : "Sc. \(scene.sceneNumber)")
+            #if os(macOS)
+            .navigationSubtitle(showingElementPicker ? "" : scene.slugLine)
+            #endif
+            .toolbar { toolbarContent }
+    }
+
+    @ViewBuilder
+    private var mainContent: some View {
+        if showingElementPicker, let sheet, let production = scene.script?.production {
+            ElementPickerView(
+                production: production,
+                breakdownSheet: sheet,
+                initialCategory: pickerCategory,
+                onDone: { showingElementPicker = false }
+            )
+            .environment(\.managedObjectContext, context)
+        } else {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    sceneHeader
+                    Divider()
+                    if let sheet {
+                        BreakdownBody(sheet: sheet, scene: scene) { category in
+                            pickerCategory = category
+                            showingElementPicker = true
+                        }
                     }
-                    .tint(.orange)
                 }
             }
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        if showingElementPicker {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Done") { showingElementPicker = false }
+            }
+        } else if scene.revisionStatus == .modified {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Mark Reviewed") {
+                    sheet?.isReviewed = true
+                    scene.revisionStatus = .unchanged
+                    PersistenceController.shared.save()
+                }
+                .tint(.orange)
+            }
+        }
+    }
+
+    // MARK: - Sheet initialisation
+
+    private func ensureSheet() {
+        guard sheet == nil else { return }
+        if let existing = scene.breakdownSheet {
+            sheet = existing
+        } else {
+            let new = BreakdownSheet(context: context)
+            scene.breakdownSheet = new
+            PersistenceController.shared.save()
+            sheet = new
         }
     }
 
@@ -93,9 +130,8 @@ struct SceneBreakdownView: View {
 private struct BreakdownBody: View {
     @ObservedObject var sheet: BreakdownSheet
     let scene: ScriptScene
+    let onAddElement: (ElementCategory) -> Void
     @Environment(\.managedObjectContext) private var context
-    @State private var showingElementPicker = false
-    @State private var pickerCategory: ElementCategory = .props
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -104,17 +140,6 @@ private struct BreakdownBody: View {
             elementsSection
             Divider()
             notesSection
-        }
-        .popover(isPresented: $showingElementPicker) {
-            if let production = scene.script?.production {
-                ElementPickerView(
-                    production: production,
-                    breakdownSheet: sheet,
-                    initialCategory: pickerCategory
-                )
-                .environment(\.managedObjectContext, context)
-                .frame(minWidth: 400, minHeight: 500)
-            }
         }
     }
 
@@ -168,8 +193,7 @@ private struct BreakdownBody: View {
                 Menu {
                     ForEach(ElementCategory.allCases) { cat in
                         Button {
-                            pickerCategory = cat
-                            showingElementPicker = true
+                            onAddElement(cat)
                         } label: {
                             Label(cat.rawValue, systemImage: cat.icon)
                         }
@@ -246,8 +270,7 @@ private struct BreakdownBody: View {
                         .foregroundStyle(category.color)
                     Spacer()
                     Button {
-                        pickerCategory = category
-                        showingElementPicker = true
+                        onAddElement(category)
                     } label: {
                         Image(systemName: "plus")
                             .font(.caption)

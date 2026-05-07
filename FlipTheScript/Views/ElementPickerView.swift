@@ -3,11 +3,11 @@ import CoreData
 
 struct ElementPickerView: View {
     @Environment(\.managedObjectContext) private var context
-    @Environment(\.dismiss) private var dismiss
 
     @ObservedObject var production: Production
     @ObservedObject var breakdownSheet: BreakdownSheet
     var initialCategory: ElementCategory
+    var onDone: () -> Void = {}
 
     @State private var selectedCategory: ElementCategory
     @State private var searchText = ""
@@ -18,10 +18,11 @@ struct ElementPickerView: View {
     @FocusState private var newFieldFocused: Bool
     @FocusState private var renameFieldFocused: Bool
 
-    init(production: Production, breakdownSheet: BreakdownSheet, initialCategory: ElementCategory) {
+    init(production: Production, breakdownSheet: BreakdownSheet, initialCategory: ElementCategory, onDone: @escaping () -> Void = {}) {
         _production = ObservedObject(wrappedValue: production)
         _breakdownSheet = ObservedObject(wrappedValue: breakdownSheet)
         self.initialCategory = initialCategory
+        self.onDone = onDone
         _selectedCategory = State(initialValue: initialCategory)
     }
 
@@ -37,8 +38,7 @@ struct ElementPickerView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
+        VStack(spacing: 0) {
                 // Category selector
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
@@ -57,10 +57,21 @@ struct ElementPickerView: View {
                 }
                 .background(.bar)
 
+                // Search field (inline — avoids NSToolbar duplicate-identifier crash
+                // that occurs with .searchable inside a popover on macOS)
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+                    TextField("Search \(selectedCategory.rawValue.lowercased())…", text: $searchText)
+                        .textFieldStyle(.plain)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color(.textBackgroundColor).opacity(0.6))
+
                 Divider()
 
                 List {
-                    // Existing elements
                     ForEach(filteredElements) { element in
                         let added = alreadyAdded.contains(element.objectID)
                         if renamingElement?.objectID == element.objectID {
@@ -135,26 +146,14 @@ struct ElementPickerView: View {
                         .buttonStyle(.plain)
                     }
                 }
-                .searchable(text: $searchText, prompt: "Search \(selectedCategory.rawValue.lowercased())…")
-            }
-            .navigationTitle("Add Element")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        if showingNewField && !newElementName.isEmpty {
-                            createAndAdd()
-                        }
-                        dismiss()
-                    }
-                }
-            }
         }
-        #if os(macOS)
-        .frame(minWidth: 400, minHeight: 500)
-        #endif
+    }
+
+    func commitPendingAndDone() {
+        if showingNewField && !newElementName.isEmpty {
+            createAndAdd()
+        }
+        onDone()
     }
 
     private func toggle(element: Element) {

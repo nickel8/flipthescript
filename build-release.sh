@@ -148,10 +148,13 @@ ditto -x -k "$ZIP_PATH" "$STAPLE_DIR"
 xcrun stapler staple "$STAPLE_DIR/FlipTheScript.app"
 xcrun stapler validate "$STAPLE_DIR/FlipTheScript.app" && echo "Staple: OK"
 
-# Recreate zip from stapled app
+# Recreate zip from stapled app.
+# --norsrc --noextattr: omit resource forks and extended attributes from the zip
+# so Archive Utility doesn't create ._AppleDouble files on extraction, which
+# would appear as unsealed files and break Gatekeeper verification.
 rm "$ZIP_PATH"
 cd "$STAPLE_DIR"
-ditto -c -k --keepParent "FlipTheScript.app" "$ZIP_PATH"
+ditto -c -k --keepParent --norsrc --noextattr "FlipTheScript.app" "$ZIP_PATH"
 cd - > /dev/null
 echo "Stapled zip: $ZIP_PATH"
 
@@ -159,7 +162,10 @@ echo "Stapled zip: $ZIP_PATH"
 
 echo ""
 echo "── Generating Sparkle EdDSA signature ──"
-SIGNATURE=$("$SIGN_UPDATE" "$ZIP_PATH")
+SIGN_OUTPUT=$("$SIGN_UPDATE" "$ZIP_PATH")
+# sign_update outputs: sparkle:edSignature="..." length="..."
+# Extract just the base64 signature value
+SIGNATURE=$(echo "$SIGN_OUTPUT" | grep -o 'sparkle:edSignature="[^"]*"' | cut -d'"' -f2)
 FILESIZE=$(stat -f%z "$ZIP_PATH")
 PUBDATE=$(date -R)
 
@@ -174,8 +180,9 @@ cat <<APPCAST
     <pubDate>${PUBDATE}</pubDate>
     <sparkle:version>${BUILD}</sparkle:version>
     <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
+    <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
     <enclosure
-        url="https://github.com/nkelly-xyz/flip-the-script/releases/download/v${VERSION}/${ZIP_NAME}"
+        url="https://github.com/nickel8/flipthescript/releases/download/v${VERSION}/${ZIP_NAME}"
         sparkle:edSignature="${SIGNATURE}"
         length="${FILESIZE}"
         type="application/octet-stream"
