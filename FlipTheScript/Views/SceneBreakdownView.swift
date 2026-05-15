@@ -11,6 +11,11 @@ struct SceneBreakdownView: View {
     var body: some View {
         mainContent
             .onAppear { ensureSheet() }
+            .onChange(of: scene) { _, _ in
+                sheet = nil
+                showingElementPicker = false
+                ensureSheet()
+            }
             .navigationTitle(showingElementPicker ? "Add Element" : "Sc. \(scene.sceneNumber)")
             #if os(macOS)
             .navigationSubtitle(showingElementPicker ? "" : scene.slugLine)
@@ -89,9 +94,22 @@ struct SceneBreakdownView: View {
                 Text(scene.slugLine)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                Text("Page \(scene.pageStart)")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
+                HStack(spacing: 10) {
+                    Text("Page \(scene.pageStart)")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                    if scene.shootDay > 0 {
+                        HStack(spacing: 4) {
+                            Image(systemName: "calendar")
+                                .font(.caption)
+                            Text("Shoot Day \(scene.shootDay)")
+                            Text("·")
+                            Text("Shot \(scene.shootOrder)")
+                        }
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.teal)
+                    }
+                }
             }
             Spacer()
             Image(systemName: scene.isComplete ? "checkmark.circle.fill" : "circle")
@@ -129,9 +147,12 @@ struct SceneBreakdownView: View {
 
 private struct BreakdownBody: View {
     @ObservedObject var sheet: BreakdownSheet
-    let scene: ScriptScene
+    @ObservedObject var scene: ScriptScene
     let onAddElement: (ElementCategory) -> Void
     @Environment(\.managedObjectContext) private var context
+
+    @State private var newTodoTitle = ""
+    @FocusState private var todoFieldFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -140,6 +161,8 @@ private struct BreakdownBody: View {
             elementsSection
             Divider()
             notesSection
+            Divider()
+            todoSection
         }
     }
 
@@ -254,6 +277,62 @@ private struct BreakdownBody: View {
             }
         }
         .padding(20)
+    }
+
+    // MARK: - To do
+
+    private var todoSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("To Do", systemImage: "checkmark.circle")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+
+            if !scene.todoItems.isEmpty {
+                VStack(spacing: 0) {
+                    ForEach(scene.todoItems, id: \.objectID) { item in
+                        Button {
+                            item.isDone.toggle()
+                            PersistenceController.shared.save()
+                        } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: item.isDone ? "checkmark.circle.fill" : "circle")
+                                    .foregroundStyle(item.isDone ? Color.accentColor : Color.secondary)
+                                Text(item.title)
+                                    .foregroundStyle(item.isDone ? Color.secondary : Color.primary)
+                                    .strikethrough(item.isDone)
+                                Spacer()
+                            }
+                            .padding(.vertical, 7)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .animation(.easeOut(duration: 0.15), value: item.isDone)
+                    }
+                }
+            }
+
+            HStack(spacing: 8) {
+                Image(systemName: "plus.circle")
+                    .foregroundStyle(Color.accentColor)
+                TextField("Add a task for this scene…", text: $newTodoTitle)
+                    .focused($todoFieldFocused)
+                    .onSubmit { addTodo() }
+            }
+        }
+        .padding(20)
+    }
+
+    private func addTodo() {
+        let trimmed = newTodoTitle.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+        guard let production = scene.script?.production else { return }
+        let item = TodoItem.create(title: trimmed, in: context)
+        production.addTodoItem(item)
+        scene.addTodoItem(item)
+        PersistenceController.shared.save()
+        newTodoTitle = ""
+        todoFieldFocused = true
     }
 
     @ViewBuilder

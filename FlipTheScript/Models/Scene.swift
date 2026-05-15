@@ -22,8 +22,23 @@ public class ScriptScene: ObservableManagedObject {
     @NSManaged public var pageStart:      Int32
     @NSManaged public var rawText:        String
     @NSManaged private var revisionStatusRaw: String
+    /// 0 = not yet scheduled
+    @NSManaged public var shootDay:       Int32
+    /// Overall position in the shooting schedule (1 = first scene shot). 0 = not scheduled.
+    @NSManaged public var shootOrder:     Int32
     @NSManaged public var script:         Script?
     @NSManaged public var breakdownSheet: BreakdownSheet?
+    @NSManaged private var _todoItems:    NSSet?
+
+    var todoItems: [TodoItem] {
+        Array((_todoItems as? Set<TodoItem>) ?? [])
+            .sorted { $0.createdAt < $1.createdAt }
+    }
+
+    func addTodoItem(_ item: TodoItem) {
+        mutableSetValue(forKey: "_todoItems").add(item)
+        item.scene = self
+    }
 
     // MARK: - Enum wrapper
 
