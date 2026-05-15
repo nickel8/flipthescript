@@ -2,7 +2,7 @@
 # build-release.sh
 #
 # Full release pipeline for FlipTheScript:
-#   archive → export → notarize → staple → zip → sign for Sparkle → print appcast snippet
+#   archive → export → notarize → staple → zip → GitHub release instructions
 #
 # Prerequisites (one-time setup):
 #   1. Xcode → Settings → Accounts → Manage Certificates → + → Developer ID Application
@@ -19,7 +19,6 @@
 #
 # Output:
 #   build/FlipTheScript-<version>.zip   — ready to upload to GitHub releases
-#   Appcast entry printed to terminal   — copy into web/public/appcast.xml
 
 set -euo pipefail
 
@@ -30,10 +29,6 @@ PROJECT="FlipTheScript.xcodeproj"
 BUNDLE_ID="Hoddy.FlipTheScript"
 NOTARYTOOL_PROFILE="FlipTheScript"   # name used in store-credentials above
 BUILD_DIR="$(pwd)/build"
-
-# Sparkle sign_update tool — search DerivedData for it
-SIGN_UPDATE=$(find ~/Library/Developer/Xcode/DerivedData/FlipTheScript-* \
-    -path "*/artifacts/sparkle/Sparkle/bin/sign_update" 2>/dev/null | head -1)
 
 # ── Preflight ─────────────────────────────────────────────────────────────────
 
@@ -48,12 +43,6 @@ fi
 if ! xcrun notarytool history --keychain-profile "$NOTARYTOOL_PROFILE" &>/dev/null; then
     echo "ERROR: Notarization credentials not stored."
     echo "       Run: xcrun notarytool store-credentials \"$NOTARYTOOL_PROFILE\" --key ~/Downloads/AuthKey_XXXXX.p8 --key-id XXXXX --issuer <uuid>"
-    exit 1
-fi
-
-if [ ! -f "$SIGN_UPDATE" ]; then
-    echo "ERROR: sign_update not found at $SIGN_UPDATE"
-    echo "       Build the project in Xcode once to resolve SPM packages."
     exit 1
 fi
 
@@ -158,42 +147,17 @@ ditto -c -k --keepParent --norsrc --noextattr "FlipTheScript.app" "$ZIP_PATH"
 cd - > /dev/null
 echo "Stapled zip: $ZIP_PATH"
 
-# ── Sparkle signature ─────────────────────────────────────────────────────────
-
-echo ""
-echo "── Generating Sparkle EdDSA signature ──"
-SIGN_OUTPUT=$("$SIGN_UPDATE" "$ZIP_PATH")
-# sign_update outputs: sparkle:edSignature="..." length="..."
-# Extract just the base64 signature value
-SIGNATURE=$(echo "$SIGN_OUTPUT" | grep -o 'sparkle:edSignature="[^"]*"' | cut -d'"' -f2)
-FILESIZE=$(stat -f%z "$ZIP_PATH")
-PUBDATE=$(date -R)
-
-cat <<APPCAST
+cat <<DONE
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- Add this <item> to web/public/appcast.xml:
+ FlipTheScript v${VERSION} (build ${BUILD}) — DONE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-<item>
-    <title>Version ${VERSION}</title>
-    <pubDate>${PUBDATE}</pubDate>
-    <sparkle:version>${BUILD}</sparkle:version>
-    <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
-    <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-    <enclosure
-        url="https://github.com/nickel8/flipthescript/releases/download/v${VERSION}/${ZIP_NAME}"
-        sparkle:edSignature="${SIGNATURE}"
-        length="${FILESIZE}"
-        type="application/octet-stream"
-    />
-</item>
+ Zip: $ZIP_PATH
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  Next steps:
-   1. Upload $ZIP_PATH to GitHub Releases as v${VERSION}
-   2. Paste the <item> above into web/public/appcast.xml
-   3. git commit + push the appcast change
+   1. Create a GitHub release tagged v${VERSION}
+   2. Upload $ZIP_NAME as the release asset
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-APPCAST
+DONE
