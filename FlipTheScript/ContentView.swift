@@ -49,6 +49,11 @@ struct ContentView: View {
                             searchText: $searchText,
                             activeSearch: $activeSearch
                         )
+                        // Force view recreation when production changes so macOS's
+                        // NavigationSplitView title-tracking state is fully torn down
+                        // before the new production appears, preventing KVO write-back
+                        // that renames the old production to the new production's name.
+                        .id(production.objectID)
                     } else {
                         ContentUnavailableView(
                             "No Production Selected",
@@ -85,6 +90,9 @@ struct ContentView: View {
                             },
                             onImportSchedule: {
                                 showingScheduleImport = true
+                            },
+                            onEpisodesEnabled: { episode in
+                                selectedEpisode = episode
                             }
                         )
                     }
@@ -117,11 +125,20 @@ struct ContentView: View {
                 }
                 .sheet(isPresented: $showingNewProduction) {
                     NewProductionSheet(name: $newProductionName) {
+                        let previous = selectedProduction
+                        let previousName = selectedProduction?.name
                         let p = Production.create(name: newProductionName, in: context)
                         PersistenceController.shared.save()
                         selectedProduction = p
                         newProductionName = ""
                         showingNewProduction = false
+                        // macOS NavigationSplitView writes the new window title back via KVO
+                        // to the previously-selected production's `name`. Detect and revert.
+                        DispatchQueue.main.async {
+                            if let prod = previous, let name = previousName, prod.name != name {
+                                prod.name = name
+                            }
+                        }
                     } onCancel: {
                         newProductionName = ""
                         showingNewProduction = false
