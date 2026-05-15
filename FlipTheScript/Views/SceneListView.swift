@@ -20,6 +20,9 @@ struct SceneListView: View {
     @StateObject private var license = LicenseManager.shared
     @State private var filterRevised = false
     @State private var sortByShootOrder = false
+    // Local copy of the production name — prevents macOS NavigationSplitView from writing
+    // back through KVO to production.name when the selected production changes.
+    @State private var columnTitle: String = ""
 
     private var effectiveEpisode: Episode? { episode ?? production.defaultEpisode }
     private var effectiveLatestScript: Script? { effectiveEpisode?.latestScript }
@@ -37,12 +40,19 @@ struct SceneListView: View {
                 )
             }
         }
-        .navigationTitle(production.name)
+        .navigationTitle(columnTitle)
         #if os(macOS)
         .navigationSubtitle(episode?.name ?? "")
+        .renameAction { }
         #endif
         .onAppear {
             if activeScript == nil { activeScript = effectiveLatestScript }
+            columnTitle = production.name
+        }
+        .onChange(of: production) { _, newProduction in
+            columnTitle = newProduction.name
+            activeScript = nil
+            selectedScene = nil
         }
         .onChange(of: episode) { _, _ in
             activeScript = nil

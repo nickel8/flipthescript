@@ -9,6 +9,7 @@ struct HomeView: View {
     var onChangeProduction: () -> Void
     var onChangeEpisode: () -> Void = {}
     var onImportSchedule: () -> Void = {}
+    var onEpisodesEnabled: (Episode) -> Void = { _ in }
 
     @State private var showingTodo = false
 
@@ -135,7 +136,7 @@ struct HomeView: View {
                     // ── Production settings ───────────────────────────────────
                     if let production = selectedProduction {
                         Divider()
-                        HasEpisodesToggle(production: production)
+                        HasEpisodesToggle(production: production, onEpisodesEnabled: onEpisodesEnabled)
                             .padding(.top, 4)
                     }
                 }
@@ -177,12 +178,31 @@ private struct EpisodesTile: View {
 
 private struct HasEpisodesToggle: View {
     @ObservedObject var production: Production
+    @Environment(\.managedObjectContext) private var context
+    var onEpisodesEnabled: (Episode) -> Void = { _ in }
 
     var body: some View {
         Toggle("This production has episodes", isOn: Binding(
             get: { production.hasEpisodes },
-            set: { production.hasEpisodes = $0; PersistenceController.shared.save() }
+            set: { newValue in
+                production.hasEpisodes = newValue
+                if newValue { migrateExistingScriptsIfNeeded() }
+                PersistenceController.shared.save()
+            }
         ))
+    }
+
+    /// If scripts were imported before episodes were enabled, move them into a
+    /// new Episode 1 so they remain accessible via the episode picker.
+    private func migrateExistingScriptsIfNeeded() {
+        guard let defaultEp = production.defaultEpisode,
+              !defaultEp.scripts.isEmpty else { return }
+        let ep1 = Episode.create(name: "Episode 1", number: 1, in: context)
+        production.addEpisode(ep1)
+        for script in defaultEp.scripts {
+            ep1.addScript(script)
+        }
+        onEpisodesEnabled(ep1)
     }
 }
 

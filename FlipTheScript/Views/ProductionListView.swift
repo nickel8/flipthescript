@@ -60,11 +60,20 @@ struct ProductionListView: View {
         }
         .sheet(isPresented: $showingNewProduction) {
             NewProductionSheet(name: $newName) {
+                let previous = selectedProduction
+                let previousName = selectedProduction?.name
                 let p = Production.create(name: newName, in: context)
                 PersistenceController.shared.save()
                 selectedProduction = p
                 newName = ""
                 showingNewProduction = false
+                // macOS NavigationSplitView writes the new window title back via KVO
+                // to the previously-selected production's `name`. Detect and revert.
+                DispatchQueue.main.async {
+                    if let prod = previous, let name = previousName, prod.name != name {
+                        prod.name = name
+                    }
+                }
             } onCancel: {
                 newName = ""
                 showingNewProduction = false
@@ -93,13 +102,25 @@ struct ProductionListView: View {
         }
         .sheet(item: $productionPendingDelete) { production in
             DeleteProductionSheet(production: production) {
+                var next: Production? = nil
+                var nextName: String? = nil
                 if selectedProduction?.objectID == production.objectID {
-                    selectedProduction = productions.first(where: { $0.objectID != production.objectID })
+                    next = productions.first(where: { $0.objectID != production.objectID })
+                    nextName = next?.name
+                    selectedProduction = next
                     selectedScene = nil
                 }
                 context.delete(production)
                 PersistenceController.shared.save()
                 productionPendingDelete = nil
+                // Same KVO write-back hazard as production creation: macOS sees the
+                // window title change and writes the old title back to the newly
+                // selected production. Detect and revert.
+                DispatchQueue.main.async {
+                    if let prod = next, let name = nextName, prod.name != name {
+                        prod.name = name
+                    }
+                }
             } onCancel: {
                 productionPendingDelete = nil
             }
