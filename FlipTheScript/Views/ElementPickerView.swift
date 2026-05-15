@@ -71,79 +71,91 @@ struct ElementPickerView: View {
 
                 Divider()
 
-                List {
-                    ForEach(filteredElements) { element in
-                        let added = alreadyAdded.contains(element.objectID)
-                        if renamingElement?.objectID == element.objectID {
-                            // Inline rename field
-                            HStack {
-                                TextField("Name", text: $renameText)
-                                    .focused($renameFieldFocused)
-                                    .onSubmit { commitRename() }
-                                Button("Save") { commitRename() }
-                                    .buttonStyle(.borderedProminent)
-                                    .tint(selectedCategory.color)
-                                    .controlSize(.small)
-                                Button("Cancel") { renamingElement = nil }
-                                    .buttonStyle(.plain)
-                                    .foregroundStyle(.secondary)
-                                    .controlSize(.small)
-                            }
-                        } else {
-                            Button {
-                                toggle(element: element)
-                            } label: {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(filteredElements) { element in
+                            let added = alreadyAdded.contains(element.objectID)
+                            if renamingElement?.objectID == element.objectID {
                                 HStack {
-                                    Text(element.name)
-                                        .foregroundStyle(.primary)
-                                    Spacer()
-                                    if added {
-                                        Image(systemName: "checkmark")
-                                            .foregroundStyle(selectedCategory.color)
-                                            .font(.body.weight(.semibold))
+                                    TextField("Name", text: $renameText)
+                                        .focused($renameFieldFocused)
+                                        .onSubmit { commitRename() }
+                                    Button("Save") { commitRename() }
+                                        .buttonStyle(.borderedProminent)
+                                        .tint(selectedCategory.color)
+                                        .controlSize(.small)
+                                    Button("Cancel") { renamingElement = nil }
+                                        .buttonStyle(.plain)
+                                        .foregroundStyle(.secondary)
+                                        .controlSize(.small)
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                            } else {
+                                Button {
+                                    toggle(element: element)
+                                } label: {
+                                    HStack {
+                                        Text(element.name)
+                                            .foregroundStyle(.primary)
+                                        Spacer()
+                                        if added {
+                                            Image(systemName: "checkmark")
+                                                .foregroundStyle(selectedCategory.color)
+                                                .font(.body.weight(.semibold))
+                                        }
+                                    }
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 10)
+                                    .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                                .contextMenu {
+                                    Button("Rename") {
+                                        renamingElement = element
+                                        renameText = element.name
+                                        renameFieldFocused = true
+                                    }
+                                    Divider()
+                                    Button("Delete from Production", role: .destructive) {
+                                        deleteElement(element)
                                     }
                                 }
+                                Divider().padding(.leading, 16)
+                            }
+                        }
+
+                        // New element inline creation
+                        if showingNewField {
+                            HStack {
+                                TextField("New \(selectedCategory.rawValue.lowercased()) name…", text: $newElementName)
+                                    .focused($newFieldFocused)
+                                    .onSubmit { createAndAdd() }
+                                if !newElementName.isEmpty {
+                                    Button("Add", action: createAndAdd)
+                                        .buttonStyle(.borderedProminent)
+                                        .tint(selectedCategory.color)
+                                        .controlSize(.small)
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                        } else {
+                            Button {
+                                showingNewField = true
+                                newFieldFocused = true
+                            } label: {
+                                Label(
+                                    "New \(selectedCategory.rawValue)…",
+                                    systemImage: "plus.circle.fill"
+                                )
+                                .foregroundStyle(selectedCategory.color)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                                .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
-                            .contextMenu {
-                                Button("Rename") {
-                                    renamingElement = element
-                                    renameText = element.name
-                                    renameFieldFocused = true
-                                }
-                                Divider()
-                                Button("Delete from Production", role: .destructive) {
-                                    deleteElement(element)
-                                }
-                            }
                         }
-                    }
-
-                    // New element inline creation
-                    if showingNewField {
-                        HStack {
-                            TextField("New \(selectedCategory.rawValue.lowercased()) name…", text: $newElementName)
-                                .focused($newFieldFocused)
-                                .onSubmit { createAndAdd() }
-                            if !newElementName.isEmpty {
-                                Button("Add", action: createAndAdd)
-                                    .buttonStyle(.borderedProminent)
-                                    .tint(selectedCategory.color)
-                                    .controlSize(.small)
-                            }
-                        }
-                    } else {
-                        Button {
-                            showingNewField = true
-                            newFieldFocused = true
-                        } label: {
-                            Label(
-                                "New \(selectedCategory.rawValue)…",
-                                systemImage: "plus.circle.fill"
-                            )
-                            .foregroundStyle(selectedCategory.color)
-                        }
-                        .buttonStyle(.plain)
                     }
                 }
         }

@@ -25,6 +25,8 @@ final class PersistenceController {
 
         if inMemory {
             container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
+        } else {
+            PersistenceController.migrateFromContainerIfNeeded()
         }
 
         container.loadPersistentStores { [weak container] desc, error in
@@ -41,6 +43,47 @@ final class PersistenceController {
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
     }
 
+    // MARK: - Data migration chain (runs on first launch after update)
+
+    private static func migrateFromContainerIfNeeded() {
+        let fm = FileManager.default
+        let home = fm.homeDirectoryForCurrentUser
+        guard let appSupport = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else { return }
+        let destBase = appSupport.appendingPathComponent("FlipTheScript/FlipTheScript")
+
+        // Step 1: Hoddy.FlipTheScript sandbox → user Application Support (legacy, pre-sandbox-removal build)
+        let oldContainerBase = home
+            .appendingPathComponent("Library/Containers/Hoddy.FlipTheScript/Data/Library/Application Support/FlipTheScript/FlipTheScript")
+        if fm.fileExists(atPath: oldContainerBase.appendingPathExtension("sqlite").path),
+           !fm.fileExists(atPath: destBase.appendingPathExtension("sqlite").path) {
+            try? fm.createDirectory(at: destBase.deletingLastPathComponent(), withIntermediateDirectories: true)
+            for ext in ["sqlite", "sqlite-wal", "sqlite-shm"] {
+                let src = oldContainerBase.appendingPathExtension(ext)
+                let dst = destBase.appendingPathExtension(ext)
+                if fm.fileExists(atPath: src.path) { try? fm.copyItem(at: src, to: dst) }
+            }
+            print("✅ Migrated from Hoddy.FlipTheScript container to Application Support")
+            return
+        }
+
+        // Step 2: user Application Support → com.hoddytools.FlipTheScript sandbox
+        // Needed when upgrading from the non-sandboxed direct-distribution build.
+        // In a sandboxed app, applicationSupportDirectory points inside the container,
+        // so we construct the unsandboxed path manually.
+        let unsandboxedBase = home
+            .appendingPathComponent("Library/Application Support/FlipTheScript/FlipTheScript")
+        if fm.fileExists(atPath: unsandboxedBase.appendingPathExtension("sqlite").path),
+           !fm.fileExists(atPath: destBase.appendingPathExtension("sqlite").path) {
+            try? fm.createDirectory(at: destBase.deletingLastPathComponent(), withIntermediateDirectories: true)
+            for ext in ["sqlite", "sqlite-wal", "sqlite-shm"] {
+                let src = unsandboxedBase.appendingPathExtension(ext)
+                let dst = destBase.appendingPathExtension(ext)
+                if fm.fileExists(atPath: src.path) { try? fm.copyItem(at: src, to: dst) }
+            }
+            print("✅ Migrated from unsandboxed Application Support to new sandbox container")
+        }
+    }
+
     // MARK: - Save
 
     func save() {
@@ -54,19 +97,26 @@ final class PersistenceController {
     static func makeModel() -> NSManagedObjectModel {
         let model = NSManagedObjectModel()
 
-        let prodE   = makeEntity("Production")
-        let scriptE = makeEntity("Script")
-        let sceneE  = makeEntity("ScriptScene")
-        let bdE     = makeEntity("BreakdownSheet")
-        let elemE   = makeEntity("Element")
-        let seE     = makeEntity("SceneElement")
-        let memberE = makeEntity("TeamMember")
-        let entryE  = makeEntity("ChangeEntry")
+        let prodE    = makeEntity("Production")
+        let episodeE = makeEntity("Episode")
+        let scriptE  = makeEntity("Script")
+        let sceneE   = makeEntity("ScriptScene")
+        let bdE      = makeEntity("BreakdownSheet")
+        let elemE    = makeEntity("Element")
+        let seE      = makeEntity("SceneElement")
+        let memberE  = makeEntity("TeamMember")
+        let entryE   = makeEntity("ChangeEntry")
+        let todoE    = makeEntity("TodoItem")
 
         prodE.properties = [
             str("name"), date("createdAt"),
+            bool("hasEpisodes"),
             optStr("shareEmailsJSON"),
             optStr("adminEmailsJSON"),
+        ]
+
+        episodeE.properties = [
+            str("name"), int32("number"), date("createdAt"), bool("isDefault"),
         ]
 
         scriptE.properties = [
@@ -79,6 +129,7 @@ final class PersistenceController {
             str("sceneNumber"), str("slugLine"), str("intExt"),
             str("location"), str("timeOfDay"), int32("pageStart"),
             str("rawText"), str("revisionStatusRaw", default: "Unchanged"),
+            int32("shootDay"), int32("shootOrder"),
         ]
 
         bdE.properties = [
@@ -106,10 +157,19 @@ final class PersistenceController {
             str("authorName"), date("createdAt"), bool("emailDispatched"),
         ]
 
-        // Production ↔ Script
-        let (p_scripts, s_production) = manyToOne(many: "_scripts", from: prodE, to: scriptE, manyDelete: .cascadeDeleteRule, one: "production", oneDelete: .nullifyDeleteRule)
-        prodE.properties   += [p_scripts]
-        scriptE.properties += [s_production]
+        todoE.properties = [
+            str("title"), bool("isDone"), date("createdAt"),
+        ]
+
+        // Production ↔ Episode
+        let (p_episodes, ep_production) = manyToOne(many: "_episodes", from: prodE, to: episodeE, manyDelete: .cascadeDeleteRule, one: "production", oneDelete: .nullifyDeleteRule)
+        prodE.properties    += [p_episodes]
+        episodeE.properties += [ep_production]
+
+        // Episode ↔ Script
+        let (ep_scripts, s_episode) = manyToOne(many: "_scripts", from: episodeE, to: scriptE, manyDelete: .cascadeDeleteRule, one: "episode", oneDelete: .nullifyDeleteRule)
+        episodeE.properties += [ep_scripts]
+        scriptE.properties  += [s_episode]
 
         // Production ↔ Element
         let (p_elements, e_production) = manyToOne(many: "_elements", from: prodE, to: elemE, manyDelete: .cascadeDeleteRule, one: "production", oneDelete: .nullifyDeleteRule)
@@ -149,7 +209,17 @@ final class PersistenceController {
         elemE.properties += [e_ses]
         seE.properties   += [se_element]
 
-        model.entities = [prodE, scriptE, sceneE, bdE, elemE, seE, memberE, entryE]
+        // Production ↔ TodoItem
+        let (p_todos, t_production) = manyToOne(many: "_todoItems", from: prodE, to: todoE, manyDelete: .cascadeDeleteRule, one: "production", oneDelete: .nullifyDeleteRule)
+        prodE.properties += [p_todos]
+        todoE.properties += [t_production]
+
+        // ScriptScene ↔ TodoItem (optional — nullify so todos survive scene deletion)
+        let (sc_todos, t_scene) = manyToOne(many: "_todoItems", from: sceneE, to: todoE, manyDelete: .nullifyDeleteRule, one: "scene", oneDelete: .nullifyDeleteRule)
+        sceneE.properties += [sc_todos]
+        todoE.properties  += [t_scene]
+
+        model.entities = [prodE, episodeE, scriptE, sceneE, bdE, elemE, seE, memberE, entryE, todoE]
         return model
     }
 

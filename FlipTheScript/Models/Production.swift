@@ -6,6 +6,7 @@ public class Production: ObservableManagedObject {
 
     @NSManaged public var name: String
     @NSManaged public var createdAt: Date
+    @NSManaged public var hasEpisodes: Bool
     @NSManaged private var shareEmailsJSON: String?
     @NSManaged private var adminEmailsJSON: String?
 
@@ -35,16 +36,17 @@ public class Production: ObservableManagedObject {
         }
     }
 
-    // Raw relationship storage (names must match the model relationship names)
-    @NSManaged private var _scripts:    NSSet?
+    // Raw relationship storage
+    @NSManaged private var _episodes:   NSSet?
     @NSManaged private var _elements:   NSSet?
     @NSManaged private var _team:       NSSet?
     @NSManaged private var _changeLog:  NSSet?
+    @NSManaged private var _todoItems:  NSSet?
 
     // MARK: - Typed arrays
 
-    var scripts: [Script] {
-        Array((_scripts as? Set<Script>) ?? [])
+    var episodes: [Episode] {
+        Array((_episodes as? Set<Episode>) ?? [])
     }
 
     var elements: [Element] {
@@ -59,11 +61,33 @@ public class Production: ObservableManagedObject {
         Array((_changeLog as? Set<ChangeEntry>) ?? [])
     }
 
+    var todoItems: [TodoItem] {
+        Array((_todoItems as? Set<TodoItem>) ?? [])
+            .sorted { $0.createdAt < $1.createdAt }
+    }
+
+    // MARK: - Script convenience (flattens across all episodes)
+
+    var scripts: [Script] {
+        episodes.flatMap { $0.scripts }
+    }
+
+    /// The episode that owns scripts for a production without episode structure.
+    var defaultEpisode: Episode? {
+        episodes.first(where: { $0.isDefault }) ?? episodes.first
+    }
+
     // MARK: - Mutation helpers
 
+    func addEpisode(_ episode: Episode) {
+        mutableSetValue(forKey: "_episodes").add(episode)
+        episode.production = self
+    }
+
+    /// Convenience: add a script to the default episode.
     func addScript(_ script: Script) {
-        mutableSetValue(forKey: "_scripts").add(script)
-        script.production = self
+        guard let ep = defaultEpisode else { return }
+        ep.addScript(script)
     }
 
     func addElement(_ element: Element) {
@@ -88,6 +112,11 @@ public class Production: ObservableManagedObject {
 
     func removeTeamMember(_ member: TeamMember) {
         mutableSetValue(forKey: "_team").remove(member)
+    }
+
+    func addTodoItem(_ item: TodoItem) {
+        mutableSetValue(forKey: "_todoItems").add(item)
+        item.production = self
     }
 
     // MARK: - Computed properties
@@ -118,8 +147,12 @@ public class Production: ObservableManagedObject {
     @discardableResult
     static func create(name: String, in context: NSManagedObjectContext) -> Production {
         let p = Production(context: context)
-        p.name = name
-        p.createdAt = Date()
+        p.name        = name
+        p.createdAt   = Date()
+        p.hasEpisodes = false
+        // Every production gets a default episode so scripts always have a home
+        let defaultEp = Episode.create(name: "Default", number: 0, isDefault: true, in: context)
+        p.addEpisode(defaultEp)
         return p
     }
 

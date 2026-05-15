@@ -11,12 +11,16 @@ struct ProductionListView: View {
 
     @Binding var selectedProduction: Production?
     @Binding var selectedScene: ScriptScene?
+    @Binding var homeImportTrigger: Bool
 
     @State private var showingNewProduction = false
     @State private var newName = ""
     @State private var showingImport = false
+    @State private var showingEpisodePicker = false
     @State private var importTarget: Production?
+    @State private var importEpisode: Episode?
     @State private var importError: String?
+    @State private var productionPendingDelete: Production?
 
     var body: some View {
         List(selection: $selectedProduction) {
@@ -25,17 +29,11 @@ struct ProductionListView: View {
                     .tag(production)
                     .contextMenu {
                         Button("Import Script…") {
-                            importTarget = production
-                            showingImport = true
+                            triggerImport(for: production)
                         }
                         Divider()
-                        Button("Delete", role: .destructive) {
-                            if selectedProduction?.objectID == production.objectID {
-                                selectedProduction = nil
-                                selectedScene = nil
-                            }
-                            context.delete(production)
-                            PersistenceController.shared.save()
+                        Button("Delete Production…", role: .destructive) {
+                            productionPendingDelete = production
                         }
                     }
             }
@@ -78,10 +76,12 @@ struct ProductionListView: View {
             allowsMultipleSelection: false
         ) { result in
             guard let production = importTarget else { return }
+            let episode = importEpisode ?? production.defaultEpisode
+            importEpisode = nil
             switch result {
             case .success(let urls):
                 guard let url = urls.first else { return }
-                importPDF(url: url, into: production)
+                importPDF(url: url, into: production, episode: episode)
             case .failure(let error):
                 importError = error.localizedDescription
             }
@@ -91,9 +91,53 @@ struct ProductionListView: View {
         } message: {
             Text(importError ?? "")
         }
+        .sheet(item: $productionPendingDelete) { production in
+            DeleteProductionSheet(production: production) {
+                if selectedProduction?.objectID == production.objectID {
+                    selectedProduction = productions.first(where: { $0.objectID != production.objectID })
+                    selectedScene = nil
+                }
+                context.delete(production)
+                PersistenceController.shared.save()
+                productionPendingDelete = nil
+            } onCancel: {
+                productionPendingDelete = nil
+            }
+            .environment(\.managedObjectContext, context)
+        }
+        .onChange(of: homeImportTrigger) { _, triggered in
+            guard triggered, let production = selectedProduction else { return }
+            homeImportTrigger = false
+            triggerImport(for: production)
+        }
+        .sheet(isPresented: $showingEpisodePicker) {
+            if let production = importTarget {
+                ImportEpisodePickerSheet(
+                    production: production,
+                    onSelect: { episode in
+                        importEpisode = episode
+                        showingEpisodePicker = false
+                        showingImport = true
+                    },
+                    onCancel: {
+                        showingEpisodePicker = false
+                        importTarget = nil
+                    }
+                )
+            }
+        }
     }
 
-    private func importPDF(url: URL, into production: Production) {
+    private func triggerImport(for production: Production) {
+        importTarget = production
+        if production.hasEpisodes {
+            showingEpisodePicker = true
+        } else {
+            showingImport = true
+        }
+    }
+
+    private func importPDF(url: URL, into production: Production, episode: Episode?) {
         guard url.startAccessingSecurityScopedResource() else {
             importError = "Permission denied for this file."
             return
@@ -109,15 +153,16 @@ struct ProductionListView: View {
             return
         }
 
+        let targetEpisode = episode ?? production.defaultEpisode
         let filename = url.deletingPathExtension().lastPathComponent
-        let version = "Draft \(production.scripts.count + 1)"
+        let version = "Draft \((targetEpisode?.scripts.count ?? 0) + 1)"
         let script = Script.create(version: version, filename: filename, pdfData: data, in: context)
-        production.addScript(script)
+        targetEpisode?.addScript(script)
 
         Task {
             let parsedScenes = ScriptParser.parse(pdfData: data)
             await MainActor.run {
-                let previousScript = production.scripts
+                let previousScript = (targetEpisode?.scripts ?? [])
                     .filter { $0.objectID != script.objectID }
                     .max(by: { $0.importedAt < $1.importedAt })
 
@@ -182,6 +227,89 @@ struct ProductionListView: View {
     }
 }
 
+// MARK: - Episode picker (shown before file import for episode-based productions)
+
+struct ImportEpisodePickerSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    @ObservedObject var production: Production
+    let onSelect: (Episode) -> Void
+    let onCancel: () -> Void
+
+    var namedEpisodes: [Episode] {
+        production.episodes
+            .filter { !$0.isDefault }
+            .sorted { $0.number < $1.number }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("Which episode?")
+                    .font(.headline)
+                Spacer()
+                Button("Cancel", action: onCancel)
+            }
+            .padding()
+
+            Divider()
+
+            if namedEpisodes.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "film.stack")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.secondary)
+                    Text("No episodes configured")
+                        .font(.headline)
+                    Text("Add episodes from the Episodes tile first.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding()
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(namedEpisodes, id: \.objectID) { episode in
+                            Button {
+                                onSelect(episode)
+                            } label: {
+                                HStack(spacing: 12) {
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text(episode.name)
+                                            .font(.headline)
+                                            .foregroundStyle(Color.primary)
+                                        if let script = episode.latestScript {
+                                            Text(script.version)
+                                                .font(.caption)
+                                                .foregroundStyle(Color.secondary)
+                                        } else {
+                                            Text("No script imported")
+                                                .font(.caption)
+                                                .foregroundStyle(Color.secondary.opacity(0.6))
+                                        }
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                        .foregroundStyle(Color.secondary)
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            Divider().padding(.leading, 16)
+                        }
+                    }
+                }
+            }
+        }
+        .frame(minWidth: 340, minHeight: 380)
+    }
+}
+
 // MARK: - Production Row
 
 struct ProductionRow: View {
@@ -195,7 +323,7 @@ struct ProductionRow: View {
                 HStack(spacing: 6) {
                     Text(script.version)
                         .font(.caption.weight(.medium))
-                        .foregroundStyle(.primary.opacity(0.8))
+                        .foregroundStyle(Color.black.opacity(0.75))
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(script.revisionColor)
@@ -212,6 +340,124 @@ struct ProductionRow: View {
             }
         }
         .padding(.vertical, 2)
+    }
+}
+
+// MARK: - Delete Production Sheet
+
+private struct DeleteProductionSheet: View {
+    @ObservedObject var production: Production
+    let onConfirm: () -> Void
+    let onCancel: () -> Void
+
+    @State private var confirmationText = ""
+    @FocusState private var fieldFocused: Bool
+
+    private var sceneCount: Int {
+        production.scripts.flatMap { $0.scenes }.count
+    }
+    private var scriptCount: Int { production.scripts.count }
+    private var todoCount: Int   { production.todoItems.count }
+
+    private var nameMatches: Bool {
+        confirmationText == production.name
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+
+            // Header
+            HStack(alignment: .top, spacing: 14) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.title)
+                    .foregroundStyle(.red)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Delete \"\(production.name)\"?")
+                        .font(.headline)
+                    Text("This is permanent and cannot be undone.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(20)
+
+            Divider()
+
+            // What will be deleted
+            VStack(alignment: .leading, spacing: 8) {
+                Text("The following will be permanently deleted:")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    deletionRow("doc.text", "\(scriptCount) script\(scriptCount == 1 ? "" : "s")")
+                    deletionRow("film", "\(sceneCount) scene\(sceneCount == 1 ? "" : "s") and all breakdown data")
+                    deletionRow("checkmark.circle", "\(todoCount) to-do item\(todoCount == 1 ? "" : "s")")
+                    deletionRow("tag", "All elements, team members, and activity history")
+                }
+            }
+            .padding(20)
+
+            Divider()
+
+            // Typed confirmation
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Type the production name to confirm:")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+
+                Text(production.name)
+                    .font(.system(.body, design: .monospaced).weight(.medium))
+                    .foregroundStyle(.primary)
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(.textBackgroundColor))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color(.separatorColor), lineWidth: 0.5))
+
+                TextField("Type production name here…", text: $confirmationText)
+                    .textFieldStyle(.roundedBorder)
+                    .focused($fieldFocused)
+                    .onSubmit { if nameMatches { onConfirm() } }
+            }
+            .padding(20)
+
+            Divider()
+
+            // Actions
+            HStack {
+                Button("Cancel", action: onCancel)
+                    .keyboardShortcut(.cancelAction)
+                Spacer()
+                Button(role: .destructive) {
+                    onConfirm()
+                } label: {
+                    Label("Delete Production", systemImage: "trash")
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.red)
+                .disabled(!nameMatches)
+                .keyboardShortcut(.defaultAction)
+            }
+            .padding(20)
+        }
+        .frame(width: 440)
+        .onAppear { fieldFocused = true }
+    }
+
+    @ViewBuilder
+    private func deletionRow(_ icon: String, _ text: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.caption)
+                .foregroundStyle(.red.opacity(0.7))
+                .frame(width: 16)
+            Text(text)
+                .font(.subheadline)
+                .foregroundStyle(.primary)
+        }
     }
 }
 

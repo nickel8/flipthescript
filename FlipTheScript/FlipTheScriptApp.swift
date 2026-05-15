@@ -1,18 +1,7 @@
 import SwiftUI
-import Sparkle
 
 @main
 struct FlipTheScriptApp: App {
-
-    private let updaterController: SPUStandardUpdaterController
-
-    init() {
-        updaterController = SPUStandardUpdaterController(
-            startingUpdater: true,
-            updaterDelegate: nil,
-            userDriverDelegate: nil
-        )
-    }
 
     var body: some SwiftUI.Scene {
         WindowGroup {
@@ -23,12 +12,7 @@ struct FlipTheScriptApp: App {
                 #endif
         }
         .commands {
-            CommandGroup(after: .appInfo) {
-                CheckForUpdatesView(updater: updaterController.updater)
-            }
-        }
-        .commands {
-            AppCommands(updaterController: updaterController)
+            AppCommands()
         }
 
         #if os(macOS)
@@ -50,7 +34,6 @@ struct FlipTheScriptApp: App {
 // MARK: - Commands
 
 struct AppCommands: Commands {
-    let updaterController: SPUStandardUpdaterController
     @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {

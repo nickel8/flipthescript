@@ -55,7 +55,10 @@ public class Script: ObservableManagedObject {
     @NSManaged public var pdfData:    Data?
     @NSManaged public var isParsing:  Bool
     @NSManaged public var colorHex:   String?
-    @NSManaged public var production: Production?
+    @NSManaged public var episode:    Episode?
+
+    /// Convenience — traverse up to the owning production.
+    var production: Production? { episode?.production }
 
     @NSManaged private var _scenes: NSSet?
 
