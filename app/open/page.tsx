@@ -1,6 +1,6 @@
 import SiteShell from "../components/SiteShell";
 
-const DOWNLOAD_URL = "https://github.com/nickel8/flipthescript/releases/download/v1.7/FlipTheScript-1.7.zip";
+const DOWNLOAD_URL = "https://github.com/nickel8/flipthescript/releases/download/v1.8/FlipTheScript-1.8.zip";
 
 export const metadata = {
   title: "Download FlipTheScript — macOS",
@@ -10,7 +10,7 @@ const steps = [
   {
     n: "01",
     heading: "Download and unzip",
-    body: "Click the download button and wait for FlipTheScript-1.7.zip to finish downloading. Double-click the zip to unzip it — you'll see FlipTheScript.app appear.",
+    body: "Click the download button and wait for FlipTheScript-1.8.zip to finish downloading. Double-click the zip to unzip it — you'll see FlipTheScript.app appear.",
   },
   {
     n: "02",
