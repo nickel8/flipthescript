@@ -8,6 +8,20 @@
 
 
 <item>
+    <title>Version 1.8</title>
+    <pubDate>Fri, 16 May 2026 19:00:00 +0100</pubDate>
+    <sparkle:version>11</sparkle:version>
+    <sparkle:shortVersionString>1.8</sparkle:shortVersionString>
+    <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+    <enclosure
+        url="https://github.com/nickel8/flipthescript/releases/download/v1.8/FlipTheScript-1.8.zip"
+        sparkle:edSignature="P3y8YNEOdXNUdZXN6Xi0sk5oDaTCo0oEDgVyLJHFQfeOA+oAPdLvabVOTjvdy9FTvYI0F43m0rfHjGYVcvwjCQ=="
+        length="1281345"
+        type="application/octet-stream"
+    />
+</item>
+
+<item>
     <title>Version 1.7</title>
     <pubDate>Sun, 10 May 2026 09:32:25 +0100</pubDate>
     <sparkle:version>8</sparkle:version>
