@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CLOUD_COOKIE } from "@/lib/cloud-session";
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL?.trim();
+const ANON_KEY = process.env.SUPABASE_ANON_KEY?.trim();
 
 export async function POST(req: NextRequest) {
   try {
