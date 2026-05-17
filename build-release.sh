@@ -29,6 +29,8 @@ PROJECT="FlipTheScript.xcodeproj"
 BUNDLE_ID="Hoddy.FlipTheScript"
 NOTARYTOOL_PROFILE="FlipTheScript"   # name used in store-credentials above
 BUILD_DIR="$(pwd)/build"
+WEB_DIR="$(pwd)/web"
+GH=~/bin/gh
 
 # ── Preflight ─────────────────────────────────────────────────────────────────
 
@@ -43,6 +45,11 @@ fi
 if ! xcrun notarytool history --keychain-profile "$NOTARYTOOL_PROFILE" &>/dev/null; then
     echo "ERROR: Notarization credentials not stored."
     echo "       Run: xcrun notarytool store-credentials \"$NOTARYTOOL_PROFILE\" --key ~/Downloads/AuthKey_XXXXX.p8 --key-id XXXXX --issuer <uuid>"
+    exit 1
+fi
+
+if ! "$GH" auth status &>/dev/null; then
+    echo "ERROR: gh not authenticated. Run: ~/bin/gh auth login"
     exit 1
 fi
 
@@ -106,7 +113,7 @@ echo "Export OK: $APP_PATH"
 echo ""
 echo "── Verifying signature ──"
 codesign --verify --deep --strict --verbose=2 "$APP_PATH"
-spctl --assess --type exec --verbose "$APP_PATH" && echo "Gatekeeper: OK"
+spctl --assess --type exec --verbose "$APP_PATH" && echo "Gatekeeper: OK" || echo "Gatekeeper: not yet notarized (expected)"
 
 # ── Zip ───────────────────────────────────────────────────────────────────────
 
@@ -147,17 +154,88 @@ ditto -c -k --keepParent --norsrc --noextattr "FlipTheScript.app" "$ZIP_PATH"
 cd - > /dev/null
 echo "Stapled zip: $ZIP_PATH"
 
+# ── Sparkle signature ─────────────────────────────────────────────────────────
+
+echo ""
+echo "── Generating Sparkle EdDSA signature ──"
+SIGN_UPDATE=$(find /tmp/SparkleForSPM/bin ~/Library/Developer/Xcode/DerivedData/FlipTheScript-*/SourcePackages/artifacts -name "sign_update" 2>/dev/null | head -1)
+if [ -z "$SIGN_UPDATE" ]; then
+    echo "ERROR: sign_update not found. Build the project in Xcode once to download Sparkle."
+    exit 1
+fi
+SIGN_OUTPUT=$("$SIGN_UPDATE" "$ZIP_PATH")
+SIGNATURE=$(echo "$SIGN_OUTPUT" | grep -o 'sparkle:edSignature="[^"]*"' | cut -d'"' -f2)
+FILESIZE=$(stat -f%z "$ZIP_PATH")
+PUBDATE=$(date -R)
+echo "Signature OK"
+
+# ── Update appcast.xml ────────────────────────────────────────────────────────
+
+echo ""
+echo "── Updating appcast.xml ──"
+APPCAST="$WEB_DIR/public/appcast.xml"
+NEW_ITEM="<item>
+    <title>Version ${VERSION}</title>
+    <pubDate>${PUBDATE}</pubDate>
+    <sparkle:version>${BUILD}</sparkle:version>
+    <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
+    <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+    <enclosure
+        url=\"https://github.com/nickel8/flipthescript/releases/download/v${VERSION}/${ZIP_NAME}\"
+        sparkle:edSignature=\"${SIGNATURE}\"
+        length=\"${FILESIZE}\"
+        type=\"application/octet-stream\"
+    />
+</item>"
+
+# Insert after the opening <channel>...</language> block
+sed -i '' "s|</language>|</language>\n\n${NEW_ITEM}|" "$APPCAST"
+echo "Appcast updated"
+
+# ── Update download page ──────────────────────────────────────────────────────
+
+echo ""
+echo "── Updating download page ──"
+OPEN_PAGE="$WEB_DIR/app/open/page.tsx"
+# Replace the DOWNLOAD_URL line (any previous version)
+sed -i '' "s|releases/download/v[0-9.]*/FlipTheScript-[0-9.]*.zip|releases/download/v${VERSION}/FlipTheScript-${VERSION}.zip|g" "$OPEN_PAGE"
+# Replace filename references in the step text
+sed -i '' "s|FlipTheScript-[0-9.]*.zip|FlipTheScript-${VERSION}.zip|g" "$OPEN_PAGE"
+echo "Download page updated"
+
+# ── Commit and push web changes ───────────────────────────────────────────────
+
+echo ""
+echo "── Committing web changes ──"
+cd "$WEB_DIR"
+git add public/appcast.xml app/open/page.tsx
+git commit -m "chore: release v${VERSION}"
+git push
+cd - > /dev/null
+echo "Web pushed"
+
+# ── GitHub release ────────────────────────────────────────────────────────────
+
+echo ""
+echo "── Creating GitHub release ──"
+"$GH" release create "v${VERSION}" \
+    "${ZIP_PATH}#${ZIP_NAME}" \
+    --repo nickel8/flipthescript \
+    --title "v${VERSION}" \
+    --notes "$(cat <<RELNOTES
+See https://www.flip-the-script.app for what's new.
+RELNOTES
+)"
+echo "GitHub release created"
+
+# ── Done ─────────────────────────────────────────────────────────────────────
+
 cat <<DONE
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- FlipTheScript v${VERSION} (build ${BUILD}) — DONE
+ FlipTheScript v${VERSION} (build ${BUILD}) — SHIPPED
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
- Zip: $ZIP_PATH
-
- Next steps:
-   1. Create a GitHub release tagged v${VERSION}
-   2. Upload $ZIP_NAME as the release asset
+ GitHub: https://github.com/nickel8/flipthescript/releases/tag/v${VERSION}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 DONE
