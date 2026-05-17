@@ -7,6 +7,7 @@ public class Production: ObservableManagedObject {
     @NSManaged public var name: String
     @NSManaged public var createdAt: Date
     @NSManaged public var hasEpisodes: Bool
+    @NSManaged public var cloudID: UUID?
     @NSManaged private var shareEmailsJSON: String?
     @NSManaged private var adminEmailsJSON: String?
 
@@ -150,6 +151,7 @@ public class Production: ObservableManagedObject {
         p.name        = name
         p.createdAt   = Date()
         p.hasEpisodes = false
+        p.cloudID     = UUID()
         // Every production gets a default episode so scripts always have a home
         let defaultEp = Episode.create(name: "Default", number: 0, isDefault: true, in: context)
         p.addEpisode(defaultEp)

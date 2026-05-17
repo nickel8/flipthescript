@@ -294,6 +294,7 @@ private struct BreakdownBody: View {
                         Button {
                             item.isDone.toggle()
                             PersistenceController.shared.save()
+                            TodoSyncService.shared.toggle(item)
                         } label: {
                             HStack(spacing: 10) {
                                 Image(systemName: item.isDone ? "checkmark.circle.fill" : "circle")
@@ -331,6 +332,7 @@ private struct BreakdownBody: View {
         production.addTodoItem(item)
         scene.addTodoItem(item)
         PersistenceController.shared.save()
+        TodoSyncService.shared.push(item)
         newTodoTitle = ""
         todoFieldFocused = true
     }

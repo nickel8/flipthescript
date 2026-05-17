@@ -26,6 +26,7 @@ public class ScriptScene: ObservableManagedObject {
     @NSManaged public var shootDay:       Int32
     /// Overall position in the shooting schedule (1 = first scene shot). 0 = not scheduled.
     @NSManaged public var shootOrder:     Int32
+    @NSManaged public var cloudID:        UUID?
     @NSManaged public var script:         Script?
     @NSManaged public var breakdownSheet: BreakdownSheet?
     @NSManaged private var _todoItems:    NSSet?
@@ -78,6 +79,7 @@ public class ScriptScene: ObservableManagedObject {
         s.pageStart     = Int32(pageStart)
         s.rawText       = rawText
         s.revisionStatus = .unchanged
+        s.cloudID        = UUID()
         return s
     }
 
