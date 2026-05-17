@@ -56,7 +56,7 @@ export default async function ProductionPage({
     if (scriptIds.length > 0) {
       const sRes = await dbFetch(
         `scenes?script_id=in.(${scriptIds.join(",")})&order=scene_number.asc` +
-        `&select=id,cloud_id,scene_number,slug_line,is_complete,` +
+        `&select=id,cloud_id,scene_number,slug_line,is_complete,shoot_day,shoot_order,` +
         `breakdown_sheets(synopsis,notes,scene_elements(notes,elements(name,category)))`
       );
       const raw = await sRes.json();
@@ -72,6 +72,8 @@ export default async function ProductionPage({
               scene_number: r.scene_number as string,
               slug_line: r.slug_line as string,
               is_complete: r.is_complete as boolean,
+              shoot_day: (r.shoot_day as number) ?? 0,
+              shoot_order: (r.shoot_order as number) ?? 0,
               synopsis: sheet ? (sheet.synopsis as string | null) : null,
               notes: sheet ? (sheet.notes as string | null) : null,
               elements: sceneElements
