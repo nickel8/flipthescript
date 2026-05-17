@@ -5,6 +5,10 @@ const SUPABASE_URL = process.env.SUPABASE_URL!;
 const ANON_KEY = process.env.SUPABASE_ANON_KEY!;
 
 export async function POST(req: NextRequest) {
+  if (!SUPABASE_URL || !ANON_KEY) {
+    return NextResponse.json({ error: "Server misconfiguration: missing env vars" }, { status: 500 });
+  }
+
   const { email, password } = await req.json();
 
   const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
