@@ -16,23 +16,30 @@ function db(path: string, options: RequestInit = {}) {
   });
 }
 
-// GET — fetch todos for a production (used by Mac app to pull cloud state)
-export async function GET(req: NextRequest) {
+// Accept either a Bearer token (Mac app) or cookie session (web viewer)
+async function resolveUser(req: NextRequest): Promise<{ id: string } | null> {
   const jwt = req.headers.get("Authorization")?.replace("Bearer ", "").trim();
-  if (!jwt) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (jwt) {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${jwt}` },
+    });
+    if (res.ok) {
+      const user = await res.json();
+      if (user?.id) return { id: user.id };
+    }
+  }
+  return getCloudSession();
+}
 
-  // Verify JWT and get user id
-  const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${jwt}` },
-  });
-  if (!userRes.ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { id: userId } = await userRes.json();
+// GET — fetch todos for a production (Mac app pull sync)
+export async function GET(req: NextRequest) {
+  const user = await resolveUser(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const productionCloudId = req.nextUrl.searchParams.get("productionCloudId");
   if (!productionCloudId) return NextResponse.json({ error: "productionCloudId required" }, { status: 400 });
 
-  // Resolve cloud_id → production pk (and verify ownership)
-  const prodRes = await db(`productions?cloud_id=eq.${productionCloudId}&owner_id=eq.${userId}&select=id`);
+  const prodRes = await db(`productions?cloud_id=eq.${productionCloudId}&owner_id=eq.${user.id}&select=id`);
   const prods = await prodRes.json();
   if (!Array.isArray(prods) || prods.length === 0) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -46,12 +53,11 @@ export async function GET(req: NextRequest) {
 
   const raw = await todosRes.json();
   const todos = Array.isArray(raw) ? raw.map((t: Record<string, unknown>) => ({
-    id:            t.id,
-    cloudId:       t.cloud_id,
-    title:         t.title,
-    isDone:        t.is_done,
-    createdAt:     t.created_at,
-    sceneCloudId:  (t.scenes as { cloud_id?: string }[] | null)?.[0]?.cloud_id ?? null,
+    cloudId:      t.cloud_id,
+    title:        t.title,
+    isDone:       t.is_done,
+    createdAt:    t.created_at,
+    sceneCloudId: (t.scenes as { cloud_id?: string }[] | null)?.[0]?.cloud_id ?? null,
   })) : [];
 
   return NextResponse.json(todos);
@@ -59,22 +65,23 @@ export async function GET(req: NextRequest) {
 
 // POST — create a todo
 export async function POST(req: NextRequest) {
-  const session = await getCloudSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await resolveUser(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { production_id, scene_cloud_id, title } = await req.json();
-  if (!production_id || !title) {
-    return NextResponse.json({ error: "production_id and title required" }, { status: 400 });
+  const { production_cloud_id, scene_cloud_id, title } = await req.json();
+  if (!production_cloud_id || !title) {
+    return NextResponse.json({ error: "production_cloud_id and title required" }, { status: 400 });
   }
 
-  // Verify user owns this production
-  const prodRes = await db(`productions?id=eq.${production_id}&owner_id=eq.${session.id}&select=id`);
+  // Resolve cloud_id → production PK (and verify ownership)
+  const prodRes = await db(`productions?cloud_id=eq.${production_cloud_id}&owner_id=eq.${user.id}&select=id`);
   const prods = await prodRes.json();
   if (!Array.isArray(prods) || prods.length === 0) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
+  const production_id = prods[0].id;
 
-  // Resolve scene_cloud_id → scene PK id
+  // Resolve scene_cloud_id → scene PK
   let scene_id: string | null = null;
   if (scene_cloud_id) {
     const sceneRes = await db(`scenes?cloud_id=eq.${scene_cloud_id}&select=id`);
@@ -86,20 +93,17 @@ export async function POST(req: NextRequest) {
     production_id,
     title,
     is_done: false,
-    user_id: session.id,
+    user_id: user.id,
   };
   if (scene_id) row.scene_id = scene_id;
 
-  const res = await db("todos?select=id,title,is_done,scene_id,scenes(cloud_id)", {
+  const res = await db("todos?select=id,cloud_id,title,is_done,scene_id,scenes(cloud_id)", {
     method: "POST",
     headers: { Prefer: "return=representation" },
     body: JSON.stringify(row),
   });
 
-  if (!res.ok) {
-    const err = await res.text();
-    return NextResponse.json({ error: err }, { status: 500 });
-  }
+  if (!res.ok) return NextResponse.json({ error: await res.text() }, { status: 500 });
 
   const [raw] = await res.json();
   return NextResponse.json(normaliseTodo(raw));
@@ -107,30 +111,25 @@ export async function POST(req: NextRequest) {
 
 // PATCH — toggle is_done
 export async function PATCH(req: NextRequest) {
-  const session = await getCloudSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await resolveUser(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id, is_done } = await req.json();
 
-  // Verify ownership via production join
-  const existRes = await db(
-    `todos?id=eq.${id}&select=id,productions!inner(owner_id)`
-  );
+  const existRes = await db(`todos?id=eq.${id}&select=id,productions!inner(owner_id)`);
   const rows = await existRes.json();
   const row = Array.isArray(rows) ? rows[0] : null;
-  if (!row || row.productions?.owner_id !== session.id) {
+  if (!row || row.productions?.owner_id !== user.id) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const patchRes = await db(`todos?id=eq.${id}&select=id,title,is_done,scene_id,scenes(cloud_id)`, {
+  const patchRes = await db(`todos?id=eq.${id}&select=id,cloud_id,title,is_done,scene_id,scenes(cloud_id)`, {
     method: "PATCH",
     headers: { Prefer: "return=representation" },
     body: JSON.stringify({ is_done }),
   });
 
-  if (!patchRes.ok) {
-    return NextResponse.json({ error: await patchRes.text() }, { status: 500 });
-  }
+  if (!patchRes.ok) return NextResponse.json({ error: await patchRes.text() }, { status: 500 });
 
   const [updated] = await patchRes.json();
   return NextResponse.json(normaliseTodo(updated));
@@ -138,17 +137,15 @@ export async function PATCH(req: NextRequest) {
 
 // DELETE
 export async function DELETE(req: NextRequest) {
-  const session = await getCloudSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await resolveUser(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await req.json();
 
-  const existRes = await db(
-    `todos?id=eq.${id}&select=id,productions!inner(owner_id)`
-  );
+  const existRes = await db(`todos?id=eq.${id}&select=id,productions!inner(owner_id)`);
   const rows = await existRes.json();
   const row = Array.isArray(rows) ? rows[0] : null;
-  if (!row || row.productions?.owner_id !== session.id) {
+  if (!row || row.productions?.owner_id !== user.id) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
@@ -156,12 +153,11 @@ export async function DELETE(req: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
-// Normalise DB row → client shape (scene_cloud_id instead of scene_id + scenes join)
 function normaliseTodo(raw: Record<string, unknown>) {
   return {
-    id: raw.id,
-    title: raw.title,
-    is_done: raw.is_done,
-    scene_cloud_id: (raw.scenes as { cloud_id?: string }[] | null)?.[0]?.cloud_id ?? null,
+    cloudId:      raw.cloud_id,
+    title:        raw.title,
+    isDone:       raw.is_done,
+    sceneCloudId: (raw.scenes as { cloud_id?: string }[] | null)?.[0]?.cloud_id ?? null,
   };
 }
