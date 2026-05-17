@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
       // 6. Scripts → {cloudId → id}
       const scriptRowsIn = scripts.map(s => ({
         cloud_id:    s.cloudId,
-        episode_id:  epMap[s.episodeCloudId],
+        episode_id:  epMap[k(s.episodeCloudId)],
         version:     s.version,
         filename:    s.filename,
         imported_at: s.importedAt,
@@ -169,7 +169,7 @@ export async function POST(req: NextRequest) {
         // 7. Scenes → {cloudId → id}
         const sceneRowsIn = scenes.map(sc => ({
           cloud_id:       sc.cloudId,
-          script_id:      scriptMap[sc.scriptCloudId],
+          script_id:      scriptMap[k(sc.scriptCloudId)],
           scene_number:   sc.sceneNumber,
           slug_line:      sc.slugLine,
           int_ext:        sc.intExt,
@@ -191,7 +191,7 @@ export async function POST(req: NextRequest) {
           // 8. Breakdown sheets → {cloudId → id}
           const sheetRowsIn = breakdownSheets.map(sh => ({
             cloud_id:   sh.cloudId,
-            scene_id:   sceneMap[sh.sceneCloudId],
+            scene_id:   sceneMap[k(sh.sceneCloudId)],
             synopsis:   sh.synopsis,
             notes:      sh.notes,
             is_reviewed: sh.isReviewed,
@@ -215,8 +215,8 @@ export async function POST(req: NextRequest) {
               // 10. Scene elements
               const seRowsIn = sceneElements.map(se => ({
                 cloud_id:          se.cloudId,
-                breakdown_sheet_id: sheetMap[se.sheetCloudId],
-                element_id:        elemMap[se.elementCloudId],
+                breakdown_sheet_id: sheetMap[k(se.sheetCloudId)],
+                element_id:        elemMap[k(se.elementCloudId)],
                 notes:             se.notes,
               })).filter(r => r.breakdown_sheet_id && r.element_id);
 
@@ -270,7 +270,13 @@ async function upsert<T = unknown>(
   return returning ? res.json() : [];
 }
 
-/** Build cloudId → Supabase id map from upsert result rows. */
+/** Build cloudId → Supabase id map from upsert result rows.
+ *  Keys are lowercased so Swift uppercase UUIDs and Postgres lowercase UUIDs both match. */
 function toMap(rows: { id: string; cloud_id: string }[]): Record<string, string> {
-  return Object.fromEntries(rows.map(r => [r.cloud_id, r.id]));
+  return Object.fromEntries(rows.map(r => [r.cloud_id.toLowerCase(), r.id]));
+}
+
+/** Normalise a UUID string to lowercase for map lookups. */
+function k(uuid: string): string {
+  return uuid.toLowerCase();
 }
