@@ -18,48 +18,58 @@ export default function PricingPage() {
       <section className="border-b border-black px-6 py-20">
         <p className="text-xs tracking-widest uppercase mb-8 opacity-40">Pricing</p>
         <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
-          Simple, honest pricing.
+          The right plan for every role.
         </h1>
         <p className="text-lg opacity-55 max-w-xl">
-          One license, one person. Try free for a day — no card required.
+          From the art director running the breakdown to the buyer managing their prep —
+          everyone has a plan. Try free for a day, no card required.
         </p>
       </section>
 
       {/* Plans */}
-      <section className="border-b border-black grid grid-cols-1 md:grid-cols-4">
+      <section className="border-b border-black grid grid-cols-1 md:grid-cols-3">
 
-        {/* Trial */}
-        <div className="p-10 border-b md:border-b-0 md:border-r border-black">
-          <p className="text-xs tracking-widest uppercase opacity-40 mb-6">Free trial</p>
-          <p className="text-4xl font-bold mb-2">£0</p>
-          <p className="text-sm opacity-55 mb-8">1 day, no card required</p>
-          <ul className="space-y-3 text-sm opacity-70">
-            <li>✓ Full app access</li>
-            <li>✓ Import &amp; break down scripts</li>
-            <li>✓ No credit card needed</li>
-          </ul>
+        {/* Art Director */}
+        <div className="p-10 border-b md:border-b-0 md:border-r border-black flex flex-col">
+          <div className="flex-1">
+            <p className="text-xs tracking-widest uppercase opacity-40 mb-6">Art Director</p>
+            <p className="text-4xl font-bold mb-2">£149</p>
+            <p className="text-sm opacity-55 mb-2">Mac app — one-time purchase</p>
+            <p className="text-sm opacity-55 mb-8">+ £4.99 / month to take it mobile</p>
+            <ul className="space-y-3 text-sm opacity-70">
+              <li>✓ Import PDF scripts &amp; auto-detect scenes</li>
+              <li>✓ Tag elements, write synopses, export breakdowns</li>
+              <li>✓ Amendments? Import the new draft — your work carries over</li>
+              <li>✓ Import the shoot schedule, sort by shoot order instantly</li>
+              <li>✓ To-do list — assign tasks to your team</li>
+              <li>✓ Publish &amp; notify the whole department</li>
+              <li>✓ 1-day free trial, no card required</li>
+            </ul>
+          </div>
           <div className="mt-10">
             <a
               href="/open"
-              className="inline-block border border-black text-sm font-bold px-6 py-3 hover:bg-black hover:text-white transition-colors"
+              className="inline-block bg-black text-white text-sm font-bold px-6 py-3 hover:opacity-75 transition-opacity"
             >
               Try free →
             </a>
           </div>
         </div>
 
-        {/* Monthly */}
-        <div className="p-10 border-b md:border-b-0 md:border-r border-black">
-          <p className="text-xs tracking-widest uppercase opacity-40 mb-6">Monthly</p>
-          <p className="text-4xl font-bold mb-2">£30</p>
-          <p className="text-sm opacity-55 mb-8">per month, cancel any time</p>
-          <ul className="space-y-3 text-sm opacity-70">
-            <li>✓ Unlimited productions</li>
-            <li>✓ PDF + CSV export</li>
-            <li>✓ Revision tracking</li>
-            <li>✓ Breakdown sharing</li>
-            <li>✓ Email support</li>
-          </ul>
+        {/* Art Department */}
+        <div className="p-10 border-b md:border-b-0 md:border-r border-black flex flex-col">
+          <div className="flex-1">
+            <p className="text-xs tracking-widest uppercase opacity-40 mb-6">Art Department</p>
+            <p className="text-sm opacity-55 mb-1">Props · Graphics · Buyers</p>
+            <p className="text-4xl font-bold mb-2">£9.99</p>
+            <p className="text-sm opacity-55 mb-8">per month, cancel any time</p>
+            <ul className="space-y-3 text-sm opacity-70">
+              <li>✓ See the latest breakdown the moment it&apos;s published</li>
+              <li>✓ Your own to-do list to track your prep</li>
+              <li>✓ Collaborate in the app — no more WhatsApp threads</li>
+              <li>✓ Get feedback and approvals before it&apos;s too late</li>
+            </ul>
+          </div>
           <div className="mt-10">
             <PaddleCheckoutButton
               priceId={MONTHLY_PRICE_ID}
@@ -70,48 +80,29 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* Annual */}
-        <div className="p-10 border-b md:border-b-0 md:border-r border-black relative">
+        {/* Head of Department */}
+        <div className="p-10 flex flex-col relative">
           <div className="absolute top-6 right-6">
-            <span className="text-xs font-bold bg-black text-white px-3 py-1">SAVE 31%</span>
+            <span className="text-xs font-bold bg-black text-white px-3 py-1">TEAM</span>
           </div>
-          <p className="text-xs tracking-widest uppercase opacity-40 mb-6">Annual</p>
-          <p className="text-4xl font-bold mb-2">£249</p>
-          <p className="text-sm opacity-55 mb-8">per year — £20.75/month</p>
-          <ul className="space-y-3 text-sm opacity-70">
-            <li>✓ Everything in Monthly</li>
-            <li>✓ Best value for long productions</li>
-            <li>✓ One invoice for accounting</li>
-          </ul>
+          <div className="flex-1">
+            <p className="text-xs tracking-widest uppercase opacity-40 mb-6">Head of Department</p>
+            <p className="text-sm opacity-55 mb-1">Designers · Supervisors</p>
+            <p className="text-4xl font-bold mb-2">£49.99</p>
+            <p className="text-sm opacity-55 mb-8">per month, cancel any time</p>
+            <ul className="space-y-3 text-sm opacity-70">
+              <li>✓ Everything in Art Department</li>
+              <li>✓ Keep a finger on the prep across the whole team</li>
+              <li>✓ Follow up and keep things on track — from one place</li>
+              <li>✓ No surprises on the day</li>
+            </ul>
+          </div>
           <div className="mt-10">
             <PaddleCheckoutButton
               priceId={ANNUAL_PRICE_ID}
               className="bg-black text-white text-sm font-bold px-6 py-3 hover:opacity-75 transition-opacity cursor-pointer"
             >
               Get started →
-            </PaddleCheckoutButton>
-          </div>
-        </div>
-
-        {/* Lifetime */}
-        <div className="p-10 relative">
-          <div className="absolute top-6 right-6">
-            <span className="text-xs font-bold border border-black px-3 py-1">ONE-TIME</span>
-          </div>
-          <p className="text-xs tracking-widest uppercase opacity-40 mb-6">Lifetime</p>
-          <p className="text-4xl font-bold mb-2">£599</p>
-          <p className="text-sm opacity-55 mb-8">pay once, use forever</p>
-          <ul className="space-y-3 text-sm opacity-70">
-            <li>✓ Everything in Annual</li>
-            <li>✓ All future updates included</li>
-            <li>✓ No subscription, ever</li>
-          </ul>
-          <div className="mt-10">
-            <PaddleCheckoutButton
-              priceId={LIFETIME_PRICE_ID}
-              className="bg-black text-white text-sm font-bold px-6 py-3 hover:opacity-75 transition-opacity cursor-pointer"
-            >
-              Buy lifetime →
             </PaddleCheckoutButton>
           </div>
         </div>
@@ -125,23 +116,23 @@ export default function PricingPage() {
           {[
             {
               q: "How does the free trial work?",
-              a: "Download the app and you have 1 day of full access — no credit card required. At the end of the trial you'll be prompted to enter a license key to continue.",
+              a: "Download the Mac app and you have 1 day of full access — no credit card required. At the end of the trial you'll be prompted to purchase to continue.",
             },
             {
-              q: "Is it per seat?",
-              a: "No. One license covers one person. Colleagues can view shared breakdowns for free via a personal magic link — they only need a license if they want to create and edit their own productions.",
+              q: "Do team members need their own account?",
+              a: "Yes, each person needs their own plan. The art director publishes the breakdown; everyone else subscribes to view it and manage their own to-do list.",
             },
             {
-              q: "What does lifetime mean?",
-              a: "Pay once and use FlipTheScript forever, including all future updates. No subscription, no renewals.",
-            },
-            {
-              q: "Can I switch between monthly and annual?",
-              a: "Yes. You can upgrade from monthly to annual at any time and we'll pro-rate the difference.",
+              q: "What is the mobile app?",
+              a: "The Mac app is the main tool for art directors doing the breakdown. The mobile app (coming soon) lets you take your breakdown and to-dos with you on set for £4.99 / month.",
             },
             {
               q: "What happens if I cancel?",
-              a: "Your data stays on your Mac. You can still view everything you've created — you just won't be able to import new scripts or create new productions until you reactivate.",
+              a: "Your data stays safe. You can still view everything — you just won't receive new breakdown updates or be able to add new tasks until you reactivate.",
+            },
+            {
+              q: "Can I get an invoice?",
+              a: "Yes. Receipts and invoices are issued automatically via Paddle, our payment provider.",
             },
           ].map((item) => (
             <div key={item.q} className="border-b border-black pb-10 last:border-b-0 last:pb-0">
