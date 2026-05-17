@@ -78,6 +78,14 @@ interface SceneElementPayload {
   notes: string;
 }
 
+interface TodoPayload {
+  cloudId: string;
+  title: string;
+  isDone: boolean;
+  createdAt: string;
+  sceneCloudId?: string | null;
+}
+
 interface PublishPayload {
   production: ProductionPayload;
   episodes: EpisodePayload[];
@@ -86,6 +94,7 @@ interface PublishPayload {
   breakdownSheets: SheetPayload[];
   elements: ElementPayload[];
   sceneElements: SceneElementPayload[];
+  todos: TodoPayload[];
 }
 
 // ── Handler ───────────────────────────────────────────────────────────────────
@@ -120,7 +129,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { production, episodes, scripts, scenes, breakdownSheets, elements, sceneElements } = payload;
+  const { production, episodes, scripts, scenes, breakdownSheets, elements, sceneElements, todos } = payload;
 
   try {
     // 3. Upsert production
@@ -227,6 +236,39 @@ export async function POST(req: NextRequest) {
           }
         }
       }
+    }
+
+    // 11. Todos (production-level; scene_id resolved by cloud_id lookup)
+    if (todos && todos.length > 0) {
+      // Resolve any scene cloud_ids to PKs in one fetch
+      const sceneCloudIds = todos.map(t => t.sceneCloudId).filter(Boolean) as string[];
+      let sceneMapForTodos: Record<string, string> = {};
+      if (sceneCloudIds.length > 0) {
+        const ids = sceneCloudIds.map(id => k(id)).join(",");
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/scenes?cloud_id=in.(${ids})&select=id,cloud_id`,
+          { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+        );
+        if (res.ok) sceneMapForTodos = toMap(await res.json());
+      }
+
+      const todoRowsIn = todos.map(t => {
+        const row: Record<string, unknown> = {
+          cloud_id:      t.cloudId,
+          production_id: prodID,
+          user_id:       ownerID,
+          title:         t.title,
+          is_done:       t.isDone,
+          created_at:    t.createdAt,
+        };
+        if (t.sceneCloudId) {
+          const sid = sceneMapForTodos[k(t.sceneCloudId)];
+          if (sid) row.scene_id = sid;
+        }
+        return row;
+      });
+
+      await upsert("todos", todoRowsIn, "cloud_id", false);
     }
 
     return NextResponse.json({ ok: true, productionId: prodID });
