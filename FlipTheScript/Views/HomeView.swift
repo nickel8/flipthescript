@@ -11,7 +11,8 @@ struct HomeView: View {
     var onImportSchedule: () -> Void = {}
     var onEpisodesEnabled: (Episode) -> Void = { _ in }
 
-    @State private var showingTodo = false
+    @State private var showingTodo    = false
+    @State private var showingSignIn  = false
 
     private var hasScript: Bool {
         if let ep = selectedEpisode { return ep.latestScript != nil }
@@ -131,6 +132,12 @@ struct HomeView: View {
                             isEnabled: true,
                             action: onChangeProduction
                         )
+                        if let production = selectedProduction {
+                            CloudPublishTile(
+                                production: production,
+                                showingSignIn: $showingSignIn
+                            )
+                        }
                     }
 
                     // ── Production settings ───────────────────────────────────
@@ -150,6 +157,14 @@ struct HomeView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .sheet(isPresented: $showingSignIn) {
+            CloudSignInView {
+                // After sign-in, trigger publish automatically
+                if let production = selectedProduction {
+                    Task { await PublishService.shared.publish(production) }
+                }
+            }
+        }
     }
 }
 
@@ -203,6 +218,41 @@ private struct HasEpisodesToggle: View {
             ep1.addScript(script)
         }
         onEpisodesEnabled(ep1)
+    }
+}
+
+// MARK: - Cloud publish tile
+
+private struct CloudPublishTile: View {
+    @ObservedObject var production: Production
+    @Binding var showingSignIn: Bool
+    @ObservedObject private var auth    = CloudAuthManager.shared
+    @ObservedObject private var publish = PublishService.shared
+
+    private var lastPublished: String {
+        guard let date = publish.lastPublishedAt(for: production) else { return "Never published" }
+        let f = RelativeDateTimeFormatter()
+        f.unitsStyle = .short
+        return "Published \(f.localizedString(for: date, relativeTo: Date()))"
+    }
+
+    var body: some View {
+        HomeTile(
+            icon: publish.isPublishing ? "arrow.clockwise" : "cloud.fill",
+            title: "Publish to cloud",
+            subtitle: publish.isPublishing
+                ? publish.progressLabel
+                : (publish.publishError != nil ? publish.publishError! : lastPublished),
+            color: publish.publishError != nil ? .red : .blue,
+            isEnabled: !publish.isPublishing,
+            action: {
+                if auth.isSignedIn {
+                    Task { await publish.publish(production) }
+                } else {
+                    showingSignIn = true
+                }
+            }
+        )
     }
 }
 

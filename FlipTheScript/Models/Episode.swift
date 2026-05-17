@@ -8,6 +8,7 @@ public class Episode: ObservableManagedObject {
     @NSManaged public var number: Int32
     @NSManaged public var createdAt: Date
     @NSManaged public var isDefault: Bool
+    @NSManaged public var cloudID: UUID?
     @NSManaged public var production: Production?
 
     @NSManaged private var _scripts: NSSet?
@@ -38,6 +39,7 @@ public class Episode: ObservableManagedObject {
         e.number    = number
         e.createdAt = Date()
         e.isDefault = isDefault
+        e.cloudID   = UUID()
         return e
     }
 

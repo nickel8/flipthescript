@@ -41,7 +41,14 @@ struct TodoSheet: View {
                     LazyVStack(spacing: 0) {
                         ForEach(production.todoItems, id: \.objectID) { item in
                             TodoRow(item: item)
+                                .environment(\.managedObjectContext, context)
                             Divider().padding(.leading, 40)
+                        }
+                        .onDelete { indexSet in
+                            for i in indexSet {
+                                let item = production.todoItems[i]
+                                TodoSyncService.shared.delete(item, context: context)
+                            }
                         }
                     }
                 }
@@ -65,6 +72,10 @@ struct TodoSheet: View {
             .padding()
         }
         .frame(minWidth: 360, minHeight: 400)
+        .task { TodoSyncService.shared.pull(production: production, context: context) }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            TodoSyncService.shared.pull(production: production, context: context)
+        }
     }
 
     private func addItem() {
@@ -73,6 +84,7 @@ struct TodoSheet: View {
         let item = TodoItem.create(title: trimmed, in: context)
         production.addTodoItem(item)
         PersistenceController.shared.save()
+        TodoSyncService.shared.push(item)
         newTitle = ""
         fieldFocused = true
     }
@@ -81,12 +93,14 @@ struct TodoSheet: View {
 // MARK: - Row
 
 private struct TodoRow: View {
+    @Environment(\.managedObjectContext) private var context
     @ObservedObject var item: TodoItem
 
     var body: some View {
         Button {
             item.isDone.toggle()
             PersistenceController.shared.save()
+            TodoSyncService.shared.toggle(item)
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: item.isDone ? "checkmark.circle.fill" : "circle")

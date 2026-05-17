@@ -15,18 +15,20 @@ struct ContentView: View {
     @State private var searchText = ""
     @State private var activeSearch = ""   // committed on Enter only
 
-    // Sidebar visibility — show all columns by default
-    @State private var columnVisibility: NavigationSplitViewVisibility = .all
-
     // Home tile actions
     @State private var showingChangeProduction = false
     @State private var showingChangeEpisode = false
     @State private var showingNewProduction = false
     @State private var newProductionName = ""
-    @State private var homeImportTrigger = false
     @State private var showingScheduleImport = false
     @State private var parsedScheduleEntries: [ShootEntry] = []
     @State private var schedulePreviewScript: Script? = nil
+
+    // Script import
+    @State private var showingScriptImport = false
+    @State private var showingEpisodePicker = false
+    @State private var importEpisode: Episode?
+    @State private var importError: String?
 
     // Persist the active production across launches
     @AppStorage("activeProductionURI") private var activeProductionURI = ""
@@ -34,13 +36,7 @@ struct ContentView: View {
     var body: some View {
         LicenseGate {
             VStack(spacing: 0) {
-                NavigationSplitView(columnVisibility: $columnVisibility) {
-                    ProductionListView(
-                        selectedProduction: $selectedProduction,
-                        selectedScene: $selectedScene,
-                        homeImportTrigger: $homeImportTrigger
-                    )
-                } content: {
+                NavigationSplitView {
                     if let production = selectedProduction {
                         SceneListView(
                             production: production,
@@ -58,7 +54,7 @@ struct ContentView: View {
                         ContentUnavailableView(
                             "No Production Selected",
                             systemImage: "film",
-                            description: Text("Create or select a production from the sidebar.")
+                            description: Text("Select a production to get started.")
                         )
                     }
                 } detail: {
@@ -68,12 +64,8 @@ struct ContentView: View {
                         HomeView(
                             selectedProduction: selectedProduction,
                             selectedEpisode: selectedEpisode,
-                            onNewScript: {
-                                homeImportTrigger = true
-                            },
-                            onNewAmendments: {
-                                homeImportTrigger = true
-                            },
+                            onNewScript: { triggerScriptImport() },
+                            onNewAmendments: { triggerScriptImport() },
                             onViewBreakdown: {
                                 let script = selectedEpisode?.latestScript
                                     ?? selectedProduction?.latestScript
@@ -144,6 +136,42 @@ struct ContentView: View {
                         showingNewProduction = false
                     }
                 }
+                .sheet(isPresented: $showingEpisodePicker) {
+                    if let production = selectedProduction {
+                        ImportEpisodePickerSheet(
+                            production: production,
+                            onSelect: { episode in
+                                importEpisode = episode
+                                showingEpisodePicker = false
+                                showingScriptImport = true
+                            },
+                            onCancel: {
+                                showingEpisodePicker = false
+                            }
+                        )
+                    }
+                }
+                .fileImporter(
+                    isPresented: $showingScriptImport,
+                    allowedContentTypes: [.pdf],
+                    allowsMultipleSelection: false
+                ) { result in
+                    guard let production = selectedProduction else { return }
+                    let episode = importEpisode ?? production.defaultEpisode
+                    importEpisode = nil
+                    switch result {
+                    case .success(let urls):
+                        guard let url = urls.first else { return }
+                        importPDF(url: url, into: production, episode: episode)
+                    case .failure(let error):
+                        importError = error.localizedDescription
+                    }
+                }
+                .alert("Import Failed", isPresented: .constant(importError != nil)) {
+                    Button("OK") { importError = nil }
+                } message: {
+                    Text(importError ?? "")
+                }
                 .fileImporter(
                     isPresented: $showingScheduleImport,
                     allowedContentTypes: [.pdf],
@@ -177,6 +205,105 @@ struct ContentView: View {
                     .filter { !$0.isDefault }
                     .sorted { $0.number < $1.number }
                     .first
+            }
+        }
+    }
+
+    // ── Script import ──────────────────────────────────────────────────────────
+
+    private func triggerScriptImport() {
+        guard let production = selectedProduction else { return }
+        if production.hasEpisodes {
+            showingEpisodePicker = true
+        } else {
+            showingScriptImport = true
+        }
+    }
+
+    private func importPDF(url: URL, into production: Production, episode: Episode?) {
+        guard url.startAccessingSecurityScopedResource() else {
+            importError = "Permission denied for this file."
+            return
+        }
+        defer { url.stopAccessingSecurityScopedResource() }
+
+        guard let data = try? Data(contentsOf: url) else {
+            importError = "Could not read file."
+            return
+        }
+        guard ScriptParser.isTextBased(pdfData: data) else {
+            importError = "This PDF appears to be scanned. Please use a text-based PDF."
+            return
+        }
+
+        let targetEpisode = episode ?? production.defaultEpisode
+        let filename = url.deletingPathExtension().lastPathComponent
+        let version = "Draft \((targetEpisode?.scripts.count ?? 0) + 1)"
+        let script = Script.create(version: version, filename: filename, pdfData: data, in: context)
+        targetEpisode?.addScript(script)
+
+        Task {
+            let parsedScenes = ScriptParser.parse(pdfData: data)
+            await MainActor.run {
+                let previousScript = (targetEpisode?.scripts ?? [])
+                    .filter { $0.objectID != script.objectID }
+                    .max(by: { $0.importedAt < $1.importedAt })
+
+                for parsed in parsedScenes {
+                    let scene = ScriptScene.create(
+                        sceneNumber: parsed.sceneNumber,
+                        slugLine: parsed.slugLine,
+                        intExt: parsed.intExt,
+                        location: parsed.location,
+                        timeOfDay: parsed.timeOfDay,
+                        pageStart: parsed.pageStart,
+                        rawText: parsed.rawText,
+                        in: context
+                    )
+                    script.addScene(scene)
+                }
+
+                let diffSummary: DiffSummary?
+                if let prev = previousScript {
+                    diffSummary = ScriptDiffer.diff(
+                        newScenes: script.scenes,
+                        against: prev,
+                        context: context
+                    )
+                } else {
+                    diffSummary = nil
+                }
+
+                let ownerName = production.team.first(where: { $0.role == .owner })?.name ?? "You"
+                let entry: ChangeEntry
+                if let diff = diffSummary, diff.hasChanges {
+                    var parts: [String] = []
+                    if diff.modified > 0 { parts.append("\(diff.modified) revised") }
+                    if diff.added > 0    { parts.append("\(diff.added) new") }
+                    if diff.deleted > 0  { parts.append("\(diff.deleted) removed") }
+                    let revised = script.scenes
+                        .filter { $0.revisionStatus != .unchanged }
+                        .map(\.sceneNumber)
+                    entry = ChangeEntry.create(
+                        type: .scenesRevised,
+                        summary: "\(script.version) imported — \(parts.joined(separator: ", "))",
+                        affectedSceneNumbers: revised,
+                        authorName: ownerName,
+                        in: context
+                    )
+                } else {
+                    entry = ChangeEntry.create(
+                        type: .newDraft,
+                        summary: "\(script.version) imported — \(script.scenes.count) scenes",
+                        authorName: ownerName,
+                        in: context
+                    )
+                }
+                production.addChangeEntry(entry)
+
+                script.isParsing = false
+                selectedScene = nil
+                PersistenceController.shared.save()
             }
         }
     }

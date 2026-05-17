@@ -7,6 +7,7 @@ public class TodoItem: ObservableManagedObject {
     @NSManaged public var title: String
     @NSManaged public var isDone: Bool
     @NSManaged public var createdAt: Date
+    @NSManaged public var cloudID: UUID?
     @NSManaged public var production: Production?
     @NSManaged public var scene: ScriptScene?
 

@@ -4,6 +4,7 @@ import CoreData
 @objc(BreakdownSheet)
 public class BreakdownSheet: ObservableManagedObject {
 
+    @NSManaged public var cloudID:    UUID?
     @NSManaged public var synopsis:   String
     @NSManaged public var notes:      String
     @NSManaged public var isReviewed: Bool

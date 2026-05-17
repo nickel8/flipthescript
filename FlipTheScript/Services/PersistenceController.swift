@@ -27,6 +27,11 @@ final class PersistenceController {
             container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
         } else {
             PersistenceController.migrateFromContainerIfNeeded()
+            // Enable lightweight migration so adding new optional attributes
+            // (e.g. cloudID) doesn't destroy existing user data.
+            let desc = container.persistentStoreDescriptions.first
+            desc?.setOption(true as NSNumber, forKey: NSMigratePersistentStoresAutomaticallyOption)
+            desc?.setOption(true as NSNumber, forKey: NSInferMappingModelAutomaticallyOption)
         }
 
         container.loadPersistentStores { [weak container] desc, error in
@@ -113,16 +118,19 @@ final class PersistenceController {
             bool("hasEpisodes"),
             optStr("shareEmailsJSON"),
             optStr("adminEmailsJSON"),
+            uuid("cloudID"),
         ]
 
         episodeE.properties = [
             str("name"), int32("number"), date("createdAt"), bool("isDefault"),
+            uuid("cloudID"),
         ]
 
         scriptE.properties = [
             str("version"), str("filename"), date("importedAt"),
             binary("pdfData", external: true), bool("isParsing"),
             optStr("colorHex"),
+            uuid("cloudID"),
         ]
 
         sceneE.properties = [
@@ -130,18 +138,22 @@ final class PersistenceController {
             str("location"), str("timeOfDay"), int32("pageStart"),
             str("rawText"), str("revisionStatusRaw", default: "Unchanged"),
             int32("shootDay"), int32("shootOrder"),
+            uuid("cloudID"),
         ]
 
         bdE.properties = [
             str("synopsis"), str("notes"), bool("isReviewed"),
+            uuid("cloudID"),
         ]
 
         elemE.properties = [
             str("name"), str("categoryRaw"), str("notes"),
+            uuid("cloudID"),
         ]
 
         seE.properties = [
             str("notes"),
+            uuid("cloudID"),
         ]
 
         memberE.properties = [
@@ -159,6 +171,7 @@ final class PersistenceController {
 
         todoE.properties = [
             str("title"), bool("isDone"), date("createdAt"),
+            uuid("cloudID"),
         ]
 
         // Production ↔ Episode
@@ -247,6 +260,10 @@ final class PersistenceController {
 
     private static func int32(_ name: String, default v: Int32 = 0) -> NSAttributeDescription {
         let a = NSAttributeDescription(); a.name = name; a.attributeType = .integer32AttributeType; a.defaultValue = v as NSNumber; a.isOptional = true; return a
+    }
+
+    private static func uuid(_ name: String) -> NSAttributeDescription {
+        let a = NSAttributeDescription(); a.name = name; a.attributeType = .UUIDAttributeType; a.isOptional = true; return a
     }
 
     private static func binary(_ name: String, external: Bool = false) -> NSAttributeDescription {

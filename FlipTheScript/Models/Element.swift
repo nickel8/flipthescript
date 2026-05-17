@@ -57,6 +57,7 @@ enum ElementCategory: String, Codable, CaseIterable, Identifiable {
 @objc(Element)
 public class Element: ObservableManagedObject {
 
+    @NSManaged public var cloudID:    UUID?
     @NSManaged public var name:       String
     @NSManaged private var categoryRaw: String
     @NSManaged public var notes:      String
@@ -88,6 +89,7 @@ public class Element: ObservableManagedObject {
         e.name     = name
         e.category = category
         e.notes    = ""
+        e.cloudID  = UUID()
         return e
     }
 

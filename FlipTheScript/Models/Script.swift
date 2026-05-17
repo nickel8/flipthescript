@@ -55,6 +55,7 @@ public class Script: ObservableManagedObject {
     @NSManaged public var pdfData:    Data?
     @NSManaged public var isParsing:  Bool
     @NSManaged public var colorHex:   String?
+    @NSManaged public var cloudID:    UUID?
     @NSManaged public var episode:    Episode?
 
     /// Convenience — traverse up to the owning production.
@@ -108,6 +109,7 @@ public class Script: ObservableManagedObject {
         s.pdfData    = pdfData
         s.importedAt = Date()
         s.isParsing  = true
+        s.cloudID    = UUID()
         return s
     }
 
