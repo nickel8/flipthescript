@@ -9,7 +9,8 @@ import { useParams, useSearchParams } from "next/navigation";
 
 interface SceneElement {
   category: string;
-  items: string[];
+  // New format: [{cloudId, name}]; old format: string[]
+  items: (string | { cloudId?: string; name: string })[];
 }
 
 interface Scene {
@@ -191,7 +192,9 @@ export default function ViewBreakdown() {
                 {scene.elements.map(group => (
                   <div key={group.category} style={styles.elementGroup}>
                     <span style={styles.elementCat}>{group.category}</span>
-                    <span style={styles.elementItems}>{group.items.join(", ")}</span>
+                    <span style={styles.elementItems}>
+                      {group.items.map(item => typeof item === "string" ? item : item.name).join(", ")}
+                    </span>
                   </div>
                 ))}
               </div>

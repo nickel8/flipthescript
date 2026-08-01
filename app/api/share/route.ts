@@ -1,5 +1,6 @@
-import { put } from "@vercel/blob";
+import { get, put } from "@vercel/blob";
 import { NextRequest, NextResponse } from "next/server";
+import { sendDigestsForPublish, type BlobSnapshot, type BreakdownMeta } from "@/lib/digest";
 import { randomUUID } from "crypto";
 
 // ---------------------------------------------------------------------------
@@ -10,8 +11,9 @@ import { randomUUID } from "crypto";
 //   adEmail: string,
 //   productionName: string,
 //   scriptVersion: string,
-//   colleagues: string[],       // emails to invite
-//   breakdown: object           // the full snapshot JSON
+//   colleagues: {email: string, department: string}[],  // current format
+//              | string[]                               // legacy, still accepted
+//   breakdown: object           // the full snapshot JSON (scenes with sceneCloudId + element cloudIds)
 // }
 // ---------------------------------------------------------------------------
 
@@ -22,7 +24,13 @@ const RESEND_KEY   = process.env.RESEND_API_KEY!;
 export async function POST(req: NextRequest) {
   try {
   const body = await req.json();
-  const { adEmail, productionName, scriptVersion, colleagues, breakdown } = body;
+  // colleagues can be a plain string array (legacy) or [{email, department}] (current)
+  const { adEmail, productionName, scriptVersion, breakdown } = body;
+  const rawColleagues: (string | { email: string; department?: string })[] =
+    Array.isArray(body.colleagues) ? body.colleagues : [];
+  const colleagues = rawColleagues.map(c =>
+    typeof c === "string" ? { email: c, department: null } : { email: c.email, department: c.department ?? null }
+  );
 
   if (!adEmail || !productionName || !breakdown) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -52,8 +60,9 @@ export async function POST(req: NextRequest) {
   const breakdownId: string = record.id;
 
   // 3. Add each colleague to access list and send magic link
-  const emails: string[] = Array.isArray(colleagues) ? colleagues : [];
-  await Promise.all(emails.map(email => inviteColleague(breakdownId, email, productionName, scriptVersion)));
+  await Promise.all(
+    colleagues.map(c => inviteColleague(breakdownId, c.email, c.department, productionName, scriptVersion))
+  );
 
   return NextResponse.json({ breakdownId });
   } catch (err: unknown) {
@@ -74,12 +83,23 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  // Fetch existing record to get blob key
+  // Fetch existing record to get blob key + production name
   const existing = await supabase("GET", `/rest/v1/shared_breakdowns?id=eq.${breakdownId}&select=blob_key,ad_email,production_name`);
   const [record] = await existing.json();
   if (!record) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // Overwrite blob
+  // Fetch old blob content for digest diff — must happen before overwrite
+  let oldSnapshot: BlobSnapshot | null = null;
+  try {
+    const oldResult = await get(record.blob_key, { access: "private" });
+    if (oldResult?.stream) {
+      oldSnapshot = await new Response(oldResult.stream).json();
+    }
+  } catch {
+    // If old blob is unavailable, skip digests for this publish
+  }
+
+  // Overwrite blob with new snapshot
   await put(
     new URL(record.blob_key).pathname.slice(1),
     JSON.stringify(breakdown),
@@ -87,20 +107,23 @@ export async function PATCH(req: NextRequest) {
   );
 
   // Update metadata
+  const publishedAt = new Date().toISOString();
   await supabase("PATCH", `/rest/v1/shared_breakdowns?id=eq.${breakdownId}`, {
     script_version: scriptVersion,
-    scene_count: breakdown.scenes?.length ?? 0,
-    updated_at: new Date().toISOString(),
+    scene_count:    breakdown.scenes?.length ?? 0,
+    updated_at:     publishedAt,
   });
 
-  // Notify all current access list
-  const accessRes = await supabase("GET", `/rest/v1/breakdown_access?breakdown_id=eq.${breakdownId}&select=email`);
-  const accessList = await accessRes.json();
-  await Promise.all(
-    accessList.map((row: { email: string }) =>
-      sendUpdateEmail(row.email, breakdownId, record.production_name, scriptVersion)
-    )
-  );
+  // Send change digests to all access-list recipients.
+  // Each recipient with changes gets a digest email containing a fresh magic link.
+  // Recipients with no changes receive nothing.
+  const meta: BreakdownMeta = {
+    id:              breakdownId,
+    production_name: record.production_name,
+    script_version:  scriptVersion,
+    published_at:    publishedAt,
+  };
+  await sendDigestsForPublish(oldSnapshot, breakdown as BlobSnapshot, meta);
 
   return NextResponse.json({ updated: true });
 }
@@ -109,12 +132,20 @@ export async function PATCH(req: NextRequest) {
 // Helpers
 // ---------------------------------------------------------------------------
 
-async function inviteColleague(breakdownId: string, email: string, productionName: string, scriptVersion: string) {
-  // Add to access list (ignore if already exists)
-  await supabase("POST", "/rest/v1/breakdown_access", {
-    breakdown_id: breakdownId,
-    email,
-  }, "resolution=ignore-duplicates");
+async function inviteColleague(
+  breakdownId: string,
+  email: string,
+  department: string | null,
+  productionName: string,
+  scriptVersion: string,
+) {
+  // Add to access list; on conflict update department in case it changed
+  await supabase(
+    "POST",
+    "/rest/v1/breakdown_access?on_conflict=breakdown_id,email",
+    { breakdown_id: breakdownId, email, ...(department ? { department } : {}) },
+    "resolution=merge-duplicates",
+  );
 
   await sendMagicLink(email, breakdownId, productionName, scriptVersion, "invite");
 }
@@ -170,9 +201,6 @@ async function sendMagicLink(
   });
 }
 
-async function sendUpdateEmail(email: string, breakdownId: string, productionName: string, scriptVersion: string) {
-  await sendMagicLink(email, breakdownId, productionName, scriptVersion, "reaccess");
-}
 
 function supabase(method: string, path: string, body?: object, prefer?: string) {
   return fetch(`${SUPABASE_URL}${path}`, {
