@@ -20,6 +20,7 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
       <footer className="px-6 py-5 flex items-center justify-between text-xs opacity-35 border-t border-black">
         <span>© {new Date().getFullYear()} FlipTheScript</span>
         <nav className="flex gap-6">
+          <Link href="/docs" className="hover:opacity-70">Docs</Link>
           <Link href="/pricing" className="hover:opacity-70">Pricing</Link>
           <Link href="/privacy" className="hover:opacity-70">Privacy</Link>
           <Link href="/terms" className="hover:opacity-70">Terms</Link>
