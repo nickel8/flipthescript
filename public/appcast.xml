@@ -4,6 +4,19 @@
     <title>FlipTheScript</title>
     <link>https://www.flip-the-script.app/appcast.xml</link>
     <language>en</language>
+
+<item>
+    <title>Version 1.10</title>
+    <pubDate>Tue, 08 Sep 2026 22:04:22 +0100</pubDate>
+    <sparkle:version>13</sparkle:version>
+    <sparkle:shortVersionString>1.10</sparkle:shortVersionString>
+    <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+    <enclosure
+        url="https://github.com/nickel8/flipthescript/releases/download/v1.10/FlipTheScript-1.10.zip"
+        length="1467970"
+        type="application/octet-stream"
+    />
+</item>
     
 
 
