@@ -280,7 +280,18 @@ ${ED_SIG_LINE}
         type=\"application/octet-stream\"
     />
 </item>"
-sed -i '' "s|</language>|</language>\n\n${NEW_ITEM}|" "$APPCAST"
+TMPITEM=$(mktemp)
+printf '%s' "$NEW_ITEM" > "$TMPITEM"
+awk -v item_file="$TMPITEM" '
+/<\/language>/ {
+    print
+    print ""
+    while ((getline line < item_file) > 0) print line
+    next
+}
+{ print }
+' "$APPCAST" > "${APPCAST}.tmp" && mv "${APPCAST}.tmp" "$APPCAST"
+rm -f "$TMPITEM"
 ok "appcast.xml updated"
 
 # Update download page
