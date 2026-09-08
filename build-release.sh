@@ -71,8 +71,12 @@ security find-identity -v -p codesigning | grep -q "Developer ID Application" \
 ok "Developer ID certificate"
 
 # Notarization credentials
-xcrun notarytool history --keychain-profile "$NOTARYTOOL_PROFILE" &>/dev/null \
-    || die "Notarization credentials not stored.\n  xcrun notarytool store-credentials \"$NOTARYTOOL_PROFILE\" ..."
+NOTARY_CHECK=$(xcrun notarytool history --keychain-profile "$NOTARYTOOL_PROFILE" 2>&1 || true)
+if echo "$NOTARY_CHECK" | grep -q "agreement"; then
+    die "Apple legal agreement expired or missing.\n  → Sign in at https://appstoreconnect.apple.com and accept any pending agreements, then re-run."
+elif echo "$NOTARY_CHECK" | grep -qi "error\|invalid\|not found"; then
+    die "Notarization credentials not stored.\n  xcrun notarytool store-credentials \"$NOTARYTOOL_PROFILE\" --key ~/Downloads/AuthKey_XXXXX.p8 --key-id XXXXX --issuer <uuid>"
+fi
 ok "Notarization credentials (profile: $NOTARYTOOL_PROFILE)"
 
 # GitHub CLI
@@ -80,13 +84,16 @@ ok "Notarization credentials (profile: $NOTARYTOOL_PROFILE)"
     || die "gh not authenticated. Run: ~/bin/gh auth login"
 ok "GitHub CLI authenticated"
 
-# Sparkle sign_update
+# Sparkle sign_update (optional — app uses manual updates, not Sparkle in-app updater)
 SIGN_UPDATE=$(find /tmp/SparkleForSPM/bin \
     ~/Library/Developer/Xcode/DerivedData/FlipTheScript-*/SourcePackages/artifacts \
+    ~/Library/Caches/org.sparkle-project.Sparkle \
     -name "sign_update" 2>/dev/null | head -1 || true)
-[ -n "$SIGN_UPDATE" ] \
-    || die "sign_update not found. Open the project in Xcode once to download Sparkle."
-ok "Sparkle sign_update: $SIGN_UPDATE"
+if [ -n "$SIGN_UPDATE" ]; then
+    ok "Sparkle sign_update: $SIGN_UPDATE"
+else
+    warn "sign_update not found — appcast will be updated without EdDSA signature"
+fi
 
 # ExportOptions.plist
 [ -f "ExportOptions.plist" ] \
@@ -238,19 +245,28 @@ cd - > /dev/null
 ok "Stapled zip: $ZIP_PATH"
 
 # ══════════════════════════════════════════════════════════════════════════════
-sep; echo " SPARKLE + APPCAST + DOWNLOAD PAGE"; sep
+sep; echo " APPCAST + DOWNLOAD PAGE"; sep
 
-# Sparkle EdDSA signature
-echo ""
-SIGN_OUTPUT=$("$SIGN_UPDATE" "$ZIP_PATH")
-SIGNATURE=$(echo "$SIGN_OUTPUT" | grep -o 'sparkle:edSignature="[^"]*"' | cut -d'"' -f2)
 FILESIZE=$(stat -f%z "$ZIP_PATH")
 PUBDATE=$(date -R)
-[ -n "$SIGNATURE" ] || die "Sparkle signature generation failed"
-ok "Sparkle EdDSA signature generated"
+
+# Sparkle EdDSA signature (optional — app no longer embeds Sparkle updater)
+SIGNATURE=""
+if [ -n "$SIGN_UPDATE" ]; then
+    echo ""
+    SIGN_OUTPUT=$("$SIGN_UPDATE" "$ZIP_PATH")
+    SIGNATURE=$(echo "$SIGN_OUTPUT" | grep -o 'sparkle:edSignature="[^"]*"' | cut -d'"' -f2)
+    [ -n "$SIGNATURE" ] && ok "Sparkle EdDSA signature generated" || warn "Sparkle signature generation failed — continuing without"
+fi
 
 # Update appcast.xml
+echo ""
 APPCAST="$WEB_DIR/public/appcast.xml"
+if [ -n "$SIGNATURE" ]; then
+    ED_SIG_LINE="        sparkle:edSignature=\"${SIGNATURE}\""
+else
+    ED_SIG_LINE=""
+fi
 NEW_ITEM="<item>
     <title>Version ${NEW_VERSION}</title>
     <pubDate>${PUBDATE}</pubDate>
@@ -259,7 +275,7 @@ NEW_ITEM="<item>
     <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
     <enclosure
         url=\"https://github.com/nickel8/flipthescript/releases/download/v${NEW_VERSION}/${ZIP_NAME}\"
-        sparkle:edSignature=\"${SIGNATURE}\"
+${ED_SIG_LINE}
         length=\"${FILESIZE}\"
         type=\"application/octet-stream\"
     />
