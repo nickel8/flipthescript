@@ -9,8 +9,10 @@ struct ExportView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var settings = ExportSettings.shared
 
-    @State private var isGeneratingPDF = false
-    @State private var isGeneratingCSV = false
+    @State private var isGeneratingPDF  = false
+    @State private var isGeneratingCSV  = false
+    @State private var isGeneratingXLSX = false
+    @State private var showingPreview   = false
 
     @State private var errorMessage: String?
     @State private var showingError = false
@@ -132,17 +134,54 @@ struct ExportView: View {
                     )
 
                     exportRow(
-                        title: "Spreadsheet (CSV)",
-                        subtitle: "Opens in Excel or Google Sheets",
-                        icon: "tablecells",
+                        title: "Styled Spreadsheet (.xlsx)",
+                        subtitle: "House style applied — opens directly in Excel",
+                        icon: "tablecells.fill",
                         iconColor: .green,
+                        isGenerating: isGeneratingXLSX,
+                        action: generateXLSX
+                    )
+
+                    exportRow(
+                        title: "Raw CSV",
+                        subtitle: "Plain data — no formatting",
+                        icon: "tablecells",
+                        iconColor: .secondary,
                         isGenerating: isGeneratingCSV,
                         action: generateCSV
                     )
+
+                    Button(action: { showingPreview = true }) {
+                        HStack(spacing: 14) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(settings.accentSwiftUIColor.opacity(0.12))
+                                    .frame(width: 40, height: 40)
+                                Image(systemName: "eye.fill")
+                                    .font(.system(size: 18))
+                                    .foregroundStyle(settings.accentSwiftUIColor)
+                            }
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Preview spreadsheet").font(.body).foregroundStyle(.primary)
+                                Text("See what your XLSX export will look like")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.vertical, 4)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
                 } header: {
                     Text("\(script.version) — \(script.filename)")
                 } footer: {
                     Text("\(script.totalCount) scenes · \(script.completedCount) with breakdowns")
+                }
+                .sheet(isPresented: $showingPreview) {
+                    BreakdownSpreadsheetView(script: script)
                 }
 
                 if let msg = successMessage {
@@ -259,6 +298,25 @@ struct ExportView: View {
                 #else
                 pdfData = data
                 showingPDFExporter = true
+                #endif
+            }
+        }
+    }
+
+    private func generateXLSX() {
+        guard !isGeneratingXLSX else { return }
+        successMessage = nil
+        isGeneratingXLSX = true
+
+        Task { @MainActor in
+            let data = ExportService.buildBreakdownXLSX(script: script, settings: settings)
+            isGeneratingXLSX = false
+
+            if data.isEmpty {
+                showError("XLSX generation failed.")
+            } else {
+                #if os(macOS)
+                saveWithPanel(data: data, contentType: .init(filenameExtension: "xlsx")!, ext: "xlsx")
                 #endif
             }
         }

@@ -20,15 +20,20 @@ struct ContentView: View {
     @State private var showingChangeEpisode = false
     @State private var showingNewProduction = false
     @State private var newProductionName = ""
-    @State private var showingScheduleImport = false
     @State private var parsedScheduleEntries: [ShootEntry] = []
     @State private var schedulePreviewScript: Script? = nil
 
     // Script import
-    @State private var showingScriptImport = false
+    private enum PDFImportKind { case script, schedule }
+    @State private var pdfImportKind: PDFImportKind = .script
+    @State private var showingPDFImport = false
     @State private var showingEpisodePicker = false
     @State private var importEpisode: Episode?
     @State private var importError: String?
+
+    // Live breakdown
+    @StateObject private var liveSession = BreakdownLiveSession()
+    @State private var showingLiveBreakdown = false
 
     // Persist the active production across launches
     @AppStorage("activeProductionURI") private var activeProductionURI = ""
@@ -81,7 +86,8 @@ struct ContentView: View {
                                 showingChangeEpisode = true
                             },
                             onImportSchedule: {
-                                showingScheduleImport = true
+                                pdfImportKind = .schedule
+                                showingPDFImport = true
                             },
                             onEpisodesEnabled: { episode in
                                 selectedEpisode = episode
@@ -143,7 +149,10 @@ struct ContentView: View {
                             onSelect: { episode in
                                 importEpisode = episode
                                 showingEpisodePicker = false
-                                showingScriptImport = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                                    pdfImportKind = .script
+                                    showingPDFImport = true
+                                }
                             },
                             onCancel: {
                                 showingEpisodePicker = false
@@ -152,19 +161,32 @@ struct ContentView: View {
                     }
                 }
                 .fileImporter(
-                    isPresented: $showingScriptImport,
+                    isPresented: $showingPDFImport,
                     allowedContentTypes: [.pdf],
                     allowsMultipleSelection: false
                 ) { result in
-                    guard let production = selectedProduction else { return }
-                    let episode = importEpisode ?? production.defaultEpisode
-                    importEpisode = nil
-                    switch result {
-                    case .success(let urls):
-                        guard let url = urls.first else { return }
-                        importPDF(url: url, into: production, episode: episode)
-                    case .failure(let error):
-                        importError = error.localizedDescription
+                    switch pdfImportKind {
+                    case .script:
+                        guard let production = selectedProduction else { return }
+                        let episode = importEpisode ?? production.defaultEpisode
+                        importEpisode = nil
+                        switch result {
+                        case .success(let urls):
+                            guard let url = urls.first else { return }
+                            importPDF(url: url, into: production, episode: episode)
+                        case .failure(let error):
+                            importError = error.localizedDescription
+                        }
+                    case .schedule:
+                        guard case .success(let urls) = result,
+                              let url = urls.first,
+                              url.startAccessingSecurityScopedResource() else { return }
+                        defer { url.stopAccessingSecurityScopedResource() }
+                        guard let data = try? Data(contentsOf: url) else { return }
+                        let entries = ScheduleParser.parse(pdfData: data)
+                        guard !entries.isEmpty else { return }
+                        parsedScheduleEntries = entries
+                        schedulePreviewScript = selectedEpisode?.latestScript ?? selectedProduction?.latestScript
                     }
                 }
                 .alert("Import Failed", isPresented: .constant(importError != nil)) {
@@ -172,27 +194,15 @@ struct ContentView: View {
                 } message: {
                     Text(importError ?? "")
                 }
-                .fileImporter(
-                    isPresented: $showingScheduleImport,
-                    allowedContentTypes: [.pdf],
-                    allowsMultipleSelection: false
-                ) { result in
-                    guard case .success(let urls) = result,
-                          let url = urls.first,
-                          url.startAccessingSecurityScopedResource() else { return }
-                    defer { url.stopAccessingSecurityScopedResource() }
-                    guard let data = try? Data(contentsOf: url) else { return }
-                    let entries = ScheduleParser.parse(pdfData: data)
-                    guard !entries.isEmpty else { return }
-                    parsedScheduleEntries = entries
-                    schedulePreviewScript = selectedEpisode?.latestScript ?? selectedProduction?.latestScript
-                }
                 .sheet(item: $schedulePreviewScript) { script in
                     ScheduleImportSheet(entries: parsedScheduleEntries, script: script)
                         .onDisappear { parsedScheduleEntries = [] }
                 }
 
                 TrialBanner()
+            }
+            .sheet(isPresented: $showingLiveBreakdown) {
+                BreakdownLiveView(session: liveSession)
             }
         }
         .onAppear { restoreActiveProduction() }
@@ -216,7 +226,8 @@ struct ContentView: View {
         if production.hasEpisodes {
             showingEpisodePicker = true
         } else {
-            showingScriptImport = true
+            pdfImportKind = .script
+            showingPDFImport = true
         }
     }
 
@@ -241,6 +252,9 @@ struct ContentView: View {
         let version = "Draft \((targetEpisode?.scripts.count ?? 0) + 1)"
         let script = Script.create(version: version, filename: filename, pdfData: data, in: context)
         targetEpisode?.addScript(script)
+
+        liveSession.reset(scriptName: filename)
+        showingLiveBreakdown = true
 
         Task {
             let parsedScenes = ScriptParser.parse(pdfData: data)
@@ -305,6 +319,17 @@ struct ContentView: View {
                 selectedScene = nil
                 PersistenceController.shared.save()
             }
+
+            // Stream parsed scenes into the live view row by row
+            let count = parsedScenes.count
+            let delayNs = count > 0
+                ? UInt64(max(20, min(80, 3_000 / count))) * 1_000_000
+                : 0
+            for scene in parsedScenes {
+                try? await Task.sleep(nanoseconds: delayNs)
+                liveSession.scenes.append(scene)
+            }
+            liveSession.isComplete = true
         }
     }
 

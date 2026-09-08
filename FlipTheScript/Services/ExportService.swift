@@ -16,6 +16,12 @@ enum ExportService {
         return renderer.render()
     }
 
+    // MARK: - XLSX Export
+
+    static func buildBreakdownXLSX(script: Script, settings: ExportSettings = .shared) -> Data {
+        XLSXBuilder.build(script: script, settings: settings)
+    }
+
     // MARK: - CSV Export
 
     static func buildBreakdownCSV(script: Script) -> String {

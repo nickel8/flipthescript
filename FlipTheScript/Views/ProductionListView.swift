@@ -138,7 +138,9 @@ struct ProductionListView: View {
                     onSelect: { episode in
                         importEpisode = episode
                         showingEpisodePicker = false
-                        showingImport = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                            showingImport = true
+                        }
                     },
                     onCancel: {
                         showingEpisodePicker = false
