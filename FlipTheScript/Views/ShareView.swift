@@ -245,12 +245,22 @@ struct ShareView: View {
         isPublishing = true
         errorMessage = nil
 
+        // Build a lookup from email → department using the production's team list.
+        // If a team email isn't in the team list, department defaults to "Other".
+        let teamByEmail: [String: TeamMember] = Dictionary(
+            uniqueKeysWithValues: (script.production?.team ?? []).map { ($0.email.lowercased(), $0) }
+        )
+        let colleagues: [[String: String]] = teamEmails.map { email in
+            let dept = teamByEmail[email.lowercased()]?.department.rawValue ?? "Other"
+            return ["email": email, "department": dept]
+        }
+
         Task { @MainActor in
             do {
                 let result = try await ShareService.publish(
                     script: script,
                     adEmail: trimmedEmail,
-                    colleagues: teamEmails
+                    colleagues: colleagues
                 )
                 publishedURL = result.viewURL
             } catch {

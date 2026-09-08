@@ -20,7 +20,7 @@ struct ShareService {
     static func publish(
         script: Script,
         adEmail: String,
-        colleagues: [String]
+        colleagues: [[String: String]]   // [{email, department}]
     ) async throws -> PublishResult {
 
         let snapshot = buildSnapshot(script: script)
@@ -80,19 +80,31 @@ struct ShareService {
     private static func buildSnapshot(script: Script) -> [String: Any] {
         let scenes: [[String: Any]] = script.sortedScenes.map { scene in
             var dict: [String: Any] = [
-                "sceneNumber": scene.sceneNumber,
-                "slugLine":    scene.slugLine,
-                "synopsis":    scene.breakdownSheet?.synopsis ?? "",
-                "pageStart":   scene.pageStart,
+                "sceneCloudId": scene.cloudID?.uuidString.lowercased() ?? UUID().uuidString.lowercased(),
+                "sceneNumber":  scene.sceneNumber,
+                "slugLine":     scene.slugLine,
+                "synopsis":     scene.breakdownSheet?.synopsis ?? "",
+                "pageStart":    scene.pageStart,
             ]
 
-            // Group elements by category
+            // Group elements by category. Each item includes its cloudId for
+            // stable diffing across publishes (rename, reorder won't cause false changes).
             if let sheet = scene.breakdownSheet {
-                let grouped: [String: [String]] = Dictionary(
+                let grouped = Dictionary(
                     grouping: sheet.sceneElements.compactMap { $0.element },
                     by: { $0.category.rawValue }
-                ).mapValues { $0.map(\.name) }
-                dict["elements"] = grouped.map { ["category": $0.key, "items": $0.value] }
+                )
+                dict["elements"] = grouped.map { category, elements -> [String: Any] in
+                    [
+                        "category": category,
+                        "items": elements.map { el -> [String: Any] in
+                            [
+                                "cloudId": el.cloudID?.uuidString.lowercased() ?? "",
+                                "name":    el.name,
+                            ]
+                        },
+                    ]
+                }
             } else {
                 dict["elements"] = [[String: Any]]()
             }
