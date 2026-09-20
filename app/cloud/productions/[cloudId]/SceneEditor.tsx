@@ -19,7 +19,9 @@ const CATEGORIES = [
   "Weapons",
   "Greens",
   "SFX",
+  "VFX",
   "Costume",
+  "Clearance",
   "Other",
 ] as const;
 
@@ -96,9 +98,7 @@ export default function SceneEditor({
     const current = sheetRef.current;
     if (!current || current.scene_elements.some((se) => se.id === newSE.id)) return;
     applySheet({ ...current, scene_elements: [...current.scene_elements, newSE] });
-    if (result.isNew) {
-      onElementCreated({ id: result.elementId, name: result.name, category });
-    }
+    onElementCreated({ id: result.elementId, name: result.name, category });
   }
 
   async function handleRemoveElement(sceneElementId: string) {

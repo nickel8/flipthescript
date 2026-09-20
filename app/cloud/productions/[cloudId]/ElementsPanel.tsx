@@ -8,7 +8,9 @@ const CATEGORIES = [
   "Weapons",
   "Greens",
   "SFX",
+  "VFX",
   "Costume",
+  "Clearance",
   "Other",
 ] as const;
 
