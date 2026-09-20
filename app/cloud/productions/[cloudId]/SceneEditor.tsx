@@ -115,8 +115,6 @@ export default function SceneEditor({
     await toggleComplete(scene.id, next);
   }
 
-  const existingElementIds = new Set(sheet?.scene_elements.map((se) => se.element.id) ?? []);
-
   return (
     <div className="p-8 max-w-2xl">
       {/* Header */}
@@ -181,10 +179,8 @@ export default function SceneEditor({
           <CategorySection
             key={cat}
             category={cat}
-            elements={(sheet?.scene_elements ?? []).filter((se) => se.element.category === cat)}
-            suggestions={productionElements.filter(
-              (el) => el.category === cat && !existingElementIds.has(el.id)
-            )}
+            sceneElements={(sheet?.scene_elements ?? []).filter((se) => se.element.category === cat)}
+            allElements={productionElements.filter((el) => el.category === cat)}
             onAdd={(name) => handleAddElement(cat, name)}
             onRemove={handleRemoveElement}
           />
@@ -198,50 +194,70 @@ export default function SceneEditor({
 
 function CategorySection({
   category,
-  elements,
-  suggestions,
+  sceneElements,
+  allElements,
   onAdd,
   onRemove,
 }: {
   category: string;
-  elements: SceneElementData[];
-  suggestions: ProductionElement[];
+  sceneElements: SceneElementData[];
+  allElements: ProductionElement[];
   onAdd: (name: string) => Promise<void>;
   onRemove: (sceneElementId: string) => Promise<void>;
 }) {
   const [input, setInput] = useState("");
   const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const filtered = suggestions.filter(
-    (s) => input.length === 0 || s.name.toLowerCase().includes(input.toLowerCase())
-  );
-  const showList = open && (filtered.length > 0 || input.trim().length > 0);
-  const typedIsNew = input.trim().length > 0 &&
-    !filtered.some((s) => s.name.toLowerCase() === input.trim().toLowerCase());
+  // Map element id → scene_element id for quick linked-state lookup
+  const linkedMap = new Map(sceneElements.map((se) => [se.element.id, se.id]));
 
-  async function submit(name: string) {
-    const trimmed = name.trim();
-    if (!trimmed || busy) return;
-    setBusy(true);
-    setInput("");
-    setOpen(false);
+  const filtered = allElements.filter(
+    (el) => input.length === 0 || el.name.toLowerCase().includes(input.toLowerCase())
+  );
+
+  // True when the typed text doesn't match any element in the master list
+  const typedIsNew =
+    input.trim().length > 0 &&
+    !allElements.some((el) => el.name.toLowerCase() === input.trim().toLowerCase());
+
+  const showList = open && (filtered.length > 0 || typedIsNew);
+
+  async function toggle(el: ProductionElement) {
+    if (pendingIds.has(el.id)) return;
+    setPendingIds((p) => new Set([...p, el.id]));
     try {
-      await onAdd(trimmed);
+      const sceneElementId = linkedMap.get(el.id);
+      if (sceneElementId) {
+        await onRemove(sceneElementId);
+      } else {
+        await onAdd(el.name);
+      }
     } finally {
-      setBusy(false);
-      inputRef.current?.focus();
+      setPendingIds((p) => {
+        const next = new Set(p);
+        next.delete(el.id);
+        return next;
+      });
     }
+  }
+
+  async function addNew(name: string) {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setInput("");
+    await onAdd(trimmed);
+    inputRef.current?.focus();
   }
 
   return (
     <div>
       <p className="text-xs font-bold uppercase tracking-widest opacity-30 mb-2">{category}</p>
 
-      {elements.length > 0 && (
+      {sceneElements.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-2">
-          {elements.map((se) => (
+          {sceneElements.map((se) => (
             <span
               key={se.id}
               className="group inline-flex items-center gap-1 text-xs border border-black/20 px-2 py-0.5"
@@ -265,7 +281,6 @@ function CategorySection({
           type="text"
           value={input}
           placeholder={`Add ${category.toLowerCase()}…`}
-          disabled={busy}
           onChange={(e) => {
             setInput(e.target.value);
             setOpen(true);
@@ -273,33 +288,50 @@ function CategorySection({
           onFocus={() => setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") {
+            if (e.key === "Enter" && input.trim()) {
               e.preventDefault();
-              submit(filtered[0]?.name ?? input);
+              if (typedIsNew) {
+                addNew(input);
+              } else if (filtered.length > 0) {
+                toggle(filtered[0]);
+                setInput("");
+              }
             } else if (e.key === "Escape") {
               setOpen(false);
               setInput("");
             }
           }}
-          className="w-full text-xs border border-black/15 px-2.5 py-1.5 focus:outline-none focus:border-black/40 placeholder:opacity-25 disabled:opacity-40"
+          className="w-full text-xs border border-black/15 px-2.5 py-1.5 focus:outline-none focus:border-black/40 placeholder:opacity-25"
         />
 
         {showList && (
-          <div className="absolute top-full left-0 right-0 z-20 bg-white border border-black/20 border-t-0 max-h-44 overflow-y-auto shadow-sm">
-            {filtered.slice(0, 8).map((s) => (
-              <button
-                key={s.id}
-                onMouseDown={() => submit(s.name)}
-                className="w-full text-left text-xs px-2.5 py-1.5 hover:bg-black/5"
-              >
-                {s.name}
-              </button>
-            ))}
+          <div
+            className="absolute top-full left-0 right-0 z-20 bg-white border border-black/20 border-t-0 max-h-52 overflow-y-auto shadow-sm"
+            onMouseDown={(e) => e.preventDefault()} // keep input focused for multi-select
+          >
+            {filtered.map((el) => {
+              const isLinked = linkedMap.has(el.id);
+              const isPending = pendingIds.has(el.id);
+              return (
+                <button
+                  key={el.id}
+                  onClick={() => toggle(el)}
+                  disabled={isPending}
+                  className={`w-full text-left text-xs px-2.5 py-1.5 flex items-center gap-2 hover:bg-black/5 transition-opacity ${isPending ? "opacity-30" : ""}`}
+                >
+                  <span className="w-3.5 shrink-0 text-green-600 font-bold">
+                    {isLinked ? "✓" : ""}
+                  </span>
+                  <span className={isLinked ? "opacity-50" : ""}>{el.name}</span>
+                </button>
+              );
+            })}
             {typedIsNew && (
               <button
-                onMouseDown={() => submit(input)}
-                className="w-full text-left text-xs px-2.5 py-1.5 hover:bg-black/5 opacity-40 italic"
+                onClick={() => addNew(input)}
+                className="w-full text-left text-xs px-2.5 py-1.5 hover:bg-black/5 opacity-40 italic flex items-center gap-2"
               >
+                <span className="w-3.5 shrink-0" />
                 Add &ldquo;{input.trim()}&rdquo;
               </button>
             )}
