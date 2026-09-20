@@ -107,10 +107,11 @@ export default function BreakdownEditor({
                 productionId={productionId}
                 initialTodos={initialTodos}
                 scenes={sceneRefs}
+                selectedSceneCloudId={selectedScene?.cloud_id ?? null}
               />
             </div>
           ) : (
-            <ElementsPanel elements={elements} />
+            <ElementsPanel scene={selectedScene} />
           )}
         </div>
       </aside>

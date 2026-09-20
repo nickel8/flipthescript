@@ -116,9 +116,9 @@ export default function SceneEditor({
   }
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-6 max-w-3xl">
       {/* Header */}
-      <div className="mb-8 flex items-start justify-between gap-6">
+      <div className="mb-5 flex items-start justify-between gap-6">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className="font-mono text-xs opacity-30 font-bold">{scene.scene_number}</span>
@@ -155,8 +155,8 @@ export default function SceneEditor({
       </div>
 
       {/* Synopsis */}
-      <div className="mb-10">
-        <p className="text-xs font-bold uppercase tracking-widest opacity-30 mb-2">
+      <div className="mb-6">
+        <p className="text-xs font-bold uppercase tracking-widest opacity-30 mb-1.5">
           Synopsis
           {saving && (
             <span className="font-normal normal-case tracking-normal opacity-60 ml-2">
@@ -167,14 +167,14 @@ export default function SceneEditor({
         <textarea
           value={synopsis}
           onChange={(e) => handleSynopsisChange(e.target.value)}
-          rows={4}
+          rows={3}
           placeholder="What happens in this scene…"
-          className="w-full border border-black/20 px-3 py-2.5 text-sm focus:outline-none focus:border-black/50 resize-none leading-relaxed"
+          className="w-full border border-black/20 px-3 py-2 text-sm focus:outline-none focus:border-black/50 resize-none leading-relaxed"
         />
       </div>
 
-      {/* Categories */}
-      <div className="space-y-7">
+      {/* Categories — 2-column grid */}
+      <div className="grid grid-cols-2 gap-x-8 gap-y-4">
         {CATEGORIES.map((cat) => (
           <CategorySection
             key={cat}
@@ -253,14 +253,14 @@ function CategorySection({
 
   return (
     <div>
-      <p className="text-xs font-bold uppercase tracking-widest opacity-30 mb-2">{category}</p>
+      <p className="text-xs font-bold uppercase tracking-widest opacity-30 mb-1">{category}</p>
 
       {sceneElements.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-2">
+        <div className="flex flex-wrap gap-1 mb-1">
           {sceneElements.map((se) => (
             <span
               key={se.id}
-              className="group inline-flex items-center gap-1 text-xs border border-black/20 px-2 py-0.5"
+              className="group inline-flex items-center gap-0.5 text-xs border border-black/20 px-1.5 py-0"
             >
               {se.element.name}
               <button
@@ -301,7 +301,7 @@ function CategorySection({
               setInput("");
             }
           }}
-          className="w-full text-xs border border-black/15 px-2.5 py-1.5 focus:outline-none focus:border-black/40 placeholder:opacity-25"
+          className="w-full text-xs border border-black/15 px-2 py-1 focus:outline-none focus:border-black/40 placeholder:opacity-25"
         />
 
         {showList && (

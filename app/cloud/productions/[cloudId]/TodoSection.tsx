@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 
 interface Todo {
   id: string;
@@ -19,13 +19,19 @@ interface Props {
   productionId: string;
   initialTodos: Todo[];
   scenes: SceneRef[];
+  selectedSceneCloudId: string | null;
 }
 
-export default function TodoSection({ productionId, initialTodos, scenes }: Props) {
+export default function TodoSection({ productionId, initialTodos, scenes, selectedSceneCloudId }: Props) {
   const [todos, setTodos] = useState<Todo[]>(initialTodos);
   const [title, setTitle] = useState("");
-  const [sceneCloudId, setSceneCloudId] = useState("");
+  const [sceneCloudId, setSceneCloudId] = useState(selectedSceneCloudId ?? "");
   const [adding, setAdding] = useState(false);
+
+  // Sync form scene selector when the user switches scenes
+  useEffect(() => {
+    setSceneCloudId(selectedSceneCloudId ?? "");
+  }, [selectedSceneCloudId]);
 
   async function addTodo(e: FormEvent) {
     e.preventDefault();
@@ -76,8 +82,13 @@ export default function TodoSection({ productionId, initialTodos, scenes }: Prop
     return s ? `${s.sceneNumber} — ${s.slugLine}` : cloudId;
   };
 
-  const pending = todos.filter(t => !t.is_done);
-  const done = todos.filter(t => t.is_done);
+  // When a scene is selected, show only that scene's todos + production-wide todos
+  const visible = selectedSceneCloudId
+    ? todos.filter(t => t.scene_cloud_id === selectedSceneCloudId || t.scene_cloud_id === null)
+    : todos;
+
+  const pending = visible.filter(t => !t.is_done);
+  const done = visible.filter(t => t.is_done);
 
   return (
     <div>
