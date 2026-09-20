@@ -5,6 +5,7 @@ import type { SceneData, ProductionElement, TodoData, SheetData } from "./types"
 import SceneList from "./SceneList";
 import SceneEditor from "./SceneEditor";
 import TodoSection from "./TodoSection";
+import ElementsPanel from "./ElementsPanel";
 
 interface Props {
   scenes: SceneData[];
@@ -24,6 +25,7 @@ export default function BreakdownEditor({
   const [selectedId, setSelectedId] = useState<string | null>(
     initialScenes[0]?.id ?? null
   );
+  const [rightTab, setRightTab] = useState<"todos" | "elements">("todos");
 
   const selectedScene = scenes.find((s) => s.id === selectedId) ?? null;
 
@@ -79,13 +81,38 @@ export default function BreakdownEditor({
         )}
       </main>
 
-      {/* Todos */}
-      <aside className="w-72 shrink-0 overflow-y-auto p-6">
-        <TodoSection
-          productionId={productionId}
-          initialTodos={initialTodos}
-          scenes={sceneRefs}
-        />
+      {/* Right panel — Todos / Elements */}
+      <aside className="w-72 shrink-0 flex flex-col overflow-hidden">
+        {/* Tab bar */}
+        <div className="shrink-0 flex border-b border-black/10">
+          {(["todos", "elements"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setRightTab(tab)}
+              className={`flex-1 text-xs font-bold uppercase tracking-widest py-2.5 transition-colors ${
+                rightTab === tab
+                  ? "bg-black text-white"
+                  : "hover:bg-black/5 opacity-40"
+              }`}
+            >
+              {tab === "todos" ? "To-dos" : "Elements"}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {rightTab === "todos" ? (
+            <div className="p-6">
+              <TodoSection
+                productionId={productionId}
+                initialTodos={initialTodos}
+                scenes={sceneRefs}
+              />
+            </div>
+          ) : (
+            <ElementsPanel elements={elements} />
+          )}
+        </div>
       </aside>
     </div>
   );
