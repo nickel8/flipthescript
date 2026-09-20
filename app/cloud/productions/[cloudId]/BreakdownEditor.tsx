@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { SceneData, ProductionElement, TodoData } from "./types";
+import type { SceneData, ProductionElement, TodoData, SheetData } from "./types";
 import SceneList from "./SceneList";
 import SceneEditor from "./SceneEditor";
 import TodoSection from "./TodoSection";
@@ -30,6 +30,12 @@ export default function BreakdownEditor({
   const handleCompleteToggle = useCallback((sceneId: string, isComplete: boolean) => {
     setScenes((prev) =>
       prev.map((s) => (s.id === sceneId ? { ...s, is_complete: isComplete } : s))
+    );
+  }, []);
+
+  const handleSheetChange = useCallback((sceneId: string, sheet: SheetData | null) => {
+    setScenes((prev) =>
+      prev.map((s) => (s.id === sceneId ? { ...s, sheet } : s))
     );
   }, []);
 
@@ -64,6 +70,7 @@ export default function BreakdownEditor({
             productionElements={elements}
             onCompleteToggle={handleCompleteToggle}
             onElementCreated={handleElementCreated}
+            onSheetChange={(sheet) => handleSheetChange(selectedScene.id, sheet)}
           />
         ) : (
           <div className="flex items-center justify-center h-full min-h-64 text-sm opacity-25">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import type { SceneData, ProductionElement, SheetData, SceneElementData } from "./types";
+// sheetRef lets async handlers always read the current sheet without stale closures
 import {
   updateSynopsis,
   addElement,
@@ -28,6 +29,7 @@ interface Props {
   productionElements: ProductionElement[];
   onCompleteToggle: (sceneId: string, isComplete: boolean) => void;
   onElementCreated: (el: ProductionElement) => void;
+  onSheetChange: (sheet: SheetData | null) => void;
 }
 
 export default function SceneEditor({
@@ -36,25 +38,34 @@ export default function SceneEditor({
   productionElements,
   onCompleteToggle,
   onElementCreated,
+  onSheetChange,
 }: Props) {
   const [sheet, setSheet] = useState<SheetData | null>(scene.sheet);
   const [synopsis, setSynopsis] = useState(scene.sheet?.synopsis ?? "");
   const [saving, setSaving] = useState(false);
   const [isComplete, setIsComplete] = useState(scene.is_complete);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Keep a ref so async handlers always read the latest sheet without stale closures
+  const sheetRef = useRef<SheetData | null>(scene.sheet);
 
-  // Reset when a different scene is selected (key prop handles unmount,
-  // but update local state for in-place prop changes too)
+  function applySheet(next: SheetData | null) {
+    sheetRef.current = next;
+    setSheet(next);
+    onSheetChange(next);
+  }
+
   useEffect(() => {
+    sheetRef.current = scene.sheet;
     setSheet(scene.sheet);
     setSynopsis(scene.sheet?.synopsis ?? "");
     setIsComplete(scene.is_complete);
   }, [scene.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function getOrCreateSheet(): Promise<string> {
-    if (sheet?.id) return sheet.id;
+    if (sheetRef.current?.id) return sheetRef.current.id;
     const id = await ensureSheet(scene.id);
-    setSheet({ id, synopsis: "", notes: "", is_reviewed: false, scene_elements: [] });
+    const newSheet: SheetData = { id, synopsis: "", notes: "", is_reviewed: false, scene_elements: [] };
+    applySheet(newSheet);
     return id;
   }
 
@@ -66,6 +77,9 @@ export default function SceneEditor({
       try {
         const id = await getOrCreateSheet();
         await updateSynopsis(id, value);
+        // Sync the saved synopsis back to the parent so switching scenes preserves it
+        const current = sheetRef.current;
+        if (current) onSheetChange({ ...current, synopsis: value });
       } finally {
         setSaving(false);
       }
@@ -79,27 +93,18 @@ export default function SceneEditor({
       id: result.sceneElementId,
       element: { id: result.elementId, name: result.name, category },
     };
-    setSheet((prev) =>
-      prev
-        ? {
-            ...prev,
-            scene_elements: prev.scene_elements.some((se) => se.id === newSE.id)
-              ? prev.scene_elements
-              : [...prev.scene_elements, newSE],
-          }
-        : prev
-    );
+    const current = sheetRef.current;
+    if (!current || current.scene_elements.some((se) => se.id === newSE.id)) return;
+    applySheet({ ...current, scene_elements: [...current.scene_elements, newSE] });
     if (result.isNew) {
       onElementCreated({ id: result.elementId, name: result.name, category });
     }
   }
 
   async function handleRemoveElement(sceneElementId: string) {
-    setSheet((prev) =>
-      prev
-        ? { ...prev, scene_elements: prev.scene_elements.filter((se) => se.id !== sceneElementId) }
-        : prev
-    );
+    const current = sheetRef.current;
+    if (!current) return;
+    applySheet({ ...current, scene_elements: current.scene_elements.filter((se) => se.id !== sceneElementId) });
     await removeElement(sceneElementId);
   }
 
