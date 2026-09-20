@@ -146,13 +146,25 @@ export default async function ProductionPage({
         </span>
       </div>
 
-      {/* Editor fills remaining height */}
-      <BreakdownEditor
-        scenes={scenes}
-        productionElements={productionElements}
-        productionId={production.id}
-        initialTodos={todos}
-      />
+      {/* Editor fills remaining height — or upload prompt when empty */}
+      {scenes.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+          <p className="text-sm opacity-30">No script uploaded yet.</p>
+          <Link
+            href={`/cloud/productions/${cloudId}/upload`}
+            className="bg-black text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 hover:opacity-80 transition-opacity"
+          >
+            Upload Script PDF
+          </Link>
+        </div>
+      ) : (
+        <BreakdownEditor
+          scenes={scenes}
+          productionElements={productionElements}
+          productionId={production.id}
+          initialTodos={todos}
+        />
+      )}
     </div>
   );
 }
