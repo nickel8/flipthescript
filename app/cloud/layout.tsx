@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function CloudLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="border-b border-black px-6 py-4 flex items-center justify-between sticky top-0 bg-white z-10">
+      <header className="border-b border-black px-6 py-4 flex items-center justify-between sticky top-0 bg-white z-10" style={{ height: "57px" }}>
         <Link href="/cloud/dashboard" className="font-bold text-sm tracking-widest uppercase">
           FlipTheScript
         </Link>
