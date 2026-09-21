@@ -132,8 +132,15 @@ export async function extractLinesFromPdf(
 ): Promise<Array<{ line: string; page: number }>> {
   // Dynamic import keeps this out of client bundles
   const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  // Disable worker in Node.js — we run everything in the main thread
-  pdfjsLib.GlobalWorkerOptions.workerSrc = "";
+  // In Node.js, pdfjs needs a path to the worker file — empty string causes the
+  // "fake worker" setup to fail. Resolve the absolute path via createRequire.
+  if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+    const { createRequire } = await import("module");
+    const req = createRequire(import.meta.url);
+    pdfjsLib.GlobalWorkerOptions.workerSrc = req.resolve(
+      "pdfjs-dist/legacy/build/pdf.worker.mjs"
+    );
+  }
 
   const loadingTask = pdfjsLib.getDocument({
     data: new Uint8Array(buffer),
