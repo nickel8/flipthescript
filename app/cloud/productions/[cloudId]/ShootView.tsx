@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, type ReactNode } from "react";
+import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -154,6 +154,8 @@ function formatDate(iso: string): string {
 
 export default function ShootView({ scenes, selectedSceneId, productionId, onSelect, initialShootDays, addDaySignal }: Props) {
   const [groups, setGroups] = useState<Map<number, SceneData[]>>(() => groupByDay(scenes));
+  const groupsRef = useRef(groups);
+  groupsRef.current = groups;
   const [activeScene, setActiveScene] = useState<SceneData | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -180,11 +182,12 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
           payload.push({ id: s.id, shoot_day: day, shoot_order: i + 1 });
         });
       }
-      await fetch("/api/update-shoot-order", {
+      const res = await fetch("/api/update-shoot-order", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productionId, scenes: payload }),
       });
+      if (!res.ok) console.error("update-shoot-order failed", res.status, await res.text());
       setSaving(false);
     },
     [productionId]
@@ -247,35 +250,32 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
 
     const activeId = active.id as string;
     const overId = over.id as string;
-    const day = findDayForScene(activeId, groups);
+
+    // Use ref to get the latest committed state (avoids stale closure)
+    const current = groupsRef.current;
+    const day = findDayForScene(activeId, current);
     if (day === null) return;
 
     // Reorder within the same day
     if (!overId.startsWith("day-")) {
-      const overDay = findDayForScene(overId, groups);
+      const overDay = findDayForScene(overId, current);
       if (overDay === day) {
-        setGroups((prev) => {
-          const next = new Map(prev);
-          const group = prev.get(day)!;
-          const from = group.findIndex((s) => s.id === activeId);
-          const to = group.findIndex((s) => s.id === overId);
-          if (from !== to) {
-            const reordered = arrayMove(group, from, to);
-            next.set(day, reordered);
-            save(next);
-            return next;
-          }
-          return prev;
-        });
+        const group = current.get(day)!;
+        const from = group.findIndex((s) => s.id === activeId);
+        const to = group.findIndex((s) => s.id === overId);
+        if (from !== to) {
+          const reordered = arrayMove(group, from, to);
+          const next = new Map(current);
+          next.set(day, reordered);
+          setGroups(next);
+          save(next);
+        }
         return;
       }
     }
 
-    // Cross-day move already handled in onDragOver — read latest state then save
-    setGroups((latest) => {
-      save(latest);
-      return latest;
-    });
+    // Cross-day move already handled in onDragOver — save current ref state
+    save(current);
   }
 
   useEffect(() => {
