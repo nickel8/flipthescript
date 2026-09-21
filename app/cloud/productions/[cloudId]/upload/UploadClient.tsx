@@ -59,7 +59,11 @@ export default function UploadClient({
       setParsing(false);
 
       if (!res.ok) {
-        setError(data.error ?? `Parsing failed (${res.status}).`);
+        const msg = data.error ?? `Parsing failed (${res.status}).`;
+        const debug = data.debug_lines?.length
+          ? `\n\nFirst extracted lines:\n${(data.debug_lines as string[]).join("\n")}`
+          : "";
+        setError(msg + debug);
         return;
       }
 
