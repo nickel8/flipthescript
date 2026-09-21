@@ -26,13 +26,29 @@ export default async function ProductionPage({
   const { cloudId } = await params;
   const session = await requireCloudSession();
 
-  // Production (verify ownership)
+  // Find production by cloudId (any authenticated user can look up the prod row)
   const prodRes = await dbFetch(
-    `productions?cloud_id=eq.${cloudId}&owner_id=eq.${session.id}&select=id,name`
+    `productions?cloud_id=eq.${cloudId}&select=id,name,owner_id`
   );
   const prods = await prodRes.json();
   if (!Array.isArray(prods) || prods.length === 0) notFound();
-  const production = prods[0] as { id: string; name: string };
+  const prodRaw = prods[0] as { id: string; name: string; owner_id: string };
+
+  // Determine user role: owner, collaborator, viewer, or none
+  let userRole: "owner" | "collaborator" | "viewer" = "viewer";
+  if (prodRaw.owner_id === session.id) {
+    userRole = "owner";
+  } else {
+    const memberRes = await dbFetch(
+      `production_members?production_id=eq.${prodRaw.id}&user_id=eq.${session.id}&select=role`
+    );
+    const memberRows = await memberRes.json();
+    if (!Array.isArray(memberRows) || memberRows.length === 0) notFound();
+    const role = memberRows[0].role as string;
+    userRole = role === "collaborator" || role === "dept_owner" ? "collaborator" : "viewer";
+  }
+
+  const production = { id: prodRaw.id, name: prodRaw.name };
 
   // Episodes → scripts → scenes + elements (parallel)
   const episodesRes = await dbFetch(`episodes?production_id=eq.${production.id}&select=id`);
@@ -158,7 +174,20 @@ export default async function ProductionPage({
         <span className="ml-auto text-xs opacity-25 tabular-nums">
           {scenes.length} scene{scenes.length !== 1 ? "s" : ""}
         </span>
-        {scenes.length > 0 && (
+        {userRole === "viewer" && (
+          <span className="text-xs font-bold uppercase tracking-widest opacity-30 border border-black/20 px-2 py-0.5">
+            View only
+          </span>
+        )}
+        {userRole === "owner" && (
+          <Link
+            href={`/cloud/productions/${cloudId}/members`}
+            className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
+          >
+            Members
+          </Link>
+        )}
+        {scenes.length > 0 && userRole !== "viewer" && (
           <>
             <Link
               href={`/cloud/productions/${cloudId}/schedule`}
@@ -172,13 +201,15 @@ export default async function ProductionPage({
             >
               Upload new version
             </Link>
-            <a
-              href={`/api/export-breakdown?cloudId=${cloudId}`}
-              className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
-            >
-              Export PDF
-            </a>
           </>
+        )}
+        {scenes.length > 0 && (
+          <a
+            href={`/api/export-breakdown?cloudId=${cloudId}`}
+            className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
+          >
+            Export PDF
+          </a>
         )}
       </div>
 
@@ -201,6 +232,7 @@ export default async function ProductionPage({
           initialTodos={todos}
           scriptId={currentScriptId}
           initialShootDays={shootDays}
+          readOnly={userRole === "viewer"}
         />
       )}
     </div>

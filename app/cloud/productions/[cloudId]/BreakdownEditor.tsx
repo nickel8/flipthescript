@@ -14,6 +14,7 @@ interface Props {
   initialTodos: TodoData[];
   scriptId: string | null;
   initialShootDays: ShootDayData[];
+  readOnly?: boolean;
 }
 
 export default function BreakdownEditor({
@@ -23,6 +24,7 @@ export default function BreakdownEditor({
   initialTodos,
   scriptId,
   initialShootDays,
+  readOnly = false,
 }: Props) {
   const [scenes, setScenes] = useState<SceneData[]>(initialScenes);
   const [elements, setElements] = useState<ProductionElement[]>(initialElements);
@@ -69,6 +71,7 @@ export default function BreakdownEditor({
           onCompleteToggle={handleCompleteToggle}
           onElementCreated={handleElementCreated}
           onSheetChange={(sheet) => handleSheetChange(selectedScene.id, sheet)}
+          readOnly={readOnly}
         />
       ) : (
         <div className="flex items-center justify-center h-full min-h-64 text-sm opacity-25">
@@ -169,6 +172,7 @@ export default function BreakdownEditor({
                     initialTodos={initialTodos}
                     scenes={sceneRefs}
                     selectedSceneCloudId={selectedScene?.cloud_id ?? null}
+                    readOnly={readOnly}
                   />
                 </div>
               ) : (

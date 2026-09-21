@@ -32,6 +32,7 @@ interface Props {
   onCompleteToggle: (sceneId: string, isComplete: boolean) => void;
   onElementCreated: (el: ProductionElement) => void;
   onSheetChange: (sheet: SheetData | null) => void;
+  readOnly?: boolean;
 }
 
 export default function SceneEditor({
@@ -41,6 +42,7 @@ export default function SceneEditor({
   onCompleteToggle,
   onElementCreated,
   onSheetChange,
+  readOnly = false,
 }: Props) {
   const [sheet, setSheet] = useState<SheetData | null>(scene.sheet);
   const [synopsis, setSynopsis] = useState(scene.sheet?.synopsis ?? "");
@@ -142,16 +144,23 @@ export default function SceneEditor({
             <p className="text-xs opacity-40 mt-0.5">{scene.time_of_day}</p>
           )}
         </div>
-        <button
-          onClick={handleToggleComplete}
-          className={`shrink-0 text-xs font-bold uppercase tracking-widest px-3 py-1 border transition-colors ${
-            isComplete
-              ? "border-green-600 text-green-700 bg-green-50 hover:bg-white"
-              : "border-black/25 hover:border-black"
-          }`}
-        >
-          {isComplete ? "✓ Complete" : "Mark complete"}
-        </button>
+        {!readOnly && (
+          <button
+            onClick={handleToggleComplete}
+            className={`shrink-0 text-xs font-bold uppercase tracking-widest px-3 py-1 border transition-colors ${
+              isComplete
+                ? "border-green-600 text-green-700 bg-green-50 hover:bg-white"
+                : "border-black/25 hover:border-black"
+            }`}
+          >
+            {isComplete ? "✓ Complete" : "Mark complete"}
+          </button>
+        )}
+        {readOnly && isComplete && (
+          <span className="shrink-0 text-xs font-bold uppercase tracking-widest px-3 py-1 border border-green-600 text-green-700 bg-green-50">
+            ✓ Complete
+          </span>
+        )}
       </div>
 
       {/* Synopsis */}
@@ -164,13 +173,19 @@ export default function SceneEditor({
             </span>
           )}
         </p>
-        <textarea
-          value={synopsis}
-          onChange={(e) => handleSynopsisChange(e.target.value)}
-          rows={2}
-          placeholder="What happens in this scene…"
-          className="w-full border border-black/20 px-3 py-2 text-sm focus:outline-none focus:border-black/50 resize-none leading-relaxed"
-        />
+        {readOnly ? (
+          <p className="text-sm leading-relaxed text-black/70 min-h-[3rem]">
+            {synopsis || <span className="opacity-30 italic">No synopsis</span>}
+          </p>
+        ) : (
+          <textarea
+            value={synopsis}
+            onChange={(e) => handleSynopsisChange(e.target.value)}
+            rows={2}
+            placeholder="What happens in this scene…"
+            className="w-full border border-black/20 px-3 py-2 text-sm focus:outline-none focus:border-black/50 resize-none leading-relaxed"
+          />
+        )}
       </div>
 
       {/* Categories — 2-column grid */}
@@ -183,6 +198,7 @@ export default function SceneEditor({
             allElements={productionElements.filter((el) => el.category === cat)}
             onAdd={(name) => handleAddElement(cat, name)}
             onRemove={handleRemoveElement}
+            readOnly={readOnly}
           />
         ))}
       </div>
@@ -198,12 +214,14 @@ function CategorySection({
   allElements,
   onAdd,
   onRemove,
+  readOnly = false,
 }: {
   category: string;
   sceneElements: SceneElementData[];
   allElements: ProductionElement[];
   onAdd: (name: string) => Promise<void>;
   onRemove: (sceneElementId: string) => Promise<void>;
+  readOnly?: boolean;
 }) {
   const [input, setInput] = useState("");
   const [open, setOpen] = useState(false);
@@ -263,18 +281,21 @@ function CategorySection({
               className="group inline-flex items-center gap-0.5 text-xs border border-black/20 px-1.5 py-0"
             >
               {se.element.name}
-              <button
-                onClick={() => onRemove(se.id)}
-                className="opacity-0 group-hover:opacity-40 hover:!opacity-80 leading-none transition-opacity"
-                aria-label={`Remove ${se.element.name}`}
-              >
-                ×
-              </button>
+              {!readOnly && (
+                <button
+                  onClick={() => onRemove(se.id)}
+                  className="opacity-0 group-hover:opacity-40 hover:!opacity-80 leading-none transition-opacity"
+                  aria-label={`Remove ${se.element.name}`}
+                >
+                  ×
+                </button>
+              )}
             </span>
           ))}
         </div>
       )}
 
+      {!readOnly && (
       <div className="relative">
         <input
           ref={inputRef}
@@ -338,6 +359,7 @@ function CategorySection({
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

@@ -20,9 +20,10 @@ interface Props {
   initialTodos: Todo[];
   scenes: SceneRef[];
   selectedSceneCloudId: string | null;
+  readOnly?: boolean;
 }
 
-export default function TodoSection({ productionId, initialTodos, scenes, selectedSceneCloudId }: Props) {
+export default function TodoSection({ productionId, initialTodos, scenes, selectedSceneCloudId, readOnly = false }: Props) {
   const [todos, setTodos] = useState<Todo[]>(initialTodos);
   const [title, setTitle] = useState("");
   const [sceneCloudId, setSceneCloudId] = useState(selectedSceneCloudId ?? "");
@@ -97,7 +98,7 @@ export default function TodoSection({ productionId, initialTodos, scenes, select
       </h2>
 
       {/* Add form */}
-      <form onSubmit={addTodo} className="mb-6 flex flex-col gap-2">
+      {!readOnly && <form onSubmit={addTodo} className="mb-6 flex flex-col gap-2">
         <input
           type="text"
           placeholder="New to-do…"
@@ -126,7 +127,7 @@ export default function TodoSection({ productionId, initialTodos, scenes, select
         >
           {adding ? "Adding…" : "Add"}
         </button>
-      </form>
+      </form>}
 
       {/* Pending */}
       {pending.length > 0 && (
@@ -138,6 +139,7 @@ export default function TodoSection({ productionId, initialTodos, scenes, select
               sceneLabel={todo.scene_cloud_id ? sceneLabel(todo.scene_cloud_id) : null}
               onToggle={toggleTodo}
               onDelete={deleteTodo}
+              readOnly={readOnly}
             />
           ))}
         </ul>
@@ -155,6 +157,7 @@ export default function TodoSection({ productionId, initialTodos, scenes, select
                 sceneLabel={todo.scene_cloud_id ? sceneLabel(todo.scene_cloud_id) : null}
                 onToggle={toggleTodo}
                 onDelete={deleteTodo}
+                readOnly={readOnly}
               />
             ))}
           </ul>
@@ -173,27 +176,43 @@ function TodoItem({
   sceneLabel,
   onToggle,
   onDelete,
+  readOnly = false,
 }: {
   todo: Todo;
   sceneLabel: string | null;
   onToggle: (id: string, done: boolean) => void;
   onDelete: (id: string) => void;
+  readOnly?: boolean;
 }) {
   return (
     <li className="flex items-start gap-2 group">
-      <button
-        onClick={() => onToggle(todo.id, !todo.is_done)}
-        className={`mt-0.5 w-4 h-4 shrink-0 border flex items-center justify-center transition-colors ${
-          todo.is_done ? "bg-black border-black" : "border-black/40 hover:border-black"
-        }`}
-        aria-label={todo.is_done ? "Mark incomplete" : "Mark complete"}
-      >
-        {todo.is_done && (
-          <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-            <path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        )}
-      </button>
+      {readOnly ? (
+        <span
+          className={`mt-0.5 w-4 h-4 shrink-0 border flex items-center justify-center ${
+            todo.is_done ? "bg-black border-black" : "border-black/40"
+          }`}
+        >
+          {todo.is_done && (
+            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+              <path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+        </span>
+      ) : (
+        <button
+          onClick={() => onToggle(todo.id, !todo.is_done)}
+          className={`mt-0.5 w-4 h-4 shrink-0 border flex items-center justify-center transition-colors ${
+            todo.is_done ? "bg-black border-black" : "border-black/40 hover:border-black"
+          }`}
+          aria-label={todo.is_done ? "Mark incomplete" : "Mark complete"}
+        >
+          {todo.is_done && (
+            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+              <path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+        </button>
+      )}
 
       <div className="flex-1 min-w-0">
         <p className={`text-sm leading-snug ${todo.is_done ? "line-through opacity-30" : ""}`}>
@@ -204,13 +223,15 @@ function TodoItem({
         )}
       </div>
 
-      <button
-        onClick={() => onDelete(todo.id)}
-        className="opacity-0 group-hover:opacity-30 hover:!opacity-80 text-sm leading-none mt-0.5 transition-opacity"
-        aria-label="Delete"
-      >
-        ×
-      </button>
+      {!readOnly && (
+        <button
+          onClick={() => onDelete(todo.id)}
+          className="opacity-0 group-hover:opacity-30 hover:!opacity-80 text-sm leading-none mt-0.5 transition-opacity"
+          aria-label="Delete"
+        >
+          ×
+        </button>
+      )}
     </li>
   );
 }
