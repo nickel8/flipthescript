@@ -116,11 +116,11 @@ export default function SceneEditor({
   }
 
   return (
-    <div className="p-6 max-w-3xl">
+    <div className="p-4">
       {/* Header */}
-      <div className="mb-5 flex items-start justify-between gap-6">
+      <div className="mb-3 flex items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-1">
             <span className="font-mono text-xs opacity-30 font-bold">{scene.scene_number}</span>
             <span
               className={`text-xs font-bold px-1.5 py-0.5 ${
@@ -137,14 +137,14 @@ export default function SceneEditor({
               <span className="text-xs opacity-30">p.{scene.page_start}</span>
             )}
           </div>
-          <h2 className="text-2xl font-bold leading-tight">{scene.location}</h2>
+          <h2 className="text-lg font-bold leading-tight">{scene.location}</h2>
           {scene.time_of_day && scene.time_of_day !== "UNSPECIFIED" && (
-            <p className="text-sm opacity-40 mt-1">{scene.time_of_day}</p>
+            <p className="text-xs opacity-40 mt-0.5">{scene.time_of_day}</p>
           )}
         </div>
         <button
           onClick={handleToggleComplete}
-          className={`shrink-0 text-xs font-bold uppercase tracking-widest px-3 py-1.5 border transition-colors ${
+          className={`shrink-0 text-xs font-bold uppercase tracking-widest px-3 py-1 border transition-colors ${
             isComplete
               ? "border-green-600 text-green-700 bg-green-50 hover:bg-white"
               : "border-black/25 hover:border-black"
@@ -155,8 +155,8 @@ export default function SceneEditor({
       </div>
 
       {/* Synopsis */}
-      <div className="mb-6">
-        <p className="text-xs font-bold uppercase tracking-widest opacity-30 mb-1.5">
+      <div className="mb-3">
+        <p className="text-xs font-bold uppercase tracking-widest opacity-30 mb-1">
           Synopsis
           {saving && (
             <span className="font-normal normal-case tracking-normal opacity-60 ml-2">
@@ -167,14 +167,14 @@ export default function SceneEditor({
         <textarea
           value={synopsis}
           onChange={(e) => handleSynopsisChange(e.target.value)}
-          rows={3}
+          rows={2}
           placeholder="What happens in this scene…"
           className="w-full border border-black/20 px-3 py-2 text-sm focus:outline-none focus:border-black/50 resize-none leading-relaxed"
         />
       </div>
 
       {/* Categories — 2-column grid */}
-      <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-2">
         {CATEGORIES.map((cat) => (
           <CategorySection
             key={cat}
