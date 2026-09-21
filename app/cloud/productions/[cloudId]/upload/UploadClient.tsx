@@ -39,6 +39,7 @@ export default function UploadClient({
   const [error, setError] = useState<string | null>(null);
   const [parsing, setParsing] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [debugLines, setDebugLines] = useState<string[]>([]);
 
   const isAmendment = !!currentScriptId;
 
@@ -59,11 +60,8 @@ export default function UploadClient({
       setParsing(false);
 
       if (!res.ok) {
-        const msg = data.error ?? `Parsing failed (${res.status}).`;
-        const debug = data.debug_lines?.length
-          ? `\n\nFirst extracted lines:\n${(data.debug_lines as string[]).join("\n")}`
-          : "";
-        setError(msg + debug);
+        setError(data.error ?? `Parsing failed (${res.status}).`);
+        if (data.debug_lines?.length) setDebugLines(data.debug_lines as string[]);
         return;
       }
 
@@ -169,6 +167,17 @@ export default function UploadClient({
         />
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+        {debugLines.length > 0 && (
+          <div className="mt-4 border border-black/10 p-3 font-mono text-xs overflow-auto max-h-64">
+            <p className="font-bold mb-2 opacity-40">Extracted lines (first {debugLines.length}):</p>
+            {debugLines.map((line, i) => (
+              <div key={i} className="flex gap-2">
+                <span className="opacity-30 shrink-0 w-8 text-right">{i + 1}</span>
+                <span className="break-all">{line || <em className="opacity-30">empty</em>}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
