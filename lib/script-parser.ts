@@ -91,7 +91,16 @@ function parseSlugLine(line: string): SlugMatch | null {
   if (line.length <= 5) return null;
   const upper = line.toUpperCase();
   if (!upper.includes("INT") && !upper.includes("EXT")) return null;
-  return tryFormatA(line) ?? tryFormatB(line);
+
+  // Strip "SCENE ONE." / "SCENE 1." prefix some scripts add before the slug
+  let work = line.replace(/^SCENE\s+[^.]+\.\s*/i, "");
+
+  // Strip trailing duplicate margin scene numbers: "... 1 1" or "... 42 42"
+  work = work.replace(/(\s+\d+[A-Za-z]?\.?){1,2}\s*$/, "").trim();
+
+  if (work.length <= 5) return null;
+
+  return tryFormatA(work) ?? tryFormatB(work);
 }
 
 export function buildScenes(

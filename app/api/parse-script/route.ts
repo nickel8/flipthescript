@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudSession } from "@/lib/cloud-session";
 import { put } from "@vercel/blob";
-import { extractLinesFromPdf, buildScenes } from "@/lib/script-parser";
+import { parseScript } from "@/lib/script-parser";
 
 export const maxDuration = 60; // allow up to 60s for large scripts
 
@@ -26,16 +26,11 @@ export async function POST(req: NextRequest) {
     });
 
     // Parse scenes from the PDF
-    const lines = await extractLinesFromPdf(buffer);
-    const scenes = buildScenes(lines);
+    const scenes = await parseScript(buffer);
 
     if (scenes.length === 0) {
-      // Return first 40 extracted lines to help diagnose regex mismatches
       return NextResponse.json(
-        {
-          error: "No scenes detected. Check that the PDF is a text-based screenplay.",
-          debug_lines: lines.slice(0, 40).map((l) => l.line),
-        },
+        { error: "No scenes detected. Check that the PDF is a text-based screenplay." },
         { status: 422 }
       );
     }
