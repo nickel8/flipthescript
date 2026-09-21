@@ -153,11 +153,6 @@ function formatDate(iso: string): string {
 }
 
 export default function ShootView({ scenes, selectedSceneId, productionId, onSelect, initialShootDays, addDaySignal }: Props) {
-  // Log initial scenes on mount so we can verify the server is sending correct shoot_day values
-  useEffect(() => {
-    console.log("[ShootView] initial scenes:", scenes.map(s => `${s.scene_number}=day${s.shoot_day}`).join(", "));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
   // liveGroups is updated immediately (not batched) — used as save source of truth
   const liveGroups = useRef<Map<number, SceneData[]>>(groupByDay(scenes));
   const [groups, setGroups] = useState<Map<number, SceneData[]>>(liveGroups.current);
@@ -202,8 +197,7 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
         body: JSON.stringify({ productionId, scenes: payload }),
       })
         .then(async (r) => {
-          const body = await r.text();
-          console.log("[ShootView] save response:", r.status, body);
+          if (!r.ok) console.error("[ShootView] save failed:", r.status, await r.text());
         })
         .finally(() => setSaving(false));
     }, 400);
