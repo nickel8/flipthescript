@@ -163,6 +163,7 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
   }
   const [activeScene, setActiveScene] = useState<SceneData | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saveSeq, setSaveSeq] = useState(0); // increment to trigger save
 
   // dayNumber → ISO date string
   const [dayDates, setDayDates] = useState<Map<number, string>>(() => {
@@ -178,25 +179,28 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
   );
 
-  const save = useCallback(
-    async (updated: Map<number, SceneData[]>) => {
-      setSaving(true);
-      const payload: { id: string; shoot_day: number; shoot_order: number }[] = [];
-      for (const [day, dayScenes] of updated) {
-        dayScenes.forEach((s, i) => {
-          payload.push({ id: s.id, shoot_day: day, shoot_order: i + 1 });
-        });
-      }
-      const res = await fetch("/api/update-shoot-order", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productionId, scenes: payload }),
+  // Save runs in useEffect so it always sees the committed, up-to-date groups state
+  useEffect(() => {
+    if (saveSeq === 0) return;
+    const payload: { id: string; shoot_day: number; shoot_order: number }[] = [];
+    for (const [day, dayScenes] of groups) {
+      dayScenes.forEach((s, i) => {
+        payload.push({ id: s.id, shoot_day: day, shoot_order: i + 1 });
       });
-      if (!res.ok) console.error("update-shoot-order failed", res.status, await res.text());
-      setSaving(false);
-    },
-    [productionId]
-  );
+    }
+    console.log("[ShootView] saving", payload.length, "scenes:", payload);
+    setSaving(true);
+    fetch("/api/update-shoot-order", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productionId, scenes: payload }),
+    })
+      .then((r) => {
+        if (!r.ok) r.text().then((t) => console.error("update-shoot-order failed", r.status, t));
+      })
+      .finally(() => setSaving(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saveSeq]);
 
   async function saveDate(day: number, iso: string | null) {
     const next = new Map(dayDates);
@@ -249,20 +253,16 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
 
   function onDragEnd({ active, over }: DragEndEvent) {
     setActiveScene(null);
-    if (!over) return;
 
     const activeId = active.id as string;
-    const overId = over.id as string;
-
-    // liveGroups.current is always up to date — not subject to React batching
     const current = liveGroups.current;
-    const day = findDayForScene(activeId, current);
-    if (day === null) return;
 
-    // Reorder within the same day
-    if (!overId.startsWith("day-")) {
+    // Same-day reorder (only when dropped on a scene in the same day)
+    if (over && !String(over.id).startsWith("day-")) {
+      const overId = String(over.id);
+      const day = findDayForScene(activeId, current);
       const overDay = findDayForScene(overId, current);
-      if (overDay === day) {
+      if (day !== null && overDay === day) {
         const group = current.get(day)!;
         const from = group.findIndex((s) => s.id === activeId);
         const to = group.findIndex((s) => s.id === overId);
@@ -271,14 +271,12 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
           const next = new Map(current);
           next.set(day, reordered);
           commitGroups(next);
-          save(next);
         }
-        return;
       }
     }
 
-    // Cross-day move already handled in onDragOver — save current ref state
-    save(current);
+    // Always save after any drag ends (cross-day handled in onDragOver, same-day just committed)
+    setSaveSeq((n) => n + 1);
   }
 
   useEffect(() => {
