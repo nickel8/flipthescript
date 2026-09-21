@@ -144,6 +144,14 @@ export default async function ProductionPage({
         <span className="ml-auto text-xs opacity-25 tabular-nums">
           {scenes.length} scene{scenes.length !== 1 ? "s" : ""}
         </span>
+        {scenes.length > 0 && (
+          <Link
+            href={`/cloud/productions/${cloudId}/upload`}
+            className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
+          >
+            Upload new version
+          </Link>
+        )}
       </div>
 
       {/* Editor fills remaining height — or upload prompt when empty */}
