@@ -58,5 +58,13 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Some scenes failed to update", failures }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, updated: results.length });
+  // Verify: read back the first scene to confirm the DB actually changed
+  const firstId = scenes[0].id;
+  const verifyRes = await fetch(
+    `${SB_URL}/rest/v1/scenes?id=eq.${firstId}&select=id,shoot_day,shoot_order`,
+    { headers: HEADERS }
+  );
+  const verifyData = await verifyRes.json();
+
+  return NextResponse.json({ ok: true, updated: results.length, verify: verifyData });
 }
