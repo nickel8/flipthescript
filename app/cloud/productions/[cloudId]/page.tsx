@@ -43,6 +43,7 @@ export default async function ProductionPage({
 
   let scenes: SceneData[] = [];
   let productionElements: ProductionElement[] = [];
+  let currentScriptId: string | null = null;
 
   if (episodeIds.length > 0) {
     const scriptsRes = await dbFetch(
@@ -52,6 +53,7 @@ export default async function ProductionPage({
     const scriptIds: string[] = Array.isArray(scripts)
       ? scripts.map((s: { id: string }) => s.id)
       : [];
+    if (scriptIds.length > 0) currentScriptId = scriptIds[0];
 
     if (scriptIds.length > 0) {
       const [scenesRes, elementsRes] = await Promise.all([
@@ -171,6 +173,7 @@ export default async function ProductionPage({
           productionElements={productionElements}
           productionId={production.id}
           initialTodos={todos}
+          scriptId={currentScriptId}
         />
       )}
     </div>

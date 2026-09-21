@@ -12,6 +12,7 @@ interface Props {
   productionElements: ProductionElement[];
   productionId: string;
   initialTodos: TodoData[];
+  scriptId: string | null;
 }
 
 export default function BreakdownEditor({
@@ -19,6 +20,7 @@ export default function BreakdownEditor({
   productionElements: initialElements,
   productionId,
   initialTodos,
+  scriptId,
 }: Props) {
   const [scenes, setScenes] = useState<SceneData[]>(initialScenes);
   const [elements, setElements] = useState<ProductionElement[]>(initialElements);
@@ -26,6 +28,7 @@ export default function BreakdownEditor({
     initialScenes[0]?.id ?? null
   );
   const [rightTab, setRightTab] = useState<"todos" | "elements">("todos");
+  const [showPdf, setShowPdf] = useState(false);
 
   const selectedScene = scenes.find((s) => s.id === selectedId) ?? null;
 
@@ -51,10 +54,30 @@ export default function BreakdownEditor({
     slugLine: s.slug_line,
   }));
 
+  const editorPane = (
+    <main className="flex-1 overflow-y-auto min-w-0">
+      {selectedScene ? (
+        <SceneEditor
+          key={selectedScene.id}
+          scene={selectedScene}
+          productionId={productionId}
+          productionElements={elements}
+          onCompleteToggle={handleCompleteToggle}
+          onElementCreated={handleElementCreated}
+          onSheetChange={(sheet) => handleSheetChange(selectedScene.id, sheet)}
+        />
+      ) : (
+        <div className="flex items-center justify-center h-full min-h-64 text-sm opacity-25">
+          Select a scene to begin
+        </div>
+      )}
+    </main>
+  );
+
   return (
     <div className="flex h-full overflow-hidden divide-x divide-black/10">
       {/* Scene list */}
-      <aside className="w-60 shrink-0 overflow-y-auto border-r border-black/10">
+      <aside className="w-52 shrink-0 overflow-y-auto">
         <SceneList
           scenes={scenes}
           selectedSceneId={selectedId}
@@ -62,26 +85,21 @@ export default function BreakdownEditor({
         />
       </aside>
 
-      {/* Breakdown editor */}
-      <main className="flex-1 overflow-y-auto">
-        {selectedScene ? (
-          <SceneEditor
-            key={selectedScene.id}
-            scene={selectedScene}
-            productionId={productionId}
-            productionElements={elements}
-            onCompleteToggle={handleCompleteToggle}
-            onElementCreated={handleElementCreated}
-            onSheetChange={(sheet) => handleSheetChange(selectedScene.id, sheet)}
+      {/* PDF viewer + breakdown editor */}
+      {showPdf && scriptId ? (
+        <div className="flex flex-1 overflow-hidden divide-x divide-black/10">
+          <iframe
+            src={`/api/script-pdf?scriptId=${scriptId}`}
+            className="flex-1 min-w-0 h-full border-0"
+            title="Script PDF"
           />
-        ) : (
-          <div className="flex items-center justify-center h-full min-h-64 text-sm opacity-25">
-            Select a scene to begin
-          </div>
-        )}
-      </main>
+          {editorPane}
+        </div>
+      ) : (
+        editorPane
+      )}
 
-      {/* Right panel — Todos / Elements */}
+      {/* Right panel — Todos / Elements / Script toggle */}
       <aside className="w-72 shrink-0 flex flex-col overflow-hidden">
         {/* Tab bar */}
         <div className="shrink-0 flex border-b border-black/10">
@@ -90,7 +108,7 @@ export default function BreakdownEditor({
               key={tab}
               onClick={() => setRightTab(tab)}
               className={`flex-1 text-xs font-bold uppercase tracking-widest py-2.5 transition-colors ${
-                rightTab === tab
+                rightTab === tab && !showPdf
                   ? "bg-black text-white"
                   : "hover:bg-black/5 opacity-40"
               }`}
@@ -98,6 +116,16 @@ export default function BreakdownEditor({
               {tab === "todos" ? "To-dos" : "Elements"}
             </button>
           ))}
+          {scriptId && (
+            <button
+              onClick={() => setShowPdf((p) => !p)}
+              className={`flex-1 text-xs font-bold uppercase tracking-widest py-2.5 transition-colors ${
+                showPdf ? "bg-black text-white" : "hover:bg-black/5 opacity-40"
+              }`}
+            >
+              Script
+            </button>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto">
