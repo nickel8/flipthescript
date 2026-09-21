@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
   // Parse the schedule PDF
   const buffer = await file.arrayBuffer();
-  const entries = await parseSchedule(buffer);
+  const { entries, dayDates } = await parseSchedule(buffer);
 
   if (entries.length === 0) {
     return NextResponse.json(
@@ -93,6 +93,23 @@ export async function POST(req: NextRequest) {
       }),
     });
     updated++;
+  }
+
+  // Upsert shoot_days dates
+  if (dayDates.size > 0) {
+    const dayRows = [...dayDates.entries()].map(([day_number, shoot_date]) => ({
+      production_id: productionId,
+      day_number,
+      shoot_date,
+    }));
+    await fetch(`${SB_URL}/rest/v1/shoot_days`, {
+      method: "POST",
+      headers: {
+        ...HEADERS,
+        Prefer: "resolution=merge-duplicates",
+      },
+      body: JSON.stringify(dayRows),
+    });
   }
 
   return NextResponse.json({ updated, notFound, total: entries.length });

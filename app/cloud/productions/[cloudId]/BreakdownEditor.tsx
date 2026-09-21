@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { SceneData, ProductionElement, TodoData, SheetData } from "./types";
+import type { SceneData, ProductionElement, TodoData, SheetData, ShootDayData } from "./types";
 import SceneList from "./SceneList";
 import SceneEditor from "./SceneEditor";
 import TodoSection from "./TodoSection";
@@ -13,6 +13,7 @@ interface Props {
   productionId: string;
   initialTodos: TodoData[];
   scriptId: string | null;
+  initialShootDays: ShootDayData[];
 }
 
 export default function BreakdownEditor({
@@ -21,6 +22,7 @@ export default function BreakdownEditor({
   productionId,
   initialTodos,
   scriptId,
+  initialShootDays,
 }: Props) {
   const [scenes, setScenes] = useState<SceneData[]>(initialScenes);
   const [elements, setElements] = useState<ProductionElement[]>(initialElements);
@@ -96,6 +98,7 @@ export default function BreakdownEditor({
               selectedSceneId={selectedId}
               productionId={productionId}
               onSelect={setSelectedId}
+              shootDays={initialShootDays}
             />
           </div>
         )}

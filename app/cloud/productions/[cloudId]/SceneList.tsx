@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { SceneData } from "./types";
+import type { SceneData, ShootDayData } from "./types";
 import ShootView from "./ShootView";
 
 type SortOrder = "story" | "shoot";
@@ -11,10 +11,12 @@ interface Props {
   selectedSceneId: string | null;
   productionId: string;
   onSelect: (sceneId: string) => void;
+  shootDays: ShootDayData[];
 }
 
-export default function SceneList({ scenes, selectedSceneId, productionId, onSelect }: Props) {
+export default function SceneList({ scenes, selectedSceneId, productionId, onSelect, shootDays }: Props) {
   const [sort, setSort] = useState<SortOrder>("story");
+  const [addDaySignal, setAddDaySignal] = useState(0);
 
   if (scenes.length === 0) {
     return <p className="text-xs opacity-30 p-4">No scenes published yet.</p>;
@@ -49,6 +51,14 @@ export default function SceneList({ scenes, selectedSceneId, productionId, onSel
             </button>
           ))}
         </div>
+        {sort === "shoot" && (
+          <button
+            onClick={() => setAddDaySignal((n) => n + 1)}
+            className="text-xs font-bold uppercase tracking-widest opacity-30 hover:opacity-70 transition-opacity"
+          >
+            + Add day
+          </button>
+        )}
       </div>
 
       {sort === "shoot" ? (
@@ -57,6 +67,8 @@ export default function SceneList({ scenes, selectedSceneId, productionId, onSel
           selectedSceneId={selectedSceneId}
           productionId={productionId}
           onSelect={onSelect}
+          initialShootDays={shootDays}
+          addDaySignal={addDaySignal}
         />
       ) : (
         <ul>

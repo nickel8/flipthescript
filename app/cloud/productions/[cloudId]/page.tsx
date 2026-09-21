@@ -2,7 +2,7 @@ import { requireCloudSession } from "@/lib/cloud-session";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import BreakdownEditor from "./BreakdownEditor";
-import type { SceneData, ProductionElement, TodoData } from "./types";
+import type { SceneData, ProductionElement, TodoData, ShootDayData } from "./types";
 
 export const metadata = {
   title: "Breakdown — FlipTheScript",
@@ -115,6 +115,18 @@ export default async function ProductionPage({
     }
   }
 
+  // Shoot days
+  const shootDaysRes = await dbFetch(
+    `shoot_days?production_id=eq.${production.id}&order=day_number.asc&select=day_number,shoot_date`
+  );
+  const shootDaysRaw = await shootDaysRes.json();
+  const shootDays: ShootDayData[] = Array.isArray(shootDaysRaw)
+    ? shootDaysRaw.map((r: { day_number: number; shoot_date: string | null }) => ({
+        dayNumber: r.day_number,
+        shootDate: r.shoot_date ?? null,
+      }))
+    : [];
+
   // Todos
   const todosRes = await dbFetch(
     `todos?production_id=eq.${production.id}&order=created_at.asc` +
@@ -182,6 +194,7 @@ export default async function ProductionPage({
           productionId={production.id}
           initialTodos={todos}
           scriptId={currentScriptId}
+          initialShootDays={shootDays}
         />
       )}
     </div>

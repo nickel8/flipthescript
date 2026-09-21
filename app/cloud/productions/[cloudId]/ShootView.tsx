@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -19,13 +19,15 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { SceneData } from "./types";
+import type { SceneData, ShootDayData } from "./types";
 
 interface Props {
   scenes: SceneData[];
   selectedSceneId: string | null;
   productionId: string;
   onSelect: (id: string) => void;
+  initialShootDays: ShootDayData[];
+  addDaySignal: number;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -136,10 +138,26 @@ function SortableRow({
 
 // ── Main ShootView ────────────────────────────────────────────────────────────
 
-export default function ShootView({ scenes, selectedSceneId, productionId, onSelect }: Props) {
+// Format ISO date "YYYY-MM-DD" → "Sat 16 May" for display
+function formatDate(iso: string): string {
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+}
+
+export default function ShootView({ scenes, selectedSceneId, productionId, onSelect, initialShootDays, addDaySignal }: Props) {
   const [groups, setGroups] = useState<Map<number, SceneData[]>>(() => groupByDay(scenes));
   const [activeScene, setActiveScene] = useState<SceneData | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // dayNumber → ISO date string
+  const [dayDates, setDayDates] = useState<Map<number, string>>(() => {
+    const m = new Map<number, string>();
+    for (const d of initialShootDays) {
+      if (d.shootDate) m.set(d.dayNumber, d.shootDate);
+    }
+    return m;
+  });
+  const [editingDay, setEditingDay] = useState<number | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
@@ -163,6 +181,18 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
     },
     [productionId]
   );
+
+  async function saveDate(day: number, iso: string | null) {
+    const next = new Map(dayDates);
+    if (iso) next.set(day, iso); else next.delete(day);
+    setDayDates(next);
+    setEditingDay(null);
+    await fetch("/api/update-shoot-day", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productionId, dayNumber: day, shootDate: iso }),
+    });
+  }
 
   function onDragStart({ active }: DragStartEvent) {
     const id = active.id as string;
@@ -237,6 +267,16 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
     save(groups);
   }
 
+  useEffect(() => {
+    if (addDaySignal === 0) return;
+    setGroups((prev) => {
+      const next = new Map(prev);
+      const maxDay = Math.max(0, ...[...next.keys()].filter((d) => d > 0));
+      next.set(maxDay + 1, []);
+      return next;
+    });
+  }, [addDaySignal]);
+
   const days = orderedDays(groups);
 
   return (
@@ -263,12 +303,36 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
               {/* Day header */}
               <div
                 id={`day-${day}`}
-                className="px-3 py-1.5 border-b border-black/10 bg-black/[0.03] flex items-center justify-between"
+                className="px-3 py-1.5 border-b border-black/10 bg-black/[0.03] flex items-center gap-2"
               >
-                <span className="text-xs font-bold uppercase tracking-widest opacity-50">
+                <span className="text-xs font-bold uppercase tracking-widest opacity-50 shrink-0">
                   {day === 0 ? "Unscheduled" : `Day ${day}`}
                 </span>
-                <span className="text-xs opacity-25 tabular-nums">
+
+                {day !== 0 && (
+                  editingDay === day ? (
+                    <input
+                      type="date"
+                      autoFocus
+                      defaultValue={dayDates.get(day) ?? ""}
+                      onBlur={(e) => saveDate(day, e.target.value || null)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") saveDate(day, (e.target as HTMLInputElement).value || null);
+                        if (e.key === "Escape") setEditingDay(null);
+                      }}
+                      className="text-xs border-0 bg-transparent outline-none flex-1 min-w-0 opacity-50"
+                    />
+                  ) : (
+                    <button
+                      onClick={() => setEditingDay(day)}
+                      className="text-xs opacity-30 hover:opacity-60 transition-opacity flex-1 text-left truncate"
+                    >
+                      {dayDates.has(day) ? formatDate(dayDates.get(day)!) : <span className="italic">add date</span>}
+                    </button>
+                  )
+                )}
+
+                <span className="text-xs opacity-25 tabular-nums shrink-0 ml-auto">
                   {doneCount}/{dayScenes.length}
                 </span>
               </div>

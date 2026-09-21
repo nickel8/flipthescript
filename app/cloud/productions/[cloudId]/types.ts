@@ -42,3 +42,8 @@ export interface TodoData {
   is_done: boolean;
   scene_cloud_id: string | null;
 }
+
+export interface ShootDayData {
+  dayNumber: number;
+  shootDate: string | null; // ISO "YYYY-MM-DD"
+}
