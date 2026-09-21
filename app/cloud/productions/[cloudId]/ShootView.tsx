@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, type ReactNode } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -10,6 +10,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  useDroppable,
   closestCorners,
 } from "@dnd-kit/core";
 import {
@@ -59,6 +60,13 @@ function findDayForScene(id: string, map: Map<number, SceneData[]>): number | nu
     if (scenes.some((s) => s.id === id)) return day;
   }
   return null;
+}
+
+// ── Droppable day container ───────────────────────────────────────────────────
+
+function DroppableDay({ id, children }: { id: string; children: ReactNode }) {
+  const { setNodeRef } = useDroppable({ id });
+  return <div ref={setNodeRef}>{children}</div>;
 }
 
 // ── Drag handle icon ─────────────────────────────────────────────────────────
@@ -337,23 +345,25 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
                 </span>
               </div>
 
-              <SortableContext
-                id={`day-${day}`}
-                items={dayScenes.map((s) => s.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                {dayScenes.map((scene) => (
-                  <SortableRow
-                    key={scene.id}
-                    scene={scene}
-                    selected={scene.id === selectedSceneId}
-                    onSelect={onSelect}
-                  />
-                ))}
-                {dayScenes.length === 0 && (
-                  <div className="px-3 py-2 text-xs opacity-20 italic">Drop scenes here</div>
-                )}
-              </SortableContext>
+              <DroppableDay id={`day-${day}`}>
+                <SortableContext
+                  id={`day-${day}`}
+                  items={dayScenes.map((s) => s.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {dayScenes.map((scene) => (
+                    <SortableRow
+                      key={scene.id}
+                      scene={scene}
+                      selected={scene.id === selectedSceneId}
+                      onSelect={onSelect}
+                    />
+                  ))}
+                  {dayScenes.length === 0 && (
+                    <div className="px-3 py-2 text-xs opacity-20 italic">Drop scenes here</div>
+                  )}
+                </SortableContext>
+              </DroppableDay>
             </div>
           );
         })}
