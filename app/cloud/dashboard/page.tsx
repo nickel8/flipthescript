@@ -38,13 +38,27 @@ export default async function CloudDashboardPage() {
           <h1 className="text-2xl font-bold">Productions</h1>
           <p className="text-sm opacity-50 mt-1">{session.email}</p>
         </div>
-        <SignOutButton />
+        <div className="flex items-center gap-4">
+          <Link
+            href="/cloud/productions/new"
+            className="bg-black text-white text-xs font-bold uppercase tracking-widest px-4 py-2 hover:opacity-80 transition-opacity"
+          >
+            New production
+          </Link>
+          <SignOutButton />
+        </div>
       </div>
 
       {productions.length === 0 ? (
-        <p className="text-sm opacity-50">
-          No productions yet. Publish from the Mac app to see them here.
-        </p>
+        <div className="flex flex-col items-center gap-4 py-16 text-center">
+          <p className="text-sm opacity-40">No productions yet.</p>
+          <Link
+            href="/cloud/productions/new"
+            className="bg-black text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 hover:opacity-80 transition-opacity"
+          >
+            New production
+          </Link>
+        </div>
       ) : (
         <ul className="divide-y divide-black/10 border border-black/10">
           {productions.map(p => (
