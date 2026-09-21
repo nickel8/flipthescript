@@ -212,7 +212,7 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
 
   function onDragStart({ active }: DragStartEvent) {
     const id = active.id as string;
-    for (const dayScenes of groups.values()) {
+    for (const dayScenes of liveGroups.current.values()) {
       const found = dayScenes.find((s) => s.id === id);
       if (found) { setActiveScene(found); break; }
     }
@@ -223,21 +223,21 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
     const activeId = active.id as string;
     const overId = over.id as string;
 
-    const activeDay = findDayForScene(activeId, groups);
+    // Always read from liveGroups — never from stale React state
+    const current = liveGroups.current;
+    const activeDay = findDayForScene(activeId, current);
     if (activeDay === null) return;
 
-    // overId is either a scene id or a day container id (prefixed "day-")
     const overDay = overId.startsWith("day-")
       ? parseInt(overId.slice(4), 10)
-      : findDayForScene(overId, groups);
+      : findDayForScene(overId, current);
 
     if (overDay === null || overDay === activeDay) return;
 
-    // Move scene to the new day — update liveGroups immediately
-    const prev = liveGroups.current;
-    const next = new Map(prev);
+    const next = new Map(current);
     const fromGroup = [...(next.get(activeDay) ?? [])];
-    const scene = fromGroup.find((s) => s.id === activeId)!;
+    const scene = fromGroup.find((s) => s.id === activeId);
+    if (!scene) return; // scene already moved, skip
     const toGroup = [...(next.get(overDay) ?? [])];
 
     next.set(activeDay, fromGroup.filter((s) => s.id !== activeId));
