@@ -172,6 +172,12 @@ export default async function ProductionPage({
             >
               Upload new version
             </Link>
+            <a
+              href={`/api/export-breakdown?cloudId=${cloudId}`}
+              className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
+            >
+              Export PDF
+            </a>
           </>
         )}
       </div>

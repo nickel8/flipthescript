@@ -12,6 +12,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@paddle/paddle-js": "^1.6.4",
+    "@react-pdf/renderer": "^4.9.0",
     "@vercel/blob": "^2.3.3",
     "next": "16.2.4",
     "pdfjs-dist": "^6.3.289",
