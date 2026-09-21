@@ -14,12 +14,20 @@ interface ParseResult {
   scenes: ParsedScene[];
 }
 
+interface CurrentScene {
+  scene_number: string;
+  slug_line: string;
+}
+
+type SceneDiffStatus = "same" | "changed" | "new";
+
 interface Props {
   cloudId: string;
   productionId: string;
   productionName: string;
   currentScriptId: string | null;
   currentScriptName: string | null;
+  currentScenes: CurrentScene[];
 }
 
 export default function UploadClient({
@@ -28,6 +36,7 @@ export default function UploadClient({
   productionName,
   currentScriptId,
   currentScriptName,
+  currentScenes,
 }: Props) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -255,9 +264,44 @@ export default function UploadClient({
 
         {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
+        {/* Diff summary (amendments only) */}
+        {isAmendment && (() => {
+          const oldMap = new Map(currentScenes.map(s => [s.scene_number, s.slug_line]));
+          const newNums = new Set(parseResult.scenes.map(s => s.sceneNumber));
+          const changed = parseResult.scenes.filter(s => {
+            const old = oldMap.get(s.sceneNumber);
+            return old !== undefined && old !== s.slugLine;
+          }).length;
+          const added = parseResult.scenes.filter(s => !oldMap.has(s.sceneNumber)).length;
+          const removed = currentScenes.filter(s => !newNums.has(s.scene_number)).length;
+          const same = parseResult.scenes.length - changed - added;
+          return (
+            <div className="mb-6 flex gap-6 text-xs">
+              {same > 0 && <span className="opacity-40">{same} unchanged</span>}
+              {changed > 0 && <span className="text-amber-600 font-bold">{changed} changed</span>}
+              {added > 0 && <span className="text-green-700 font-bold">{added} new</span>}
+              {removed > 0 && <span className="text-red-600 font-bold">{removed} removed</span>}
+            </div>
+          );
+        })()}
+
         {/* Scene list preview */}
-        <div className="border border-black/10 divide-y divide-black/10">
-          {parseResult.scenes.map((s, i) => (
+        {(() => {
+          const oldMap = isAmendment
+            ? new Map(currentScenes.map(s => [s.scene_number, s.slug_line]))
+            : null;
+          const removedScenes = isAmendment
+            ? currentScenes.filter(s => !parseResult.scenes.find(n => n.sceneNumber === s.scene_number))
+            : [];
+          return (
+          <div className="border border-black/10 divide-y divide-black/10">
+          {parseResult.scenes.map((s, i) => {
+            const old = oldMap?.get(s.sceneNumber);
+            const status: SceneDiffStatus = !isAmendment ? "same"
+              : old === undefined ? "new"
+              : old !== s.slugLine ? "changed"
+              : "same";
+            return (
             <div key={i} className="flex items-baseline gap-3 px-4 py-2.5">
               <span className="font-mono text-xs opacity-30 w-8 shrink-0">{s.sceneNumber}</span>
               <span
@@ -275,10 +319,23 @@ export default function UploadClient({
               {s.timeOfDay && s.timeOfDay !== "UNSPECIFIED" && (
                 <span className="text-xs opacity-30 shrink-0">{s.timeOfDay}</span>
               )}
+              {status === "new" && <span className="text-xs font-bold text-green-700 shrink-0">NEW</span>}
+              {status === "changed" && <span className="text-xs font-bold text-amber-600 shrink-0">CHANGED</span>}
               <span className="text-xs opacity-25 shrink-0 font-mono">p.{s.pageStart}</span>
+            </div>
+            );
+          })}
+          {/* Removed scenes */}
+          {removedScenes.map(s => (
+            <div key={`removed-${s.scene_number}`} className="flex items-baseline gap-3 px-4 py-2.5 opacity-40">
+              <span className="font-mono text-xs w-8 shrink-0">{s.scene_number}</span>
+              <span className="text-sm flex-1 min-w-0 truncate line-through">{s.slug_line}</span>
+              <span className="text-xs font-bold text-red-600 shrink-0">REMOVED</span>
             </div>
           ))}
         </div>
+          );
+        })()}
       </div>
     );
   }

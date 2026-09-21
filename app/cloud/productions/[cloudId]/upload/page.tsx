@@ -36,6 +36,8 @@ export default async function UploadScriptPage({
   let currentScriptId: string | null = null;
   let currentScriptName: string | null = null;
 
+  let currentScenes: Array<{ scene_number: string; slug_line: string }> = [];
+
   if (Array.isArray(episodes) && episodes.length > 0) {
     const epIds = episodes.map((e: { id: string }) => e.id).join(",");
     const scriptRes = await dbFetch(
@@ -45,6 +47,17 @@ export default async function UploadScriptPage({
     if (Array.isArray(scripts) && scripts.length > 0) {
       currentScriptId = scripts[0].id;
       currentScriptName = `${scripts[0].filename} (${scripts[0].version})`;
+
+      const scenesRes = await dbFetch(
+        `scenes?script_id=eq.${currentScriptId}&is_deleted=eq.false&select=scene_number,slug_line&order=scene_number.asc`
+      );
+      const raw = await scenesRes.json();
+      if (Array.isArray(raw)) {
+        currentScenes = raw.map((s: { scene_number: string; slug_line: string }) => ({
+          scene_number: s.scene_number,
+          slug_line: s.slug_line,
+        }));
+      }
     }
   }
 
@@ -55,6 +68,7 @@ export default async function UploadScriptPage({
       productionName={production.name}
       currentScriptId={currentScriptId}
       currentScriptName={currentScriptName}
+      currentScenes={currentScenes}
     />
   );
 }

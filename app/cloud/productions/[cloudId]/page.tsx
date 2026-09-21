@@ -46,7 +46,7 @@ export default async function ProductionPage({
 
   if (episodeIds.length > 0) {
     const scriptsRes = await dbFetch(
-      `scripts?episode_id=in.(${episodeIds.join(",")})&select=id`
+      `scripts?episode_id=in.(${episodeIds.join(",")})&is_current=eq.true&select=id`
     );
     const scripts = await scriptsRes.json();
     const scriptIds: string[] = Array.isArray(scripts)
