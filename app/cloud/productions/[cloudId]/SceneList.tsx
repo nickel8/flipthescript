@@ -20,8 +20,6 @@ export default function SceneList({ scenes, selectedSceneId, productionId, onSel
     return <p className="text-xs opacity-30 p-4">No scenes published yet.</p>;
   }
 
-  const hasShootOrder = scenes.some((s) => s.shoot_day > 0);
-
   const sorted =
     sort === "shoot"
       ? [...scenes].sort((a, b) => {
@@ -38,21 +36,19 @@ export default function SceneList({ scenes, selectedSceneId, productionId, onSel
         <p className="text-xs opacity-30">
           {completeCount}/{scenes.length} complete
         </p>
-        {hasShootOrder && (
-          <div className="flex border border-black/20 w-fit">
-            {(["story", "shoot"] as SortOrder[]).map((opt) => (
-              <button
-                key={opt}
-                onClick={() => setSort(opt)}
-                className={`text-xs font-bold uppercase tracking-widest px-2 py-1 transition-colors ${
-                  sort === opt ? "bg-black text-white" : "hover:bg-black/5"
-                }`}
-              >
-                {opt === "story" ? "Story" : "Shoot"}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="flex border border-black/20 w-fit">
+          {(["story", "shoot"] as SortOrder[]).map((opt) => (
+            <button
+              key={opt}
+              onClick={() => setSort(opt)}
+              className={`text-xs font-bold uppercase tracking-widest px-2 py-1 transition-colors ${
+                sort === opt ? "bg-black text-white" : "hover:bg-black/5"
+              }`}
+            >
+              {opt === "story" ? "Story" : "Shoot"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {sort === "shoot" ? (
