@@ -153,6 +153,11 @@ function formatDate(iso: string): string {
 }
 
 export default function ShootView({ scenes, selectedSceneId, productionId, onSelect, initialShootDays, addDaySignal }: Props) {
+  // Log initial scenes on mount so we can verify the server is sending correct shoot_day values
+  useEffect(() => {
+    console.log("[ShootView] initial scenes:", scenes.map(s => `${s.scene_number}=day${s.shoot_day}`).join(", "));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // liveGroups is updated immediately (not batched) — used as save source of truth
   const liveGroups = useRef<Map<number, SceneData[]>>(groupByDay(scenes));
   const [groups, setGroups] = useState<Map<number, SceneData[]>>(liveGroups.current);
@@ -179,27 +184,30 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
   );
 
-  // Save runs in useEffect so it always sees the committed, up-to-date groups state
+  // Save runs in useEffect so it always sees the committed, up-to-date groups state.
+  // Debounced: waits 400ms after the last drag end before saving.
   useEffect(() => {
     if (saveSeq === 0) return;
-    const payload: { id: string; shoot_day: number; shoot_order: number }[] = [];
-    for (const [day, dayScenes] of groups) {
-      dayScenes.forEach((s, i) => {
-        payload.push({ id: s.id, shoot_day: day, shoot_order: i + 1 });
-      });
-    }
-    console.log("[ShootView] saving payload:", JSON.stringify(payload));
-    setSaving(true);
-    fetch("/api/update-shoot-order", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productionId, scenes: payload }),
-    })
-      .then(async (r) => {
-        const body = await r.text();
-        console.log("[ShootView] response:", r.status, body);
+    const timer = setTimeout(() => {
+      const payload: { id: string; shoot_day: number; shoot_order: number }[] = [];
+      for (const [day, dayScenes] of groups) {
+        dayScenes.forEach((s, i) => {
+          payload.push({ id: s.id, shoot_day: day, shoot_order: i + 1 });
+        });
+      }
+      setSaving(true);
+      fetch("/api/update-shoot-order", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productionId, scenes: payload }),
       })
-      .finally(() => setSaving(false));
+        .then(async (r) => {
+          const body = await r.text();
+          console.log("[ShootView] save response:", r.status, body);
+        })
+        .finally(() => setSaving(false));
+    }, 400);
+    return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [saveSeq]);
 
