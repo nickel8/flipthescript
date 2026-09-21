@@ -147,12 +147,20 @@ export default async function ProductionPage({
           {scenes.length} scene{scenes.length !== 1 ? "s" : ""}
         </span>
         {scenes.length > 0 && (
-          <Link
-            href={`/cloud/productions/${cloudId}/upload`}
-            className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
-          >
-            Upload new version
-          </Link>
+          <>
+            <Link
+              href={`/cloud/productions/${cloudId}/schedule`}
+              className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
+            >
+              Import schedule
+            </Link>
+            <Link
+              href={`/cloud/productions/${cloudId}/upload`}
+              className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
+            >
+              Upload new version
+            </Link>
+          </>
         )}
       </div>
 
