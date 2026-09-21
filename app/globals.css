@@ -6,6 +6,13 @@
 html {
   font-family: 'Courier Prime', 'Courier New', Courier, monospace;
   background: #fff;
-  color: #0a0a0a;
+  color: #000;
   -webkit-font-smoothing: antialiased;
 }
+
+/* Tailwind opacity utilities produce grey text against white —
+   override the most common muted-text values to stay readable. */
+.opacity-40 { opacity: 0.65 !important; }
+.opacity-30 { opacity: 0.5 !important; }
+.opacity-25 { opacity: 0.45 !important; }
+.opacity-20 { opacity: 0.38 !important; }
