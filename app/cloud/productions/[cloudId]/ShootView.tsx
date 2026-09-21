@@ -153,9 +153,14 @@ function formatDate(iso: string): string {
 }
 
 export default function ShootView({ scenes, selectedSceneId, productionId, onSelect, initialShootDays, addDaySignal }: Props) {
-  const [groups, setGroups] = useState<Map<number, SceneData[]>>(() => groupByDay(scenes));
-  const groupsRef = useRef(groups);
-  groupsRef.current = groups;
+  // liveGroups is updated immediately (not batched) — used as save source of truth
+  const liveGroups = useRef<Map<number, SceneData[]>>(groupByDay(scenes));
+  const [groups, setGroups] = useState<Map<number, SceneData[]>>(liveGroups.current);
+
+  function commitGroups(next: Map<number, SceneData[]>) {
+    liveGroups.current = next;
+    setGroups(next);
+  }
   const [activeScene, setActiveScene] = useState<SceneData | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -228,20 +233,18 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
 
     if (overDay === null || overDay === activeDay) return;
 
-    // Move scene to the new day
-    setGroups((prev) => {
-      const next = new Map(prev);
-      const fromGroup = [...(next.get(activeDay) ?? [])];
-      const scene = fromGroup.find((s) => s.id === activeId)!;
-      const toGroup = [...(next.get(overDay) ?? [])];
+    // Move scene to the new day — update liveGroups immediately
+    const prev = liveGroups.current;
+    const next = new Map(prev);
+    const fromGroup = [...(next.get(activeDay) ?? [])];
+    const scene = fromGroup.find((s) => s.id === activeId)!;
+    const toGroup = [...(next.get(overDay) ?? [])];
 
-      next.set(activeDay, fromGroup.filter((s) => s.id !== activeId));
-      next.set(overDay, [...toGroup, scene]);
+    next.set(activeDay, fromGroup.filter((s) => s.id !== activeId));
+    next.set(overDay, [...toGroup, scene]);
 
-      // Remove empty days (except day 0 — keep unscheduled even if empty)
-      if (activeDay !== 0 && next.get(activeDay)?.length === 0) next.delete(activeDay);
-      return next;
-    });
+    if (activeDay !== 0 && next.get(activeDay)?.length === 0) next.delete(activeDay);
+    commitGroups(next);
   }
 
   function onDragEnd({ active, over }: DragEndEvent) {
@@ -251,8 +254,8 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
     const activeId = active.id as string;
     const overId = over.id as string;
 
-    // Use ref to get the latest committed state (avoids stale closure)
-    const current = groupsRef.current;
+    // liveGroups.current is always up to date — not subject to React batching
+    const current = liveGroups.current;
     const day = findDayForScene(activeId, current);
     if (day === null) return;
 
@@ -267,7 +270,7 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
           const reordered = arrayMove(group, from, to);
           const next = new Map(current);
           next.set(day, reordered);
-          setGroups(next);
+          commitGroups(next);
           save(next);
         }
         return;
@@ -280,12 +283,11 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
 
   useEffect(() => {
     if (addDaySignal === 0) return;
-    setGroups((prev) => {
-      const next = new Map(prev);
-      const maxDay = Math.max(0, ...[...next.keys()].filter((d) => d > 0));
-      next.set(maxDay + 1, []);
-      return next;
-    });
+    const prev = liveGroups.current;
+    const next = new Map(prev);
+    const maxDay = Math.max(0, ...[...next.keys()].filter((d) => d > 0));
+    next.set(maxDay + 1, []);
+    commitGroups(next);
   }, [addDaySignal]);
 
   const days = orderedDays(groups);
