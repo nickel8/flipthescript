@@ -188,15 +188,16 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
         payload.push({ id: s.id, shoot_day: day, shoot_order: i + 1 });
       });
     }
-    console.log("[ShootView] saving", payload.length, "scenes:", payload);
+    console.log("[ShootView] saving payload:", JSON.stringify(payload));
     setSaving(true);
     fetch("/api/update-shoot-order", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ productionId, scenes: payload }),
     })
-      .then((r) => {
-        if (!r.ok) r.text().then((t) => console.error("update-shoot-order failed", r.status, t));
+      .then(async (r) => {
+        const body = await r.text();
+        console.log("[ShootView] response:", r.status, body);
       })
       .finally(() => setSaving(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps

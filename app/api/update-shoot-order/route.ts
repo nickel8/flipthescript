@@ -37,15 +37,26 @@ export async function PATCH(req: NextRequest) {
   }
 
   // Parallel update — each scene gets its own PATCH
-  await Promise.all(
-    scenes.map((s) =>
-      fetch(`${SB_URL}/rest/v1/scenes?id=eq.${s.id}`, {
+  const results = await Promise.all(
+    scenes.map(async (s) => {
+      const r = await fetch(`${SB_URL}/rest/v1/scenes?id=eq.${s.id}`, {
         method: "PATCH",
-        headers: HEADERS,
+        headers: { ...HEADERS, Prefer: "return=minimal" },
         body: JSON.stringify({ shoot_day: s.shoot_day, shoot_order: s.shoot_order }),
-      })
-    )
+      });
+      if (!r.ok) {
+        const text = await r.text();
+        console.error(`Scene PATCH failed for ${s.id}:`, r.status, text);
+        return { id: s.id, ok: false, status: r.status, body: text };
+      }
+      return { id: s.id, ok: true };
+    })
   );
 
-  return NextResponse.json({ ok: true });
+  const failures = results.filter((r) => !r.ok);
+  if (failures.length > 0) {
+    return NextResponse.json({ error: "Some scenes failed to update", failures }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true, updated: results.length });
 }
