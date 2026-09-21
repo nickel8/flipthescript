@@ -185,7 +185,7 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
     if (saveSeq === 0) return;
     const timer = setTimeout(() => {
       const payload: { id: string; shoot_day: number; shoot_order: number }[] = [];
-      for (const [day, dayScenes] of groups) {
+      for (const [day, dayScenes] of liveGroups.current) {
         dayScenes.forEach((s, i) => {
           payload.push({ id: s.id, shoot_day: day, shoot_order: i + 1 });
         });
