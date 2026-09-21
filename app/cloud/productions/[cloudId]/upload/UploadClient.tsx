@@ -50,22 +50,27 @@ export default function UploadClient({
     setError(null);
     setParsing(true);
 
-    const form = new FormData();
-    form.append("pdf", file);
+    try {
+      const form = new FormData();
+      form.append("pdf", file);
 
-    const res = await fetch("/api/parse-script", { method: "POST", body: form });
-    const data = await res.json();
-    setParsing(false);
+      const res = await fetch("/api/parse-script", { method: "POST", body: form });
+      const data = await res.json().catch(() => ({}));
+      setParsing(false);
 
-    if (!res.ok) {
-      setError(data.error ?? "Parsing failed.");
-      return;
+      if (!res.ok) {
+        setError(data.error ?? `Parsing failed (${res.status}).`);
+        return;
+      }
+
+      setParseResult(data);
+      // Default version label: increment if amendment
+      setVersion(isAmendment ? "" : "v1");
+      setStep("preview");
+    } catch (err) {
+      setParsing(false);
+      setError(err instanceof Error ? err.message : "Parsing failed — please try again.");
     }
-
-    setParseResult(data);
-    // Default version label: increment if amendment
-    setVersion(isAmendment ? "" : "v1");
-    setStep("preview");
   }
 
   async function handleImport() {

@@ -18,26 +18,34 @@ export async function POST(req: NextRequest) {
 
   const buffer = await file.arrayBuffer();
 
-  // Upload to Vercel Blob so the PDF can be viewed later
-  const blob = await put(`scripts/${session.id}/${Date.now()}-${file.name}`, buffer, {
-    access: "public",
-    contentType: "application/pdf",
-  });
+  try {
+    // Upload to Vercel Blob so the PDF can be viewed later
+    const blob = await put(`scripts/${session.id}/${Date.now()}-${file.name}`, buffer, {
+      access: "public",
+      contentType: "application/pdf",
+    });
 
-  // Parse scenes from the PDF
-  const scenes = await parseScript(buffer);
+    // Parse scenes from the PDF
+    const scenes = await parseScript(buffer);
 
-  if (scenes.length === 0) {
+    if (scenes.length === 0) {
+      return NextResponse.json(
+        { error: "No scenes detected. Check that the PDF is a text-based screenplay." },
+        { status: 422 }
+      );
+    }
+
+    return NextResponse.json({
+      blobUrl: blob.url,
+      filename: file.name,
+      pageCount: scenes[scenes.length - 1].pageStart,
+      scenes,
+    });
+  } catch (err) {
+    console.error("parse-script error:", err);
     return NextResponse.json(
-      { error: "No scenes detected. Check that the PDF is a text-based screenplay." },
-      { status: 422 }
+      { error: err instanceof Error ? err.message : "Failed to parse PDF." },
+      { status: 500 }
     );
   }
-
-  return NextResponse.json({
-    blobUrl: blob.url,
-    filename: file.name,
-    pageCount: scenes[scenes.length - 1].pageStart,
-    scenes,
-  });
 }
