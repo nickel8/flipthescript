@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   try {
     // Upload to Vercel Blob so the PDF can be viewed later
     const blob = await put(`scripts/${session.id}/${Date.now()}-${file.name}`, buffer, {
-      access: "public",
+      access: "private",
       contentType: "application/pdf",
     });
 
