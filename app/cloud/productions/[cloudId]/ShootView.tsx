@@ -271,8 +271,11 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
       }
     }
 
-    // Cross-day move already handled in onDragOver — just save
-    save(groups);
+    // Cross-day move already handled in onDragOver — read latest state then save
+    setGroups((latest) => {
+      save(latest);
+      return latest;
+    });
   }
 
   useEffect(() => {
