@@ -94,6 +94,7 @@ export default function BreakdownEditor({
             <SceneList
               scenes={scenes}
               selectedSceneId={selectedId}
+              productionId={productionId}
               onSelect={setSelectedId}
             />
           </div>
