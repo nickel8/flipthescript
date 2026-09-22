@@ -187,6 +187,28 @@ export default async function ProductionPage({
             Members
           </Link>
         )}
+        <span className="opacity-10 text-xs">|</span>
+        <Link
+          href={`/cloud/productions/${cloudId}/tasks`}
+          className="text-xs uppercase tracking-widest opacity-20 hover:opacity-50 transition-opacity"
+          title="Coming soon"
+        >
+          Tasks
+        </Link>
+        <Link
+          href={`/cloud/productions/${cloudId}/continuity`}
+          className="text-xs uppercase tracking-widest opacity-20 hover:opacity-50 transition-opacity"
+          title="Coming soon"
+        >
+          Continuity
+        </Link>
+        <Link
+          href={`/cloud/productions/${cloudId}/budget`}
+          className="text-xs uppercase tracking-widest opacity-20 hover:opacity-50 transition-opacity"
+          title="Coming soon"
+        >
+          Budget
+        </Link>
         {scenes.length > 0 && userRole !== "viewer" && (
           <>
             <Link
