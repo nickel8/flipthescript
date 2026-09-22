@@ -1,74 +1,180 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+
+type Step = "email" | "code";
 
 export default function CloudSignInPage() {
   const router = useRouter();
+  const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resent, setResent] = useState(false);
+  const codeRef = useRef<HTMLInputElement>(null);
 
-  async function handleSubmit(e: FormEvent) {
+  // Focus the code input when we reach step two
+  useEffect(() => {
+    if (step === "code") codeRef.current?.focus();
+  }, [step]);
+
+  async function handleSendCode(e: FormEvent) {
     e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    await fetch("/api/cloud-auth/send-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+
+    // Always advance — response is always { sent: true } regardless of
+    // whether the email has an account (prevents enumeration).
+    setLoading(false);
+    setStep("code");
+  }
+
+  async function handleVerifyCode(e?: FormEvent) {
+    e?.preventDefault();
     setError("");
     setLoading(true);
 
     const res = await fetch("/api/cloud-auth/sign-in", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, code }),
     });
 
     const data = await res.json();
     setLoading(false);
 
     if (!res.ok) {
-      setError(data.error || "Sign in failed");
+      setError(data.error || "Invalid or expired code");
+      setCode("");
+      codeRef.current?.focus();
       return;
     }
 
     router.push("/cloud/dashboard");
   }
 
+  async function handleResend() {
+    setResent(false);
+    setError("");
+    setCode("");
+    await fetch("/api/cloud-auth/send-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    setResent(true);
+    codeRef.current?.focus();
+  }
+
+  function handleCodeChange(value: string) {
+    // Digits only, max 6
+    const digits = value.replace(/\D/g, "").slice(0, 6);
+    setCode(digits);
+    if (digits.length === 6) {
+      // Auto-submit once all six digits are entered
+      setTimeout(() => handleVerifyCode(), 0);
+    }
+  }
+
+  if (step === "email") {
+    return (
+      <div className="max-w-sm mx-auto py-24 px-6">
+        <h1 className="text-2xl font-bold mb-2">Sign in</h1>
+        <p className="text-sm opacity-50 mb-8">
+          We&apos;ll email you a six-digit code.
+        </p>
+
+        <form onSubmit={handleSendCode} className="flex flex-col gap-4">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-widest mb-1.5">
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoFocus
+              autoComplete="email"
+              className="w-full border border-black px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+            />
+          </div>
+
+          {error && <p className="text-sm text-red-600">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-black text-white text-sm font-bold px-4 py-2.5 hover:opacity-80 disabled:opacity-40 transition-opacity"
+          >
+            {loading ? "Sending…" : "Send code"}
+          </button>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-sm mx-auto py-24 px-6">
-      <h1 className="text-2xl font-bold mb-8">Sign in to Cloud</h1>
+      <h1 className="text-2xl font-bold mb-2">Check your email</h1>
+      <p className="text-sm opacity-50 mb-8">
+        We sent a six-digit code to <span className="font-mono">{email}</span>.
+        It expires in 10 minutes.
+      </p>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleVerifyCode} className="flex flex-col gap-4">
         <div>
-          <label className="block text-xs font-bold uppercase tracking-widest mb-1.5">Email</label>
+          <label className="block text-xs font-bold uppercase tracking-widest mb-1.5">
+            Code
+          </label>
           <input
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            required
-            className="w-full border border-black px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-bold uppercase tracking-widest mb-1.5">Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            className="w-full border border-black px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+            ref={codeRef}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            autoComplete="one-time-code"
+            value={code}
+            onChange={(e) => handleCodeChange(e.target.value)}
+            maxLength={6}
+            placeholder="000000"
+            className="w-full border border-black px-3 py-2 text-sm font-mono tracking-widest focus:outline-none focus:ring-1 focus:ring-black"
           />
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
+        {resent && !error && (
+          <p className="text-sm text-green-700">New code sent.</p>
+        )}
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || code.length < 6}
           className="bg-black text-white text-sm font-bold px-4 py-2.5 hover:opacity-80 disabled:opacity-40 transition-opacity"
         >
-          {loading ? "Signing in…" : "Sign in"}
+          {loading ? "Verifying…" : "Sign in"}
         </button>
       </form>
+
+      <div className="flex gap-4 mt-6 text-xs opacity-50">
+        <button onClick={handleResend} className="hover:opacity-100 transition-opacity">
+          Resend code
+        </button>
+        <span>·</span>
+        <button
+          onClick={() => { setStep("email"); setCode(""); setError(""); }}
+          className="hover:opacity-100 transition-opacity"
+        >
+          Use a different email
+        </button>
+      </div>
     </div>
   );
 }
