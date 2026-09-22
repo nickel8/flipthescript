@@ -126,15 +126,32 @@ export default function CloudSignInPage() {
     <div className="max-w-sm mx-auto py-24 px-6">
       <h1 className="text-2xl font-bold mb-2">Check your email</h1>
       <p className="text-sm opacity-50 mb-8">
-        We sent a six-digit code to <span className="font-mono">{email}</span>.
-        It expires in 10 minutes.
+        We sent a sign-in link to <span className="font-mono">{email}</span>.
+        Click it to sign in — no password needed.
       </p>
 
-      <form onSubmit={handleVerifyCode} className="flex flex-col gap-4">
-        <div>
-          <label className="block text-xs font-bold uppercase tracking-widest mb-1.5">
-            Code
-          </label>
+      {resent && !error && (
+        <p className="text-sm text-green-700 mb-6">New link sent.</p>
+      )}
+      {error && <p className="text-sm text-red-600 mb-6">{error}</p>}
+
+      <div className="flex gap-4 text-xs opacity-50 mb-10">
+        <button onClick={handleResend} className="hover:opacity-100 transition-opacity">
+          Resend link
+        </button>
+        <span>·</span>
+        <button
+          onClick={() => { setStep("email"); setCode(""); setError(""); }}
+          className="hover:opacity-100 transition-opacity"
+        >
+          Use a different email
+        </button>
+      </div>
+
+      {/* Code entry as a fallback — hidden until the user wants it */}
+      <details className="text-xs opacity-40 hover:opacity-60 transition-opacity">
+        <summary className="cursor-pointer select-none">Enter a code instead</summary>
+        <form onSubmit={handleVerifyCode} className="flex flex-col gap-3 mt-4">
           <input
             ref={codeRef}
             type="text"
@@ -145,36 +162,17 @@ export default function CloudSignInPage() {
             onChange={(e) => handleCodeChange(e.target.value)}
             maxLength={6}
             placeholder="000000"
-            className="w-full border border-black px-3 py-2 text-sm font-mono tracking-widest focus:outline-none focus:ring-1 focus:ring-black"
+            className="w-full border border-black/40 px-3 py-2 text-sm font-mono tracking-widest focus:outline-none focus:border-black opacity-100"
           />
-        </div>
-
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        {resent && !error && (
-          <p className="text-sm text-green-700">New code sent.</p>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading || code.length < 6}
-          className="bg-black text-white text-sm font-bold px-4 py-2.5 hover:opacity-80 disabled:opacity-40 transition-opacity"
-        >
-          {loading ? "Verifying…" : "Sign in"}
-        </button>
-      </form>
-
-      <div className="flex gap-4 mt-6 text-xs opacity-50">
-        <button onClick={handleResend} className="hover:opacity-100 transition-opacity">
-          Resend code
-        </button>
-        <span>·</span>
-        <button
-          onClick={() => { setStep("email"); setCode(""); setError(""); }}
-          className="hover:opacity-100 transition-opacity"
-        >
-          Use a different email
-        </button>
-      </div>
+          <button
+            type="submit"
+            disabled={loading || code.length < 6}
+            className="bg-black text-white text-xs font-bold uppercase tracking-widest px-4 py-2 hover:opacity-80 disabled:opacity-40 transition-opacity opacity-100"
+          >
+            {loading ? "Verifying…" : "Sign in with code"}
+          </button>
+        </form>
+      </details>
     </div>
   );
 }
