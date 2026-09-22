@@ -1,6 +1,9 @@
+import MagicLinkHandler from "./MagicLinkHandler";
+
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
+      <MagicLinkHandler />
 
       {/* Nav */}
       <header className="border-b border-black px-6 py-4 flex items-center justify-between sticky top-0 bg-white z-10">

@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       create_user: false,
       // Direct the magic link to our callback page so we can set the session cookie.
       // This URL must also be in Supabase → Auth → URL Configuration → Redirect URLs.
-      redirect_to: "https://www.flip-the-script.app/auth/callback",
+      redirect_to: "https://flip-the-script.app/auth/callback",
     }),
   });
 
