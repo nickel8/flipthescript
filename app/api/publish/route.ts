@@ -187,8 +187,9 @@ export async function POST(req: NextRequest) {
           page_start:     sc.pageStart,
           raw_text:       sc.rawText,
           revision_status: sc.revisionStatus,
-          shoot_day:      sc.shootDay,
-          shoot_order:    sc.shootOrder,
+          // shoot_day and shoot_order are managed exclusively by the web
+          // (drag-to-schedule). Omitting them here means merge-duplicates
+          // preserves the web-assigned values instead of resetting to 0.
           is_complete:    sc.isComplete,
           is_deleted:     false,
         })).filter(r => r.script_id);

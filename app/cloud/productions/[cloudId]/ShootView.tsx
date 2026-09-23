@@ -163,6 +163,7 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
   }
   const [activeScene, setActiveScene] = useState<SceneData | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const [saveSeq, setSaveSeq] = useState(0); // increment to trigger save
 
   // dayNumber → ISO date string
@@ -191,13 +192,17 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
         });
       }
       setSaving(true);
+      setSaveError(false);
       fetch("/api/update-shoot-order", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productionId, scenes: payload }),
       })
         .then(async (r) => {
-          if (!r.ok) console.error("[ShootView] save failed:", r.status, await r.text());
+          if (!r.ok) {
+            console.error("[ShootView] save failed:", r.status, await r.text());
+            setSaveError(true);
+          }
         })
         .finally(() => setSaving(false));
     }, 400);
@@ -298,6 +303,11 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
       {saving && (
         <div className="absolute top-0 right-0 text-xs opacity-30 px-3 py-2 pointer-events-none">
           saving…
+        </div>
+      )}
+      {saveError && (
+        <div className="absolute top-0 right-0 text-xs text-red-600 font-bold px-3 py-2">
+          Failed to save — reload and try again
         </div>
       )}
 
