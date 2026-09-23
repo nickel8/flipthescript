@@ -1,6 +1,7 @@
 import { requireCloudSession } from "@/lib/cloud-session";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import DigestSceneList from "./DigestSceneList";
 
 export const metadata = {
   title: "Overview — FlipTheScript",
@@ -53,7 +54,7 @@ export default async function ProductionDigestPage({
 
   const productionId = prodRaw.id;
 
-  // Episodes → scripts → scenes (lighter select for digest)
+  // Episodes → scripts → scenes
   const episodesRes = await dbFetch(`episodes?production_id=eq.${productionId}&select=id`);
   const episodes = await episodesRes.json();
   const episodeIds: string[] = Array.isArray(episodes)
@@ -62,16 +63,13 @@ export default async function ProductionDigestPage({
 
   type DigestScene = {
     id: string;
-    cloud_id: string;
     scene_number: string;
-    slug_line: string;
     int_ext: string;
     location: string;
     time_of_day: string;
     is_complete: boolean;
     shoot_day: number;
-    shoot_order: number;
-    element_count: number;
+    elements: { name: string; category: string }[];
   };
 
   let scenes: DigestScene[] = [];
@@ -92,27 +90,29 @@ export default async function ProductionDigestPage({
       const scenesRes = await dbFetch(
         `scenes?script_id=eq.${scriptId}&is_deleted=eq.false` +
           `&order=shoot_day.asc,shoot_order.asc,scene_number.asc` +
-          `&select=id,cloud_id,scene_number,slug_line,int_ext,location,time_of_day,` +
-          `is_complete,shoot_day,shoot_order,` +
-          `breakdown_sheets(scene_elements(id))`
+          `&select=id,scene_number,int_ext,location,time_of_day,is_complete,shoot_day,shoot_order,` +
+          `breakdown_sheets(scene_elements(elements(name,category)))`
       );
       const rawScenes = await scenesRes.json();
       if (Array.isArray(rawScenes)) {
         scenes = rawScenes.map((r: Record<string, unknown>) => {
           const sheets = (r.breakdown_sheets as Record<string, unknown>[] | null) ?? [];
-          const ses = (sheets[0]?.scene_elements as { id: string }[] | null) ?? [];
+          const ses = (sheets[0]?.scene_elements as Record<string, unknown>[] | null) ?? [];
+          const elements = ses
+            .filter((se) => se.elements)
+            .map((se) => {
+              const el = se.elements as { name: string; category: string };
+              return { name: el.name, category: el.category };
+            });
           return {
             id: r.id as string,
-            cloud_id: r.cloud_id as string,
             scene_number: r.scene_number as string,
-            slug_line: r.slug_line as string,
             int_ext: (r.int_ext as string) ?? "",
             location: (r.location as string) ?? "",
             time_of_day: (r.time_of_day as string) ?? "",
             is_complete: (r.is_complete as boolean) ?? false,
             shoot_day: (r.shoot_day as number) ?? 0,
-            shoot_order: (r.shoot_order as number) ?? 0,
-            element_count: ses.length,
+            elements,
           };
         });
       }
@@ -131,7 +131,10 @@ export default async function ProductionDigestPage({
       }))
     : [];
 
-  const shootDateMap = new Map(shootDays.map((d) => [d.dayNumber, d.shootDate]));
+  // Serialisable map for client component
+  const shootDates: Record<number, string | null> = {};
+  for (const d of shootDays) shootDates[d.dayNumber] = d.shootDate;
+
   const today = new Date().toISOString().slice(0, 10);
   const datedDays = shootDays.filter((d) => d.shootDate);
   const nextDay = datedDays.find((d) => d.shootDate! >= today) ?? datedDays[datedDays.length - 1] ?? null;
@@ -139,26 +142,34 @@ export default async function ProductionDigestPage({
 
   const totalScenes = scenes.length;
   const completeScenes = scenes.filter((s) => s.is_complete).length;
-
-  // Group scenes by shoot day for the prep list
-  const grouped = new Map<number, DigestScene[]>();
-  for (const scene of scenes) {
-    const day = scene.shoot_day ?? 0;
-    if (!grouped.has(day)) grouped.set(day, []);
-    grouped.get(day)!.push(scene);
-  }
-  const sortedDays = [...grouped.keys()].sort((a, b) => {
-    if (a === 0) return 1;
-    if (b === 0) return -1;
-    return a - b;
-  });
-
   const canEdit = userRole !== "viewer";
 
+  // Script card: clickable if script exists
+  const ScriptCard = scriptId ? (
+    <a
+      href={`/api/script-pdf?scriptId=${scriptId}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="p-3 border-r border-black hover:bg-black hover:text-white transition-colors group block"
+    >
+      <p className="text-xs uppercase tracking-widest opacity-40 group-hover:opacity-60 mb-1">Script</p>
+      <p className="font-bold text-sm truncate">{scriptFilename ?? "Current version"}</p>
+      {scriptUploadedAt && (
+        <p className="text-xs opacity-40 mt-0.5">{formatDate(scriptUploadedAt)}</p>
+      )}
+    </a>
+  ) : (
+    <div className="p-3 border-r border-black">
+      <p className="text-xs uppercase tracking-widest opacity-40 mb-1">Script</p>
+      <p className="text-sm opacity-40">No script uploaded</p>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen">
-      {/* Page header */}
-      <div className="border-b border-black px-6 py-3 flex items-center gap-3">
+    <div className="flex flex-col overflow-hidden" style={{ height: "calc(100vh - 57px)" }}>
+
+      {/* Sub-header */}
+      <div className="shrink-0 border-b border-black px-6 py-3 flex items-center gap-3">
         <Link
           href="/cloud/dashboard"
           className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
@@ -182,44 +193,33 @@ export default async function ProductionDigestPage({
         )}
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-12">
+      {/* Fixed content: stats + nav */}
+      <div className="shrink-0 px-6 pt-4 pb-2 max-w-4xl w-full mx-auto">
 
-        {/* At a glance */}
-        <div className="grid grid-cols-3 border border-black mb-10">
-          <div className="p-6 border-r border-black">
-            <p className="text-xs uppercase tracking-widest opacity-40 mb-2">Script</p>
-            {scriptId ? (
-              <>
-                <p className="font-bold text-sm truncate">{scriptFilename ?? "Current version"}</p>
-                {scriptUploadedAt && (
-                  <p className="text-xs opacity-40 mt-1">{formatDate(scriptUploadedAt)}</p>
-                )}
-              </>
-            ) : (
-              <p className="text-sm opacity-40">No script uploaded</p>
-            )}
-          </div>
-          <div className="p-6 border-r border-black">
-            <p className="text-xs uppercase tracking-widest opacity-40 mb-2">Shoot start</p>
+        {/* At a glance — compact stat bar */}
+        <div className="grid grid-cols-3 border border-black mb-4">
+          {ScriptCard}
+
+          <div className="p-3 border-r border-black">
+            <p className="text-xs uppercase tracking-widest opacity-40 mb-1">Shoot start</p>
             {firstShootDate ? (
               <>
                 <p className="font-bold text-sm">{formatDate(firstShootDate)}</p>
-                <p className="text-xs opacity-40 mt-1">Day 1 of {shootDays.length}</p>
+                <p className="text-xs opacity-40 mt-0.5">Day 1 of {shootDays.length}</p>
               </>
             ) : (
               <p className="text-sm opacity-40">Not scheduled</p>
             )}
           </div>
-          <div className="p-6">
-            <p className="text-xs uppercase tracking-widest opacity-40 mb-2">Breakdown</p>
+
+          <div className="p-3">
+            <p className="text-xs uppercase tracking-widest opacity-40 mb-1">Breakdown</p>
             {totalScenes > 0 ? (
               <>
-                <p className="font-bold text-sm">
-                  {completeScenes}/{totalScenes} scenes complete
-                </p>
-                <div className="mt-2 h-1 bg-black/10">
+                <p className="font-bold text-sm">{completeScenes}/{totalScenes} complete</p>
+                <div className="mt-1.5 h-0.5 bg-black/10">
                   <div
-                    className="h-1 bg-black transition-all"
+                    className="h-0.5 bg-black"
                     style={{ width: `${(completeScenes / totalScenes) * 100}%` }}
                   />
                 </div>
@@ -230,159 +230,77 @@ export default async function ProductionDigestPage({
           </div>
         </div>
 
-        {/* Navigation */}
-        <div className="mb-10">
-          <p className="text-xs uppercase tracking-widest opacity-30 mb-4">Go to</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {/* Navigation tiles */}
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
+          <Link
+            href={`/cloud/productions/${cloudId}/breakdown`}
+            className="border border-black p-3 hover:bg-black hover:text-white transition-colors group col-span-1"
+          >
+            <p className="text-[10px] uppercase tracking-widest opacity-50 group-hover:opacity-60 mb-1">Breakdown</p>
+            <p className="font-bold text-sm">{totalScenes > 0 ? `${totalScenes} scenes` : "—"}</p>
+          </Link>
 
-            <Link
-              href={`/cloud/productions/${cloudId}/breakdown`}
-              className="border border-black p-5 hover:bg-black hover:text-white transition-colors group"
+          <Link
+            href={`/cloud/productions/${cloudId}/sidings`}
+            className="border border-black p-3 hover:bg-black hover:text-white transition-colors group col-span-1"
+          >
+            <p className="text-[10px] uppercase tracking-widest opacity-50 group-hover:opacity-60 mb-1">Sidings</p>
+            <p className="font-bold text-sm">{nextDay ? `Day ${nextDay.dayNumber}` : "—"}</p>
+          </Link>
+
+          <Link
+            href={`/cloud/productions/${cloudId}/tasks`}
+            className="border border-black/20 p-3 transition-colors group col-span-1"
+          >
+            <p className="text-[10px] uppercase tracking-widest opacity-30 mb-1">Tasks</p>
+            <p className="font-bold text-sm opacity-30">Soon</p>
+          </Link>
+
+          <Link
+            href={`/cloud/productions/${cloudId}/continuity`}
+            className="border border-black/20 p-3 transition-colors group col-span-1"
+          >
+            <p className="text-[10px] uppercase tracking-widest opacity-30 mb-1">Continuity</p>
+            <p className="font-bold text-sm opacity-30">Soon</p>
+          </Link>
+
+          <Link
+            href={`/cloud/productions/${cloudId}/budget`}
+            className="border border-black/20 p-3 transition-colors group col-span-1"
+          >
+            <p className="text-[10px] uppercase tracking-widest opacity-30 mb-1">Budget</p>
+            <p className="font-bold text-sm opacity-30">Soon</p>
+          </Link>
+
+          {canEdit && totalScenes > 0 ? (
+            <a
+              href={`/api/export-breakdown?cloudId=${cloudId}`}
+              className="border border-black/20 p-3 hover:border-black/40 transition-colors col-span-1"
             >
-              <p className="text-xs uppercase tracking-widest opacity-50 group-hover:opacity-60 mb-2">Script breakdown</p>
-              <p className="font-bold">
-                {totalScenes > 0 ? `${totalScenes} scenes` : "No script yet"}
-              </p>
-            </Link>
-
-            {scriptId ? (
-              <a
-                href={`/api/script-pdf?scriptId=${scriptId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="border border-black p-5 hover:bg-black hover:text-white transition-colors group"
-              >
-                <p className="text-xs uppercase tracking-widest opacity-50 group-hover:opacity-60 mb-2">Script PDF</p>
-                <p className="font-bold">View</p>
-              </a>
-            ) : canEdit ? (
-              <Link
-                href={`/cloud/productions/${cloudId}/upload`}
-                className="border border-black p-5 hover:bg-black hover:text-white transition-colors group"
-              >
-                <p className="text-xs uppercase tracking-widest opacity-50 group-hover:opacity-60 mb-2">Script PDF</p>
-                <p className="font-bold">Upload script</p>
-              </Link>
-            ) : null}
-
-            <Link
-              href={`/cloud/productions/${cloudId}/sidings`}
-              className="border border-black p-5 hover:bg-black hover:text-white transition-colors group"
-            >
-              <p className="text-xs uppercase tracking-widest opacity-50 group-hover:opacity-60 mb-2">Sidings</p>
-              <p className="font-bold">
-                {firstShootDate ? `Day ${nextDay?.dayNumber ?? "—"}` : "Next shoot day"}
-              </p>
-            </Link>
-
-            <Link
-              href={`/cloud/productions/${cloudId}/tasks`}
-              className="border border-black/20 p-5 hover:border-black/40 transition-colors group"
-            >
-              <p className="text-xs uppercase tracking-widest opacity-30 mb-2">Tasks</p>
-              <p className="font-bold opacity-30">Coming soon</p>
-            </Link>
-
-            <Link
-              href={`/cloud/productions/${cloudId}/continuity`}
-              className="border border-black/20 p-5 hover:border-black/40 transition-colors group"
-            >
-              <p className="text-xs uppercase tracking-widest opacity-30 mb-2">Continuity</p>
-              <p className="font-bold opacity-30">Coming soon</p>
-            </Link>
-
-            <Link
-              href={`/cloud/productions/${cloudId}/budget`}
-              className="border border-black/20 p-5 hover:border-black/40 transition-colors group"
-            >
-              <p className="text-xs uppercase tracking-widest opacity-30 mb-2">Budget</p>
-              <p className="font-bold opacity-30">Coming soon</p>
-            </Link>
-
-            {canEdit && totalScenes > 0 && (
-              <a
-                href={`/api/export-breakdown?cloudId=${cloudId}`}
-                className="border border-black/20 p-5 hover:border-black/40 transition-colors"
-              >
-                <p className="text-xs uppercase tracking-widest opacity-30 mb-2">Export</p>
-                <p className="font-bold opacity-50">Breakdown PDF</p>
-              </a>
-            )}
-          </div>
+              <p className="text-[10px] uppercase tracking-widest opacity-30 mb-1">Export</p>
+              <p className="font-bold text-sm opacity-40">PDF</p>
+            </a>
+          ) : (
+            <div className="col-span-1" />
+          )}
         </div>
 
-        {/* Prep list — scenes in shoot order */}
+        {/* Scenes section label */}
         {totalScenes > 0 && (
-          <div>
-            <p className="text-xs uppercase tracking-widest opacity-30 mb-4">Scenes — shoot order</p>
-
-            {sortedDays.map((day) => {
-              const dayScenes = grouped.get(day)!;
-              const shootDate = day > 0 ? shootDateMap.get(day) : null;
-              return (
-                <div key={day} className="mb-6">
-                  {/* Day header */}
-                  <div className="flex items-baseline gap-3 mb-2 pb-1 border-b border-black/10">
-                    <span className="text-xs font-bold uppercase tracking-widest">
-                      {day === 0 ? "Unscheduled" : `Day ${day}`}
-                    </span>
-                    {shootDate && (
-                      <span className="text-xs opacity-40">{formatDate(shootDate)}</span>
-                    )}
-                    <span className="ml-auto text-xs opacity-30">
-                      {dayScenes.filter((s) => s.is_complete).length}/{dayScenes.length} complete
-                    </span>
-                  </div>
-
-                  {/* Scenes */}
-                  <div className="divide-y divide-black/5">
-                    {dayScenes.map((scene) => (
-                      <Link
-                        key={scene.id}
-                        href={`/cloud/productions/${cloudId}/breakdown`}
-                        className="flex items-center gap-3 py-2.5 hover:bg-black/3 transition-colors group -mx-2 px-2"
-                      >
-                        <span className="text-xs font-mono opacity-30 w-8 shrink-0 tabular-nums">
-                          {scene.scene_number}
-                        </span>
-                        <span
-                          className={`text-xs font-bold px-1 py-0.5 shrink-0 ${
-                            scene.int_ext === "EXT"
-                              ? "bg-green-100 text-green-700"
-                              : scene.int_ext === "INT/EXT"
-                              ? "bg-orange-100 text-orange-700"
-                              : "bg-blue-100 text-blue-700"
-                          }`}
-                        >
-                          {scene.int_ext || "INT"}
-                        </span>
-                        <span className="text-sm flex-1 truncate">
-                          {scene.location}
-                          {scene.time_of_day && scene.time_of_day !== "UNSPECIFIED" && (
-                            <span className="opacity-40 ml-1.5 text-xs">{scene.time_of_day}</span>
-                          )}
-                        </span>
-                        {scene.element_count > 0 && (
-                          <span className="text-xs opacity-30 shrink-0">
-                            {scene.element_count} element{scene.element_count !== 1 ? "s" : ""}
-                          </span>
-                        )}
-                        {scene.is_complete ? (
-                          <span className="text-xs text-green-600 font-bold shrink-0">✓</span>
-                        ) : (
-                          <span className="w-3 shrink-0" />
-                        )}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <p className="text-xs uppercase tracking-widest opacity-30">Scenes — shoot order</p>
         )}
+      </div>
 
-        {totalScenes === 0 && canEdit && (
-          <div className="text-center py-16">
+      {/* Scrollable scenes list */}
+      <div className="flex-1 overflow-y-auto px-6 pb-4 max-w-4xl w-full mx-auto">
+        {totalScenes > 0 ? (
+          <DigestSceneList
+            scenes={scenes}
+            shootDates={shootDates}
+            cloudId={cloudId}
+          />
+        ) : canEdit ? (
+          <div className="text-center py-12">
             <p className="text-sm opacity-30 mb-4">No script uploaded yet.</p>
             <Link
               href={`/cloud/productions/${cloudId}/upload`}
@@ -391,7 +309,7 @@ export default async function ProductionDigestPage({
               Upload Script PDF
             </Link>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
