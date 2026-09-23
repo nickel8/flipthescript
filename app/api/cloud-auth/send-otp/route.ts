@@ -8,9 +8,9 @@ export async function POST(req: NextRequest) {
   if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
 
   // create_user: false — only existing accounts receive a code.
-  // We call this regardless and always return { sent: true } so the response
-  // cannot be used to discover whether an email address has an account.
-  await fetch(`${SB_URL}/auth/v1/otp`, {
+  // We surface rate-limit errors so the client can show a useful message,
+  // but for all other outcomes we return { sent: true } to prevent email enumeration.
+  const sbRes = await fetch(`${SB_URL}/auth/v1/otp`, {
     method: "POST",
     headers: { "Content-Type": "application/json", apikey: ANON_KEY },
     body: JSON.stringify({
@@ -21,6 +21,13 @@ export async function POST(req: NextRequest) {
       redirect_to: "https://flip-the-script.app/auth/callback",
     }),
   });
+
+  if (sbRes.status === 429) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait a minute before trying again." },
+      { status: 429 }
+    );
+  }
 
   return NextResponse.json({ sent: true });
 }

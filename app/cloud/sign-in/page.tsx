@@ -13,27 +13,42 @@ export default function CloudSignInPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [resent, setResent] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const codeRef = useRef<HTMLInputElement>(null);
+
+  // Tick the cooldown timer down every second
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
 
   // Focus the code input when we reach step two
   useEffect(() => {
     if (step === "code") codeRef.current?.focus();
   }, [step]);
 
+  async function sendOtp(addr: string): Promise<string | null> {
+    const res = await fetch("/api/cloud-auth/send-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: addr }),
+    });
+    if (res.status === 429) {
+      const data = await res.json();
+      return data.error ?? "Too many requests. Please wait before trying again.";
+    }
+    setCooldown(60);
+    return null;
+  }
+
   async function handleSendCode(e: FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
-
-    await fetch("/api/cloud-auth/send-otp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-
-    // Always advance — response is always { sent: true } regardless of
-    // whether the email has an account (prevents enumeration).
+    const err = await sendOtp(email);
     setLoading(false);
+    if (err) { setError(err); return; }
     setStep("code");
   }
 
@@ -65,11 +80,8 @@ export default function CloudSignInPage() {
     setResent(false);
     setError("");
     setCode("");
-    await fetch("/api/cloud-auth/send-otp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
+    const err = await sendOtp(email);
+    if (err) { setError(err); return; }
     setResent(true);
     codeRef.current?.focus();
   }
@@ -136,8 +148,12 @@ export default function CloudSignInPage() {
       {error && <p className="text-sm text-red-600 mb-6">{error}</p>}
 
       <div className="flex gap-4 text-xs opacity-50 mb-10">
-        <button onClick={handleResend} className="hover:opacity-100 transition-opacity">
-          Resend link
+        <button
+          onClick={handleResend}
+          disabled={cooldown > 0}
+          className="hover:opacity-100 transition-opacity disabled:opacity-25 disabled:cursor-not-allowed"
+        >
+          {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend link"}
         </button>
         <span>·</span>
         <button
