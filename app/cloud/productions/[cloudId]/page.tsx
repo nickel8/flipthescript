@@ -284,7 +284,6 @@ export default async function ProductionPage({
           scenes={scenes}
           productionElements={productionElements}
           productionId={production.id}
-          initialTodos={todos}
           scriptId={currentScriptId}
           initialShootDays={shootDays}
           initialCategories={categories}

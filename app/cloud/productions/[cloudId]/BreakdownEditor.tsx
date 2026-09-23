@@ -1,18 +1,15 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { SceneData, ProductionElement, TodoData, SheetData, ShootDayData, CategoryData } from "./types";
+import type { SceneData, ProductionElement, SheetData, ShootDayData, CategoryData } from "./types";
 import SceneList from "./SceneList";
 import SceneEditor from "./SceneEditor";
-import TodoSection from "./TodoSection";
-import ElementsPanel from "./ElementsPanel";
 import CategoriesPanel from "./CategoriesPanel";
 
 interface Props {
   scenes: SceneData[];
   productionElements: ProductionElement[];
   productionId: string;
-  initialTodos: TodoData[];
   scriptId: string | null;
   initialShootDays: ShootDayData[];
   initialCategories: CategoryData[];
@@ -24,7 +21,6 @@ export default function BreakdownEditor({
   scenes: initialScenes,
   productionElements: initialElements,
   productionId,
-  initialTodos,
   scriptId,
   initialShootDays,
   initialCategories,
@@ -37,10 +33,9 @@ export default function BreakdownEditor({
   const [selectedId, setSelectedId] = useState<string | null>(
     initialScenes[0]?.id ?? null
   );
-  const [rightTab, setRightTab] = useState<"todos" | "elements" | "categories">("todos");
   const [showPdf, setShowPdf] = useState(false);
   const [showSceneList, setShowSceneList] = useState(true);
-  const [showRightPanel, setShowRightPanel] = useState(true);
+  const [showRightPanel, setShowRightPanel] = useState(!readOnly);
 
   const selectedScene = scenes.find((s) => s.id === selectedId) ?? null;
 
@@ -59,12 +54,6 @@ export default function BreakdownEditor({
   const handleElementCreated = useCallback((el: ProductionElement) => {
     setElements((prev) => (prev.some((e) => e.id === el.id) ? prev : [...prev, el]));
   }, []);
-
-  const sceneRefs = scenes.map((s) => ({
-    cloudId: s.cloud_id,
-    sceneNumber: s.scene_number,
-    slugLine: s.slug_line,
-  }));
 
   const editorPane = (
     <main className="flex-1 overflow-y-auto min-w-0">
@@ -136,32 +125,24 @@ export default function BreakdownEditor({
       >
         {showRightPanel ? (
           <>
-            {/* Tab bar + collapse button */}
-            <div className="shrink-0 flex border-b border-black/10">
+            {/* Header */}
+            <div className="shrink-0 flex items-center border-b border-black/10">
               <button
                 onClick={() => setShowRightPanel(false)}
                 title="Collapse panel"
-                className="w-7 shrink-0 flex items-center justify-center text-xs opacity-25 hover:opacity-60 transition-opacity border-r border-black/10"
+                className="w-7 shrink-0 flex items-center justify-center text-xs opacity-25 hover:opacity-60 transition-opacity border-r border-black/10 self-stretch"
               >
                 →
               </button>
-              {(["todos", "elements", ...(!readOnly ? ["categories"] : [])] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setRightTab(tab as typeof rightTab)}
-                  className={`flex-1 text-xs font-bold uppercase tracking-wide py-2 transition-colors ${
-                    rightTab === tab && !showPdf
-                      ? "bg-black text-white"
-                      : "hover:bg-black/5 opacity-40"
-                  }`}
-                >
-                  {tab === "todos" ? "To-dos" : tab === "elements" ? "Elements" : "Categories"}
-                </button>
-              ))}
+              {!readOnly && (
+                <span className="flex-1 text-xs font-bold uppercase tracking-wide py-2 px-3 opacity-40">
+                  Categories
+                </span>
+              )}
               {scriptId && (
                 <button
                   onClick={() => setShowPdf((p) => !p)}
-                  className={`flex-1 text-xs font-bold uppercase tracking-wide py-2 transition-colors ${
+                  className={`text-xs font-bold uppercase tracking-wide py-2 px-3 transition-colors ${
                     showPdf ? "bg-black text-white" : "hover:bg-black/5 opacity-40"
                   }`}
                 >
@@ -172,19 +153,7 @@ export default function BreakdownEditor({
 
             {/* Panel content */}
             <div className="flex-1 overflow-y-auto">
-              {rightTab === "todos" ? (
-                <div className="p-4">
-                  <TodoSection
-                    productionId={productionId}
-                    initialTodos={initialTodos}
-                    scenes={sceneRefs}
-                    selectedSceneCloudId={selectedScene?.cloud_id ?? null}
-                    readOnly={readOnly}
-                  />
-                </div>
-              ) : rightTab === "elements" ? (
-                <ElementsPanel scene={selectedScene} />
-              ) : (
+              {!readOnly && (
                 <CategoriesPanel
                   productionId={productionId}
                   categories={categories}
