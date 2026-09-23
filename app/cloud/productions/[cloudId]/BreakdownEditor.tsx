@@ -97,6 +97,19 @@ export default function BreakdownEditor({
     setElements((prev) => (prev.some((e) => e.id === el.id) ? prev : [...prev, el]));
   }, []);
 
+  const handleOrderChange = useCallback(
+    (updates: { id: string; shoot_day: number; shoot_order: number }[]) => {
+      const map = new Map(updates.map((u) => [u.id, u]));
+      setScenes((prev) =>
+        prev.map((s) => {
+          const u = map.get(s.id);
+          return u ? { ...s, shoot_day: u.shoot_day, shoot_order: u.shoot_order } : s;
+        })
+      );
+    },
+    []
+  );
+
   const editorPane = (
     <main className="flex-1 overflow-y-auto min-w-0">
       {selectedScene ? (
@@ -142,6 +155,7 @@ export default function BreakdownEditor({
               productionId={productionId}
               onSelect={setSelectedId}
               shootDays={initialShootDays}
+              onOrderChange={handleOrderChange}
             />
           </div>
         )}

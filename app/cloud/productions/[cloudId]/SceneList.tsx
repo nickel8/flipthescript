@@ -12,9 +12,10 @@ interface Props {
   productionId: string;
   onSelect: (sceneId: string) => void;
   shootDays: ShootDayData[];
+  onOrderChange: (updates: { id: string; shoot_day: number; shoot_order: number }[]) => void;
 }
 
-export default function SceneList({ scenes, selectedSceneId, productionId, onSelect, shootDays }: Props) {
+export default function SceneList({ scenes, selectedSceneId, productionId, onSelect, shootDays, onOrderChange }: Props) {
   const [sort, setSort] = useState<SortOrder>("story");
   const [addDaySignal, setAddDaySignal] = useState(0);
 
@@ -69,6 +70,7 @@ export default function SceneList({ scenes, selectedSceneId, productionId, onSel
           onSelect={onSelect}
           initialShootDays={shootDays}
           addDaySignal={addDaySignal}
+          onOrderChange={onOrderChange}
         />
       ) : (
         <ul>

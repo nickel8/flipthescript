@@ -29,6 +29,7 @@ interface Props {
   onSelect: (id: string) => void;
   initialShootDays: ShootDayData[];
   addDaySignal: number;
+  onOrderChange: (updates: { id: string; shoot_day: number; shoot_order: number }[]) => void;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -152,7 +153,7 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
 }
 
-export default function ShootView({ scenes, selectedSceneId, productionId, onSelect, initialShootDays, addDaySignal }: Props) {
+export default function ShootView({ scenes, selectedSceneId, productionId, onSelect, initialShootDays, addDaySignal, onOrderChange }: Props) {
   // liveGroups is updated immediately (not batched) — used as save source of truth
   const liveGroups = useRef<Map<number, SceneData[]>>(groupByDay(scenes));
   const [groups, setGroups] = useState<Map<number, SceneData[]>>(liveGroups.current);
@@ -285,6 +286,15 @@ export default function ShootView({ scenes, selectedSceneId, productionId, onSel
 
     // Always save after any drag ends (cross-day handled in onDragOver, same-day just committed)
     setSaveSeq((n) => n + 1);
+
+    // Notify parent so its scenes state stays in sync (survives Story↔Shoot toggle)
+    const updates: { id: string; shoot_day: number; shoot_order: number }[] = [];
+    for (const [day, dayScenes] of liveGroups.current) {
+      dayScenes.forEach((s, i) => {
+        updates.push({ id: s.id, shoot_day: day, shoot_order: i + 1 });
+      });
+    }
+    onOrderChange(updates);
   }
 
   useEffect(() => {
