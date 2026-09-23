@@ -52,3 +52,10 @@ export interface CategoryData {
   name: string;
   display_order: number;
 }
+
+export interface FlagData {
+  id: string;
+  note: string;
+  due_date: string | null;
+  is_done: boolean;
+}

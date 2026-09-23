@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import type { SceneData, ProductionElement, SheetData, ShootDayData, CategoryData } from "./types";
+import { useState, useCallback, useEffect } from "react";
+import type { SceneData, ProductionElement, SheetData, ShootDayData, CategoryData, FlagData } from "./types";
 import SceneList from "./SceneList";
 import SceneEditor from "./SceneEditor";
 import CategoriesPanel from "./CategoriesPanel";
@@ -30,12 +30,54 @@ export default function BreakdownEditor({
   const [scenes, setScenes] = useState<SceneData[]>(initialScenes);
   const [elements, setElements] = useState<ProductionElement[]>(initialElements);
   const [categories, setCategories] = useState<CategoryData[]>(initialCategories);
+  const [flags, setFlags] = useState<Map<string, FlagData>>(new Map());
   const [selectedId, setSelectedId] = useState<string | null>(
     initialScenes[0]?.id ?? null
   );
   const [showPdf, setShowPdf] = useState(false);
   const [showSceneList, setShowSceneList] = useState(true);
   const [showRightPanel, setShowRightPanel] = useState(!readOnly);
+
+  // Load the current user's flags for this production
+  useEffect(() => {
+    fetch(`/api/element-flags?productionId=${productionId}`)
+      .then((r) => r.json())
+      .then((data: { id: string; scene_element_id: string; note: string; due_date: string | null; is_done: boolean }[]) => {
+        if (!Array.isArray(data)) return;
+        const map = new Map<string, FlagData>();
+        for (const f of data) {
+          map.set(f.scene_element_id, { id: f.id, note: f.note, due_date: f.due_date, is_done: f.is_done });
+        }
+        setFlags(map);
+      })
+      .catch(() => {/* ignore */});
+  }, [productionId]);
+
+  const handleFlagToggle = useCallback(async (sceneElementId: string) => {
+    const existing = flags.get(sceneElementId);
+    if (existing) {
+      await fetch("/api/element-flags", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: existing.id }),
+      });
+      setFlags((prev) => {
+        const next = new Map(prev);
+        next.delete(sceneElementId);
+        return next;
+      });
+    } else {
+      const res = await fetch("/api/element-flags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sceneElementId, productionId }),
+      });
+      const data = await res.json();
+      if (data?.id) {
+        setFlags((prev) => new Map(prev).set(sceneElementId, { id: data.id, note: "", due_date: null, is_done: false }));
+      }
+    }
+  }, [flags, productionId]);
 
   const selectedScene = scenes.find((s) => s.id === selectedId) ?? null;
 
@@ -64,9 +106,11 @@ export default function BreakdownEditor({
           productionId={productionId}
           productionElements={elements}
           categories={categories.map((c) => c.name)}
+          flags={flags}
           onCompleteToggle={handleCompleteToggle}
           onElementCreated={handleElementCreated}
           onSheetChange={(sheet) => handleSheetChange(selectedScene.id, sheet)}
+          onFlagToggle={handleFlagToggle}
           readOnly={readOnly}
         />
       ) : (

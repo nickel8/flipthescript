@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import type { SceneData, ProductionElement, SheetData, SceneElementData } from "./types";
+import type { SceneData, ProductionElement, SheetData, SceneElementData, FlagData } from "./types";
 // sheetRef lets async handlers always read the current sheet without stale closures
 import {
   updateSynopsis,
@@ -16,9 +16,11 @@ interface Props {
   productionId: string;
   productionElements: ProductionElement[];
   categories: string[];
+  flags: Map<string, FlagData>;
   onCompleteToggle: (sceneId: string, isComplete: boolean) => void;
   onElementCreated: (el: ProductionElement) => void;
   onSheetChange: (sheet: SheetData | null) => void;
+  onFlagToggle: (sceneElementId: string) => Promise<void>;
   readOnly?: boolean;
 }
 
@@ -27,9 +29,11 @@ export default function SceneEditor({
   productionId,
   productionElements,
   categories,
+  flags,
   onCompleteToggle,
   onElementCreated,
   onSheetChange,
+  onFlagToggle,
   readOnly = false,
 }: Props) {
   const [sheet, setSheet] = useState<SheetData | null>(scene.sheet);
@@ -184,8 +188,10 @@ export default function SceneEditor({
             category={cat}
             sceneElements={(sheet?.scene_elements ?? []).filter((se) => se.element.category === cat)}
             allElements={productionElements.filter((el) => el.category === cat)}
+            flags={flags}
             onAdd={(name) => handleAddElement(cat, name)}
             onRemove={handleRemoveElement}
+            onFlagToggle={onFlagToggle}
             readOnly={readOnly}
           />
         ))}
@@ -200,15 +206,19 @@ function CategorySection({
   category,
   sceneElements,
   allElements,
+  flags,
   onAdd,
   onRemove,
+  onFlagToggle,
   readOnly = false,
 }: {
   category: string;
   sceneElements: SceneElementData[];
   allElements: ProductionElement[];
+  flags: Map<string, FlagData>;
   onAdd: (name: string) => Promise<void>;
   onRemove: (sceneElementId: string) => Promise<void>;
+  onFlagToggle: (sceneElementId: string) => Promise<void>;
   readOnly?: boolean;
 }) {
   const [input, setInput] = useState("");
@@ -263,23 +273,39 @@ function CategorySection({
 
       {sceneElements.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-1">
-          {sceneElements.map((se) => (
-            <span
-              key={se.id}
-              className="group inline-flex items-center gap-0.5 text-xs border border-black/20 px-1.5 py-0"
-            >
-              {se.element.name}
-              {!readOnly && (
+          {sceneElements.map((se) => {
+            const flagged = flags.has(se.id);
+            return (
+              <span
+                key={se.id}
+                className={`group inline-flex items-center gap-0.5 text-xs border px-1.5 py-0 transition-colors ${
+                  flagged ? "border-amber-400 bg-amber-50" : "border-black/20"
+                }`}
+              >
+                {se.element.name}
                 <button
-                  onClick={() => onRemove(se.id)}
-                  className="opacity-0 group-hover:opacity-40 hover:!opacity-80 leading-none transition-opacity"
-                  aria-label={`Remove ${se.element.name}`}
+                  onClick={() => onFlagToggle(se.id)}
+                  title={flagged ? "Remove flag" : "Flag this element"}
+                  className={`leading-none transition-opacity ${
+                    flagged
+                      ? "opacity-70 text-amber-600 hover:opacity-100"
+                      : "opacity-0 group-hover:opacity-30 hover:!opacity-70"
+                  }`}
                 >
-                  ×
+                  ⚑
                 </button>
-              )}
-            </span>
-          ))}
+                {!readOnly && (
+                  <button
+                    onClick={() => onRemove(se.id)}
+                    className="opacity-0 group-hover:opacity-40 hover:!opacity-80 leading-none transition-opacity"
+                    aria-label={`Remove ${se.element.name}`}
+                  >
+                    ×
+                  </button>
+                )}
+              </span>
+            );
+          })}
         </div>
       )}
 
