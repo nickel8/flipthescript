@@ -149,7 +149,7 @@ export default function BreakdownEditor({
                 <button
                   key={tab}
                   onClick={() => setRightTab(tab as typeof rightTab)}
-                  className={`flex-1 text-xs font-bold uppercase tracking-widest py-2 transition-colors ${
+                  className={`flex-1 text-xs font-bold uppercase tracking-wide py-2 transition-colors ${
                     rightTab === tab && !showPdf
                       ? "bg-black text-white"
                       : "hover:bg-black/5 opacity-40"
@@ -161,7 +161,7 @@ export default function BreakdownEditor({
               {scriptId && (
                 <button
                   onClick={() => setShowPdf((p) => !p)}
-                  className={`flex-1 text-xs font-bold uppercase tracking-widest py-2 transition-colors ${
+                  className={`flex-1 text-xs font-bold uppercase tracking-wide py-2 transition-colors ${
                     showPdf ? "bg-black text-white" : "hover:bg-black/5 opacity-40"
                   }`}
                 >
