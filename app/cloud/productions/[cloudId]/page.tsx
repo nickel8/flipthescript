@@ -77,15 +77,17 @@ export default async function ProductionDigestPage({
   let scenes: DigestScene[] = [];
   let scriptId: string | null = null;
   let scriptUploadedAt: string | null = null;
+  let scriptFilename: string | null = null;
 
   if (episodeIds.length > 0) {
     const scriptsRes = await dbFetch(
-      `scripts?episode_id=in.(${episodeIds.join(",")})&is_current=eq.true&select=id,created_at`
+      `scripts?episode_id=in.(${episodeIds.join(",")})&is_current=eq.true&select=id,filename,imported_at`
     );
     const scripts = await scriptsRes.json();
     if (Array.isArray(scripts) && scripts.length > 0) {
       scriptId = scripts[0].id as string;
-      scriptUploadedAt = scripts[0].created_at as string;
+      scriptUploadedAt = scripts[0].imported_at as string;
+      scriptFilename = scripts[0].filename as string;
 
       const scenesRes = await dbFetch(
         `scenes?script_id=eq.${scriptId}&is_deleted=eq.false` +
@@ -188,9 +190,9 @@ export default async function ProductionDigestPage({
             <p className="text-xs uppercase tracking-widest opacity-40 mb-2">Script</p>
             {scriptId ? (
               <>
-                <p className="font-bold text-sm">Current version</p>
+                <p className="font-bold text-sm truncate">{scriptFilename ?? "Current version"}</p>
                 {scriptUploadedAt && (
-                  <p className="text-xs opacity-40 mt-1">Uploaded {formatDate(scriptUploadedAt)}</p>
+                  <p className="text-xs opacity-40 mt-1">{formatDate(scriptUploadedAt)}</p>
                 )}
               </>
             ) : (
