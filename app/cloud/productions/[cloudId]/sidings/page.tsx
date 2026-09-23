@@ -1,6 +1,7 @@
 import { requireCloudSession } from "@/lib/cloud-session";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import PrintButton from "./PrintButton";
 
 export const metadata = { title: "Sidings — FlipTheScript" };
 
@@ -172,14 +173,7 @@ export default async function SidingsPage({
           <span>/</span>
           <span>Sidings</span>
         </div>
-        {scenes.length > 0 && (
-          <button
-            onClick={() => window.print()}
-            className="text-xs font-bold uppercase tracking-widest border border-black px-4 py-1.5 hover:bg-black hover:text-white transition-colors"
-          >
-            Print
-          </button>
-        )}
+        {scenes.length > 0 && <PrintButton />}
       </div>
 
       {/* Sidings header */}
