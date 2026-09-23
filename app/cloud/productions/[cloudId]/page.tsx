@@ -130,6 +130,9 @@ export default async function ProductionDigestPage({
     : [];
 
   const shootDateMap = new Map(shootDays.map((d) => [d.dayNumber, d.shootDate]));
+  const today = new Date().toISOString().slice(0, 10);
+  const datedDays = shootDays.filter((d) => d.shootDate);
+  const nextDay = datedDays.find((d) => d.shootDate! >= today) ?? datedDays[datedDays.length - 1] ?? null;
   const firstShootDate = shootDays.find((d) => d.shootDate)?.shootDate ?? null;
 
   const totalScenes = scenes.length;
@@ -259,6 +262,16 @@ export default async function ProductionDigestPage({
                 <p className="font-bold">Upload script</p>
               </Link>
             ) : null}
+
+            <Link
+              href={`/cloud/productions/${cloudId}/sidings`}
+              className="border border-black p-5 hover:bg-black hover:text-white transition-colors group"
+            >
+              <p className="text-xs uppercase tracking-widest opacity-50 group-hover:opacity-60 mb-2">Sidings</p>
+              <p className="font-bold">
+                {firstShootDate ? `Day ${nextDay?.dayNumber ?? "—"}` : "Next shoot day"}
+              </p>
+            </Link>
 
             <Link
               href={`/cloud/productions/${cloudId}/tasks`}
