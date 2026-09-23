@@ -180,8 +180,8 @@ export default function SceneEditor({
         )}
       </div>
 
-      {/* Categories — 2-column grid */}
-      <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+      {/* Categories — 1-col on mobile, 2-col on desktop */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
         {categories.map((cat) => (
           <CategorySection
             key={cat}

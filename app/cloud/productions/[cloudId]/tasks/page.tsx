@@ -78,7 +78,7 @@ export default async function TasksPage({
     : [];
 
   return (
-    <div className="max-w-2xl mx-auto py-12 px-6">
+    <div className="max-w-2xl mx-auto py-8 sm:py-12 px-4 sm:px-6">
       <p className="text-xs font-bold uppercase tracking-widest opacity-40 mb-8">
         <Link href="/cloud/dashboard" className="hover:opacity-100">Dashboard</Link>
         {" / "}

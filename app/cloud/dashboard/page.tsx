@@ -32,8 +32,8 @@ export default async function CloudDashboardPage() {
   const productions = await getProductions(session.id);
 
   return (
-    <div className="max-w-2xl mx-auto py-16 px-6">
-      <div className="flex items-center justify-between mb-10">
+    <div className="max-w-2xl mx-auto py-8 sm:py-16 px-4 sm:px-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 sm:mb-10">
         <div>
           <h1 className="text-2xl font-bold">Productions</h1>
           <p className="text-sm opacity-50 mt-1">{session.email}</p>

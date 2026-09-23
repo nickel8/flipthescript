@@ -98,7 +98,7 @@ export default function CloudSignInPage() {
 
   if (step === "email") {
     return (
-      <div className="max-w-sm mx-auto py-24 px-6">
+      <div className="max-w-sm mx-auto py-12 sm:py-24 px-6">
         <h1 className="text-2xl font-bold mb-2">Sign in</h1>
         <p className="text-sm opacity-50 mb-8">
           We&apos;ll email you a six-digit code.
@@ -135,7 +135,7 @@ export default function CloudSignInPage() {
   }
 
   return (
-    <div className="max-w-sm mx-auto py-24 px-6">
+    <div className="max-w-sm mx-auto py-12 sm:py-24 px-6">
       <h1 className="text-2xl font-bold mb-2">Check your email</h1>
       <p className="text-sm opacity-50 mb-8">
         We sent a sign-in link to <span className="font-mono">{email}</span>.

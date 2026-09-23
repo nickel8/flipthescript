@@ -150,7 +150,7 @@ export default async function ProductionDigestPage({
       href={`/api/script-pdf?scriptId=${scriptId}`}
       target="_blank"
       rel="noopener noreferrer"
-      className="p-3 border-r border-black hover:bg-black hover:text-white transition-colors group block"
+      className="p-2 sm:p-3 border-r border-black hover:bg-black hover:text-white transition-colors group block"
     >
       <p className="text-xs uppercase tracking-widest opacity-40 group-hover:opacity-60 mb-1">Script</p>
       <p className="font-bold text-sm truncate">{scriptFilename ?? "Current version"}</p>
@@ -159,7 +159,7 @@ export default async function ProductionDigestPage({
       )}
     </a>
   ) : (
-    <div className="p-3 border-r border-black">
+    <div className="p-2 sm:p-3 border-r border-black">
       <p className="text-xs uppercase tracking-widest opacity-40 mb-1">Script</p>
       <p className="text-sm opacity-40">No script uploaded</p>
     </div>
@@ -169,7 +169,7 @@ export default async function ProductionDigestPage({
     <div className="flex flex-col overflow-hidden" style={{ height: "calc(100vh - 57px)" }}>
 
       {/* Sub-header */}
-      <div className="shrink-0 border-b border-black px-6 py-3 flex items-center gap-3">
+      <div className="shrink-0 border-b border-black px-4 sm:px-6 py-3 flex items-center gap-2 sm:gap-3">
         <Link
           href="/cloud/dashboard"
           className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
@@ -194,13 +194,13 @@ export default async function ProductionDigestPage({
       </div>
 
       {/* Fixed content: stats + nav */}
-      <div className="shrink-0 px-6 pt-4 pb-2 max-w-4xl w-full mx-auto">
+      <div className="shrink-0 px-4 sm:px-6 pt-4 pb-2 max-w-4xl w-full mx-auto">
 
         {/* At a glance — compact stat bar */}
         <div className="grid grid-cols-3 border border-black mb-4">
           {ScriptCard}
 
-          <div className="p-3 border-r border-black">
+          <div className="p-2 sm:p-3 border-r border-black">
             <p className="text-xs uppercase tracking-widest opacity-40 mb-1">Shoot start</p>
             {firstShootDate ? (
               <>
@@ -212,7 +212,7 @@ export default async function ProductionDigestPage({
             )}
           </div>
 
-          <div className="p-3">
+          <div className="p-2 sm:p-3">
             <p className="text-xs uppercase tracking-widest opacity-40 mb-1">Breakdown</p>
             {totalScenes > 0 ? (
               <>
@@ -292,7 +292,7 @@ export default async function ProductionDigestPage({
       </div>
 
       {/* Scrollable scenes list */}
-      <div className="flex-1 overflow-y-auto px-6 pb-4 max-w-4xl w-full mx-auto">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 max-w-4xl w-full mx-auto">
         {totalScenes > 0 ? (
           <DigestSceneList
             scenes={scenes}

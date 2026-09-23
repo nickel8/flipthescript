@@ -37,6 +37,8 @@ export default function BreakdownEditor({
   const [showPdf, setShowPdf] = useState(false);
   const [showSceneList, setShowSceneList] = useState(true);
   const [showRightPanel, setShowRightPanel] = useState(!readOnly);
+  // Mobile: "list" shows the scene list full-width; "editor" shows the scene editor full-width
+  const [mobilePanel, setMobilePanel] = useState<"list" | "editor">("list");
 
   // Load the current user's flags for this production
   useEffect(() => {
@@ -112,6 +114,15 @@ export default function BreakdownEditor({
 
   const editorPane = (
     <main className="flex-1 overflow-y-auto min-w-0">
+      {/* Mobile back button */}
+      <div className="sm:hidden shrink-0 flex items-center border-b border-black/10 px-3 py-2">
+        <button
+          onClick={() => setMobilePanel("list")}
+          className="text-xs opacity-50 hover:opacity-80 transition-opacity"
+        >
+          ← Scenes
+        </button>
+      </div>
       {selectedScene ? (
         <SceneEditor
           key={selectedScene.id}
@@ -136,34 +147,43 @@ export default function BreakdownEditor({
 
   return (
     <div className="flex h-full overflow-hidden">
-      {/* ── Scene list (collapsible) ── */}
+      {/* ── Scene list ── */}
+      {/* Mobile: full-width in "list" view, hidden in "editor" view */}
+      {/* Desktop: collapsible sidebar */}
       <aside
-        className={`${showSceneList ? "w-48" : "w-7"} shrink-0 flex flex-col border-r border-black/10 transition-[width] duration-200 overflow-hidden`}
+        className={[
+          mobilePanel === "list" ? "flex" : "hidden",
+          "sm:flex flex-col border-r border-black/10 overflow-hidden",
+          showSceneList ? "sm:w-48" : "sm:w-7",
+          "w-full sm:shrink-0 sm:transition-[width] sm:duration-200",
+        ].join(" ")}
       >
         <button
           onClick={() => setShowSceneList((p) => !p)}
           title={showSceneList ? "Collapse scenes" : "Expand scenes"}
-          className="shrink-0 h-7 flex items-center justify-center border-b border-black/10 text-xs opacity-25 hover:opacity-60 transition-opacity"
+          className="hidden sm:flex shrink-0 h-7 items-center justify-center border-b border-black/10 text-xs opacity-25 hover:opacity-60 transition-opacity"
         >
           {showSceneList ? "←" : "→"}
         </button>
-        {showSceneList && (
-          <div className="flex-1 overflow-y-auto">
-            <SceneList
-              scenes={scenes}
-              selectedSceneId={selectedId}
-              productionId={productionId}
-              onSelect={setSelectedId}
-              shootDays={initialShootDays}
-              onOrderChange={handleOrderChange}
-            />
-          </div>
-        )}
+        <div className="flex-1 overflow-y-auto">
+          <SceneList
+            scenes={scenes}
+            selectedSceneId={selectedId}
+            productionId={productionId}
+            onSelect={(id) => { setSelectedId(id); setMobilePanel("editor"); }}
+            shootDays={initialShootDays}
+            onOrderChange={handleOrderChange}
+          />
+        </div>
       </aside>
 
       {/* ── PDF viewer + breakdown editor ── */}
+      {/* Mobile: full-width in "editor" view, hidden in "list" view */}
       {showPdf && scriptId ? (
-        <div className="flex flex-1 overflow-hidden border-r border-black/10">
+        <div className={[
+          mobilePanel === "editor" ? "flex" : "hidden",
+          "sm:flex flex-1 overflow-hidden border-r border-black/10",
+        ].join(" ")}>
           <iframe
             src={`/api/script-pdf?scriptId=${scriptId}`}
             className="flex-1 min-w-0 h-full border-0 border-r border-black/10"
@@ -172,14 +192,17 @@ export default function BreakdownEditor({
           {editorPane}
         </div>
       ) : (
-        <div className="flex-1 border-r border-black/10 overflow-hidden flex">
+        <div className={[
+          mobilePanel === "editor" ? "flex" : "hidden",
+          "sm:flex flex-1 border-r border-black/10 overflow-hidden",
+        ].join(" ")}>
           {editorPane}
         </div>
       )}
 
-      {/* ── Right panel (collapsible) ── */}
+      {/* ── Right panel (desktop only) ── */}
       <aside
-        className={`${showRightPanel ? "w-72" : "w-7"} shrink-0 flex flex-col transition-[width] duration-200 overflow-hidden`}
+        className={`hidden sm:flex ${showRightPanel ? "w-72" : "w-7"} shrink-0 flex-col transition-[width] duration-200 overflow-hidden`}
       >
         {showRightPanel ? (
           <>

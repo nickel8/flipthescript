@@ -171,7 +171,7 @@ export default async function BreakdownPage({
   return (
     <div className="flex flex-col" style={{ height: "calc(100vh - 57px)" }}>
       {/* Header */}
-      <div className="shrink-0 border-b border-black px-6 py-3 flex items-center gap-3">
+      <div className="shrink-0 border-b border-black px-4 sm:px-6 py-3 flex items-center gap-2 sm:gap-3">
         <Link
           href={`/cloud/productions/${cloudId}`}
           className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
@@ -193,13 +193,13 @@ export default async function BreakdownPage({
             <span className="opacity-10 text-xs">|</span>
             <Link
               href={`/cloud/productions/${cloudId}/schedule`}
-              className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
+              className="hidden sm:inline text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
             >
               Import schedule
             </Link>
             <Link
               href={`/cloud/productions/${cloudId}/upload`}
-              className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
+              className="hidden sm:inline text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
             >
               Upload new version
             </Link>
@@ -208,7 +208,7 @@ export default async function BreakdownPage({
         {scenes.length > 0 && (
           <a
             href={`/api/export-breakdown?cloudId=${cloudId}`}
-            className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
+            className="hidden sm:inline text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
           >
             Export PDF
           </a>
