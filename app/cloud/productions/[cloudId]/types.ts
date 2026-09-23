@@ -47,3 +47,8 @@ export interface ShootDayData {
   dayNumber: number;
   shootDate: string | null; // ISO "YYYY-MM-DD"
 }
+
+export interface CategoryData {
+  name: string;
+  display_order: number;
+}

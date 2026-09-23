@@ -2,7 +2,7 @@ import { requireCloudSession } from "@/lib/cloud-session";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import BreakdownEditor from "./BreakdownEditor";
-import type { SceneData, ProductionElement, TodoData, ShootDayData } from "./types";
+import type { SceneData, ProductionElement, TodoData, ShootDayData, CategoryData } from "./types";
 
 export const metadata = {
   title: "Breakdown — FlipTheScript",
@@ -143,6 +143,39 @@ export default async function ProductionPage({
       }))
     : [];
 
+  // Production categories (fall back to defaults if none configured yet)
+  const DEFAULT_CATEGORIES: CategoryData[] = [
+    { name: "Characters", display_order: 10 },
+    { name: "Action Props", display_order: 20 },
+    { name: "Standby Props", display_order: 30 },
+    { name: "Set Dressing", display_order: 40 },
+    { name: "Graphics", display_order: 50 },
+    { name: "Vehicles", display_order: 60 },
+  ];
+  const catsRes = await dbFetch(
+    `production_categories?production_id=eq.${production.id}&order=display_order.asc,name.asc&select=name,display_order`
+  );
+  const catsRaw = await catsRes.json();
+  const categories: CategoryData[] =
+    Array.isArray(catsRaw) && catsRaw.length > 0
+      ? catsRaw.map((r: { name: string; display_order: number }) => ({
+          name: r.name,
+          display_order: r.display_order,
+        }))
+      : DEFAULT_CATEGORIES;
+
+  // Full library for the "add category" picker
+  const libRes = await dbFetch(
+    `category_library?order=display_order.asc,name.asc&select=name,display_order,is_default`
+  );
+  const libRaw = await libRes.json();
+  const categoryLibrary: CategoryData[] = Array.isArray(libRaw)
+    ? libRaw.map((r: { name: string; display_order: number }) => ({
+        name: r.name,
+        display_order: r.display_order,
+      }))
+    : [];
+
   // Todos
   const todosRes = await dbFetch(
     `todos?production_id=eq.${production.id}&order=created_at.asc` +
@@ -254,6 +287,8 @@ export default async function ProductionPage({
           initialTodos={todos}
           scriptId={currentScriptId}
           initialShootDays={shootDays}
+          initialCategories={categories}
+          categoryLibrary={categoryLibrary}
           readOnly={userRole === "viewer"}
         />
       )}

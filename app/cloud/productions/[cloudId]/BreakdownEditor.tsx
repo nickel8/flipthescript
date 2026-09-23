@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { SceneData, ProductionElement, TodoData, SheetData, ShootDayData } from "./types";
+import type { SceneData, ProductionElement, TodoData, SheetData, ShootDayData, CategoryData } from "./types";
 import SceneList from "./SceneList";
 import SceneEditor from "./SceneEditor";
 import TodoSection from "./TodoSection";
 import ElementsPanel from "./ElementsPanel";
+import CategoriesPanel from "./CategoriesPanel";
 
 interface Props {
   scenes: SceneData[];
@@ -14,6 +15,8 @@ interface Props {
   initialTodos: TodoData[];
   scriptId: string | null;
   initialShootDays: ShootDayData[];
+  initialCategories: CategoryData[];
+  categoryLibrary: CategoryData[];
   readOnly?: boolean;
 }
 
@@ -24,14 +27,17 @@ export default function BreakdownEditor({
   initialTodos,
   scriptId,
   initialShootDays,
+  initialCategories,
+  categoryLibrary,
   readOnly = false,
 }: Props) {
   const [scenes, setScenes] = useState<SceneData[]>(initialScenes);
   const [elements, setElements] = useState<ProductionElement[]>(initialElements);
+  const [categories, setCategories] = useState<CategoryData[]>(initialCategories);
   const [selectedId, setSelectedId] = useState<string | null>(
     initialScenes[0]?.id ?? null
   );
-  const [rightTab, setRightTab] = useState<"todos" | "elements">("todos");
+  const [rightTab, setRightTab] = useState<"todos" | "elements" | "categories">("todos");
   const [showPdf, setShowPdf] = useState(false);
   const [showSceneList, setShowSceneList] = useState(true);
   const [showRightPanel, setShowRightPanel] = useState(true);
@@ -68,6 +74,7 @@ export default function BreakdownEditor({
           scene={selectedScene}
           productionId={productionId}
           productionElements={elements}
+          categories={categories.map((c) => c.name)}
           onCompleteToggle={handleCompleteToggle}
           onElementCreated={handleElementCreated}
           onSheetChange={(sheet) => handleSheetChange(selectedScene.id, sheet)}
@@ -138,17 +145,17 @@ export default function BreakdownEditor({
               >
                 →
               </button>
-              {(["todos", "elements"] as const).map((tab) => (
+              {(["todos", "elements", ...(!readOnly ? ["categories"] : [])] as const).map((tab) => (
                 <button
                   key={tab}
-                  onClick={() => setRightTab(tab)}
+                  onClick={() => setRightTab(tab as typeof rightTab)}
                   className={`flex-1 text-xs font-bold uppercase tracking-widest py-2 transition-colors ${
                     rightTab === tab && !showPdf
                       ? "bg-black text-white"
                       : "hover:bg-black/5 opacity-40"
                   }`}
                 >
-                  {tab === "todos" ? "To-dos" : "Elements"}
+                  {tab === "todos" ? "To-dos" : tab === "elements" ? "Elements" : "Categories"}
                 </button>
               ))}
               {scriptId && (
@@ -175,8 +182,15 @@ export default function BreakdownEditor({
                     readOnly={readOnly}
                   />
                 </div>
-              ) : (
+              ) : rightTab === "elements" ? (
                 <ElementsPanel scene={selectedScene} />
+              ) : (
+                <CategoriesPanel
+                  productionId={productionId}
+                  categories={categories}
+                  library={categoryLibrary}
+                  onCategoriesChange={setCategories}
+                />
               )}
             </div>
           </>

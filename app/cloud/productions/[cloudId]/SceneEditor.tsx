@@ -11,24 +11,11 @@ import {
   ensureSheet,
 } from "./actions";
 
-const CATEGORIES = [
-  "Characters",
-  "Props",
-  "Set Dressing",
-  "Vehicles",
-  "Weapons",
-  "Greens",
-  "SFX",
-  "VFX",
-  "Costume",
-  "Clearance",
-  "Other",
-] as const;
-
 interface Props {
   scene: SceneData;
   productionId: string;
   productionElements: ProductionElement[];
+  categories: string[];
   onCompleteToggle: (sceneId: string, isComplete: boolean) => void;
   onElementCreated: (el: ProductionElement) => void;
   onSheetChange: (sheet: SheetData | null) => void;
@@ -39,6 +26,7 @@ export default function SceneEditor({
   scene,
   productionId,
   productionElements,
+  categories,
   onCompleteToggle,
   onElementCreated,
   onSheetChange,
@@ -190,7 +178,7 @@ export default function SceneEditor({
 
       {/* Categories — 2-column grid */}
       <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-        {CATEGORIES.map((cat) => (
+        {categories.map((cat) => (
           <CategorySection
             key={cat}
             category={cat}
