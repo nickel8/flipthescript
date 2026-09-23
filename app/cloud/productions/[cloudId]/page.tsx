@@ -1,11 +1,9 @@
 import { requireCloudSession } from "@/lib/cloud-session";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import BreakdownEditor from "./BreakdownEditor";
-import type { SceneData, ProductionElement, TodoData, ShootDayData, CategoryData } from "./types";
 
 export const metadata = {
-  title: "Breakdown — FlipTheScript",
+  title: "Overview — FlipTheScript",
 };
 
 const SUPABASE_URL = process.env.SUPABASE_URL!;
@@ -18,7 +16,15 @@ function dbFetch(path: string) {
   });
 }
 
-export default async function ProductionPage({
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+export default async function ProductionDigestPage({
   params,
 }: {
   params: Promise<{ cloudId: string }>;
@@ -26,15 +32,12 @@ export default async function ProductionPage({
   const { cloudId } = await params;
   const session = await requireCloudSession();
 
-  // Find production by cloudId (any authenticated user can look up the prod row)
-  const prodRes = await dbFetch(
-    `productions?cloud_id=eq.${cloudId}&select=id,name,owner_id`
-  );
+  // Production + access check
+  const prodRes = await dbFetch(`productions?cloud_id=eq.${cloudId}&select=id,name,owner_id,published_at`);
   const prods = await prodRes.json();
   if (!Array.isArray(prods) || prods.length === 0) notFound();
-  const prodRaw = prods[0] as { id: string; name: string; owner_id: string };
+  const prodRaw = prods[0] as { id: string; name: string; owner_id: string; published_at: string };
 
-  // Determine user role: owner, collaborator, viewer, or none
   let userRole: "owner" | "collaborator" | "viewer" = "viewer";
   if (prodRaw.owner_id === session.id) {
     userRole = "owner";
@@ -48,154 +51,109 @@ export default async function ProductionPage({
     userRole = role === "collaborator" || role === "dept_owner" ? "collaborator" : "viewer";
   }
 
-  const production = { id: prodRaw.id, name: prodRaw.name };
+  const productionId = prodRaw.id;
 
-  // Episodes → scripts → scenes + elements (parallel)
-  const episodesRes = await dbFetch(`episodes?production_id=eq.${production.id}&select=id`);
+  // Episodes → scripts → scenes (lighter select for digest)
+  const episodesRes = await dbFetch(`episodes?production_id=eq.${productionId}&select=id`);
   const episodes = await episodesRes.json();
   const episodeIds: string[] = Array.isArray(episodes)
     ? episodes.map((e: { id: string }) => e.id)
     : [];
 
-  let scenes: SceneData[] = [];
-  let productionElements: ProductionElement[] = [];
-  let currentScriptId: string | null = null;
+  type DigestScene = {
+    id: string;
+    cloud_id: string;
+    scene_number: string;
+    slug_line: string;
+    int_ext: string;
+    location: string;
+    time_of_day: string;
+    is_complete: boolean;
+    shoot_day: number;
+    shoot_order: number;
+    element_count: number;
+  };
+
+  let scenes: DigestScene[] = [];
+  let scriptId: string | null = null;
+  let scriptUploadedAt: string | null = null;
 
   if (episodeIds.length > 0) {
     const scriptsRes = await dbFetch(
-      `scripts?episode_id=in.(${episodeIds.join(",")})&is_current=eq.true&select=id`
+      `scripts?episode_id=in.(${episodeIds.join(",")})&is_current=eq.true&select=id,created_at`
     );
     const scripts = await scriptsRes.json();
-    const scriptIds: string[] = Array.isArray(scripts)
-      ? scripts.map((s: { id: string }) => s.id)
-      : [];
-    if (scriptIds.length > 0) currentScriptId = scriptIds[0];
+    if (Array.isArray(scripts) && scripts.length > 0) {
+      scriptId = scripts[0].id as string;
+      scriptUploadedAt = scripts[0].created_at as string;
 
-    if (scriptIds.length > 0) {
-      const [scenesRes, elementsRes] = await Promise.all([
-        dbFetch(
-          `scenes?script_id=in.(${scriptIds.join(",")})&is_deleted=eq.false&order=scene_number.asc` +
-            `&select=id,cloud_id,scene_number,slug_line,int_ext,location,time_of_day,page_start,` +
-            `is_complete,shoot_day,shoot_order,` +
-            `breakdown_sheets(id,synopsis,notes,is_reviewed,` +
-            `scene_elements(id,elements(id,name,category)))`
-        ),
-        dbFetch(`elements?production_id=eq.${production.id}&select=id,name,category`),
-      ]);
-
+      const scenesRes = await dbFetch(
+        `scenes?script_id=eq.${scriptId}&is_deleted=eq.false` +
+          `&order=shoot_day.asc,shoot_order.asc,scene_number.asc` +
+          `&select=id,cloud_id,scene_number,slug_line,int_ext,location,time_of_day,` +
+          `is_complete,shoot_day,shoot_order,` +
+          `breakdown_sheets(scene_elements(id))`
+      );
       const rawScenes = await scenesRes.json();
-      productionElements = await elementsRes.json();
-
-      scenes = Array.isArray(rawScenes)
-        ? rawScenes.map((r: Record<string, unknown>) => {
-            const sheetsArr = r.breakdown_sheets as Record<string, unknown>[] | null;
-            const rawSheet = sheetsArr?.[0] ?? null;
-            return {
-              id: r.id as string,
-              cloud_id: r.cloud_id as string,
-              scene_number: r.scene_number as string,
-              slug_line: r.slug_line as string,
-              int_ext: (r.int_ext as string) ?? "",
-              location: (r.location as string) ?? "",
-              time_of_day: (r.time_of_day as string) ?? "",
-              page_start: (r.page_start as number) ?? 0,
-              is_complete: (r.is_complete as boolean) ?? false,
-              shoot_day: (r.shoot_day as number) ?? 0,
-              shoot_order: (r.shoot_order as number) ?? 0,
-              sheet: rawSheet
-                ? {
-                    id: rawSheet.id as string,
-                    synopsis: (rawSheet.synopsis as string) ?? "",
-                    notes: (rawSheet.notes as string) ?? "",
-                    is_reviewed: (rawSheet.is_reviewed as boolean) ?? false,
-                    scene_elements: (
-                      (rawSheet.scene_elements as Record<string, unknown>[]) ?? []
-                    )
-                      .filter((se) => se.elements)
-                      .map((se) => {
-                        const el = se.elements as Record<string, unknown>;
-                        return {
-                          id: se.id as string,
-                          element: {
-                            id: el.id as string,
-                            name: el.name as string,
-                            category: el.category as string,
-                          },
-                        };
-                      }),
-                  }
-                : null,
-            };
-          })
-        : [];
+      if (Array.isArray(rawScenes)) {
+        scenes = rawScenes.map((r: Record<string, unknown>) => {
+          const sheets = (r.breakdown_sheets as Record<string, unknown>[] | null) ?? [];
+          const ses = (sheets[0]?.scene_elements as { id: string }[] | null) ?? [];
+          return {
+            id: r.id as string,
+            cloud_id: r.cloud_id as string,
+            scene_number: r.scene_number as string,
+            slug_line: r.slug_line as string,
+            int_ext: (r.int_ext as string) ?? "",
+            location: (r.location as string) ?? "",
+            time_of_day: (r.time_of_day as string) ?? "",
+            is_complete: (r.is_complete as boolean) ?? false,
+            shoot_day: (r.shoot_day as number) ?? 0,
+            shoot_order: (r.shoot_order as number) ?? 0,
+            element_count: ses.length,
+          };
+        });
+      }
     }
   }
 
   // Shoot days
   const shootDaysRes = await dbFetch(
-    `shoot_days?production_id=eq.${production.id}&order=day_number.asc&select=day_number,shoot_date`
+    `shoot_days?production_id=eq.${productionId}&order=day_number.asc&select=day_number,shoot_date`
   );
   const shootDaysRaw = await shootDaysRes.json();
-  const shootDays: ShootDayData[] = Array.isArray(shootDaysRaw)
+  const shootDays: { dayNumber: number; shootDate: string | null }[] = Array.isArray(shootDaysRaw)
     ? shootDaysRaw.map((r: { day_number: number; shoot_date: string | null }) => ({
         dayNumber: r.day_number,
         shootDate: r.shoot_date ?? null,
       }))
     : [];
 
-  // Production categories (fall back to defaults if none configured yet)
-  const DEFAULT_CATEGORIES: CategoryData[] = [
-    { name: "Characters", display_order: 10 },
-    { name: "Action Props", display_order: 20 },
-    { name: "Standby Props", display_order: 30 },
-    { name: "Set Dressing", display_order: 40 },
-    { name: "Graphics", display_order: 50 },
-    { name: "Vehicles", display_order: 60 },
-  ];
-  const catsRes = await dbFetch(
-    `production_categories?production_id=eq.${production.id}&order=display_order.asc,name.asc&select=name,display_order`
-  );
-  const catsRaw = await catsRes.json();
-  const categories: CategoryData[] =
-    Array.isArray(catsRaw) && catsRaw.length > 0
-      ? catsRaw.map((r: { name: string; display_order: number }) => ({
-          name: r.name,
-          display_order: r.display_order,
-        }))
-      : DEFAULT_CATEGORIES;
+  const shootDateMap = new Map(shootDays.map((d) => [d.dayNumber, d.shootDate]));
+  const firstShootDate = shootDays.find((d) => d.shootDate)?.shootDate ?? null;
 
-  // Full library for the "add category" picker
-  const libRes = await dbFetch(
-    `category_library?order=display_order.asc,name.asc&select=name,display_order,is_default`
-  );
-  const libRaw = await libRes.json();
-  const categoryLibrary: CategoryData[] = Array.isArray(libRaw)
-    ? libRaw.map((r: { name: string; display_order: number }) => ({
-        name: r.name,
-        display_order: r.display_order,
-      }))
-    : [];
+  const totalScenes = scenes.length;
+  const completeScenes = scenes.filter((s) => s.is_complete).length;
 
-  // Todos
-  const todosRes = await dbFetch(
-    `todos?production_id=eq.${production.id}&order=created_at.asc` +
-      `&select=id,title,is_done,scene_id,scenes(cloud_id)`
-  );
-  const todosRaw = (await todosRes.json()) ?? [];
-  const todos: TodoData[] = Array.isArray(todosRaw)
-    ? todosRaw.map((t: Record<string, unknown>) => ({
-        id: t.id as string,
-        title: t.title as string,
-        is_done: t.is_done as boolean,
-        scene_cloud_id:
-          (t.scenes as { cloud_id?: string }[] | null)?.[0]?.cloud_id ?? null,
-      }))
-    : [];
+  // Group scenes by shoot day for the prep list
+  const grouped = new Map<number, DigestScene[]>();
+  for (const scene of scenes) {
+    const day = scene.shoot_day ?? 0;
+    if (!grouped.has(day)) grouped.set(day, []);
+    grouped.get(day)!.push(scene);
+  }
+  const sortedDays = [...grouped.keys()].sort((a, b) => {
+    if (a === 0) return 1;
+    if (b === 0) return -1;
+    return a - b;
+  });
+
+  const canEdit = userRole !== "viewer";
 
   return (
-    <div className="flex flex-col" style={{ height: "calc(100vh - 57px)" }}>
-      {/* Compact breadcrumb header */}
-      <div className="shrink-0 border-b border-black px-6 py-3 flex items-center gap-3">
+    <div className="min-h-screen">
+      {/* Page header */}
+      <div className="border-b border-black px-6 py-3 flex items-center gap-3">
         <Link
           href="/cloud/dashboard"
           className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
@@ -203,94 +161,223 @@ export default async function ProductionPage({
           ← Dashboard
         </Link>
         <span className="opacity-15 text-xs">/</span>
-        <h1 className="text-sm font-bold truncate">{production.name}</h1>
-        <span className="ml-auto text-xs opacity-25 tabular-nums">
-          {scenes.length} scene{scenes.length !== 1 ? "s" : ""}
-        </span>
+        <h1 className="text-sm font-bold truncate">{prodRaw.name}</h1>
         {userRole === "viewer" && (
-          <span className="text-xs font-bold uppercase tracking-widest opacity-30 border border-black/20 px-2 py-0.5">
+          <span className="text-xs font-bold uppercase tracking-widest opacity-30 border border-black/20 px-2 py-0.5 ml-2">
             View only
           </span>
         )}
         {userRole === "owner" && (
           <Link
             href={`/cloud/productions/${cloudId}/members`}
-            className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
+            className="ml-auto text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
           >
             Members
           </Link>
         )}
-        <span className="opacity-10 text-xs">|</span>
-        <Link
-          href={`/cloud/productions/${cloudId}/tasks`}
-          className="text-xs uppercase tracking-widest opacity-20 hover:opacity-50 transition-opacity"
-          title="Coming soon"
-        >
-          Tasks
-        </Link>
-        <Link
-          href={`/cloud/productions/${cloudId}/continuity`}
-          className="text-xs uppercase tracking-widest opacity-20 hover:opacity-50 transition-opacity"
-          title="Coming soon"
-        >
-          Continuity
-        </Link>
-        <Link
-          href={`/cloud/productions/${cloudId}/budget`}
-          className="text-xs uppercase tracking-widest opacity-20 hover:opacity-50 transition-opacity"
-          title="Coming soon"
-        >
-          Budget
-        </Link>
-        {scenes.length > 0 && userRole !== "viewer" && (
-          <>
-            <Link
-              href={`/cloud/productions/${cloudId}/schedule`}
-              className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
-            >
-              Import schedule
-            </Link>
-            <Link
-              href={`/cloud/productions/${cloudId}/upload`}
-              className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
-            >
-              Upload new version
-            </Link>
-          </>
-        )}
-        {scenes.length > 0 && (
-          <a
-            href={`/api/export-breakdown?cloudId=${cloudId}`}
-            className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
-          >
-            Export PDF
-          </a>
-        )}
       </div>
 
-      {/* Editor fills remaining height — or upload prompt when empty */}
-      {scenes.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center gap-4">
-          <p className="text-sm opacity-30">No script uploaded yet.</p>
-          <Link
-            href={`/cloud/productions/${cloudId}/upload`}
-            className="bg-black text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 hover:opacity-80 transition-opacity"
-          >
-            Upload Script PDF
-          </Link>
+      <div className="max-w-4xl mx-auto px-6 py-12">
+
+        {/* At a glance */}
+        <div className="grid grid-cols-3 border border-black mb-10">
+          <div className="p-6 border-r border-black">
+            <p className="text-xs uppercase tracking-widest opacity-40 mb-2">Script</p>
+            {scriptId ? (
+              <>
+                <p className="font-bold text-sm">Current version</p>
+                {scriptUploadedAt && (
+                  <p className="text-xs opacity-40 mt-1">Uploaded {formatDate(scriptUploadedAt)}</p>
+                )}
+              </>
+            ) : (
+              <p className="text-sm opacity-40">No script uploaded</p>
+            )}
+          </div>
+          <div className="p-6 border-r border-black">
+            <p className="text-xs uppercase tracking-widest opacity-40 mb-2">Shoot start</p>
+            {firstShootDate ? (
+              <>
+                <p className="font-bold text-sm">{formatDate(firstShootDate)}</p>
+                <p className="text-xs opacity-40 mt-1">Day 1 of {shootDays.length}</p>
+              </>
+            ) : (
+              <p className="text-sm opacity-40">Not scheduled</p>
+            )}
+          </div>
+          <div className="p-6">
+            <p className="text-xs uppercase tracking-widest opacity-40 mb-2">Breakdown</p>
+            {totalScenes > 0 ? (
+              <>
+                <p className="font-bold text-sm">
+                  {completeScenes}/{totalScenes} scenes complete
+                </p>
+                <div className="mt-2 h-1 bg-black/10">
+                  <div
+                    className="h-1 bg-black transition-all"
+                    style={{ width: `${(completeScenes / totalScenes) * 100}%` }}
+                  />
+                </div>
+              </>
+            ) : (
+              <p className="text-sm opacity-40">No scenes yet</p>
+            )}
+          </div>
         </div>
-      ) : (
-        <BreakdownEditor
-          scenes={scenes}
-          productionElements={productionElements}
-          productionId={production.id}
-          scriptId={currentScriptId}
-          initialShootDays={shootDays}
-          initialCategories={categories}
-          categoryLibrary={categoryLibrary}
-          readOnly={userRole === "viewer"}
-        />
-      )}
+
+        {/* Navigation */}
+        <div className="mb-10">
+          <p className="text-xs uppercase tracking-widest opacity-30 mb-4">Go to</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+
+            <Link
+              href={`/cloud/productions/${cloudId}/breakdown`}
+              className="border border-black p-5 hover:bg-black hover:text-white transition-colors group"
+            >
+              <p className="text-xs uppercase tracking-widest opacity-50 group-hover:opacity-60 mb-2">Script breakdown</p>
+              <p className="font-bold">
+                {totalScenes > 0 ? `${totalScenes} scenes` : "No script yet"}
+              </p>
+            </Link>
+
+            {scriptId ? (
+              <a
+                href={`/api/script-pdf?scriptId=${scriptId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="border border-black p-5 hover:bg-black hover:text-white transition-colors group"
+              >
+                <p className="text-xs uppercase tracking-widest opacity-50 group-hover:opacity-60 mb-2">Script PDF</p>
+                <p className="font-bold">View</p>
+              </a>
+            ) : canEdit ? (
+              <Link
+                href={`/cloud/productions/${cloudId}/upload`}
+                className="border border-black p-5 hover:bg-black hover:text-white transition-colors group"
+              >
+                <p className="text-xs uppercase tracking-widest opacity-50 group-hover:opacity-60 mb-2">Script PDF</p>
+                <p className="font-bold">Upload script</p>
+              </Link>
+            ) : null}
+
+            <Link
+              href={`/cloud/productions/${cloudId}/tasks`}
+              className="border border-black/20 p-5 hover:border-black/40 transition-colors group"
+            >
+              <p className="text-xs uppercase tracking-widest opacity-30 mb-2">Tasks</p>
+              <p className="font-bold opacity-30">Coming soon</p>
+            </Link>
+
+            <Link
+              href={`/cloud/productions/${cloudId}/continuity`}
+              className="border border-black/20 p-5 hover:border-black/40 transition-colors group"
+            >
+              <p className="text-xs uppercase tracking-widest opacity-30 mb-2">Continuity</p>
+              <p className="font-bold opacity-30">Coming soon</p>
+            </Link>
+
+            <Link
+              href={`/cloud/productions/${cloudId}/budget`}
+              className="border border-black/20 p-5 hover:border-black/40 transition-colors group"
+            >
+              <p className="text-xs uppercase tracking-widest opacity-30 mb-2">Budget</p>
+              <p className="font-bold opacity-30">Coming soon</p>
+            </Link>
+
+            {canEdit && totalScenes > 0 && (
+              <a
+                href={`/api/export-breakdown?cloudId=${cloudId}`}
+                className="border border-black/20 p-5 hover:border-black/40 transition-colors"
+              >
+                <p className="text-xs uppercase tracking-widest opacity-30 mb-2">Export</p>
+                <p className="font-bold opacity-50">Breakdown PDF</p>
+              </a>
+            )}
+          </div>
+        </div>
+
+        {/* Prep list — scenes in shoot order */}
+        {totalScenes > 0 && (
+          <div>
+            <p className="text-xs uppercase tracking-widest opacity-30 mb-4">Scenes — shoot order</p>
+
+            {sortedDays.map((day) => {
+              const dayScenes = grouped.get(day)!;
+              const shootDate = day > 0 ? shootDateMap.get(day) : null;
+              return (
+                <div key={day} className="mb-6">
+                  {/* Day header */}
+                  <div className="flex items-baseline gap-3 mb-2 pb-1 border-b border-black/10">
+                    <span className="text-xs font-bold uppercase tracking-widest">
+                      {day === 0 ? "Unscheduled" : `Day ${day}`}
+                    </span>
+                    {shootDate && (
+                      <span className="text-xs opacity-40">{formatDate(shootDate)}</span>
+                    )}
+                    <span className="ml-auto text-xs opacity-30">
+                      {dayScenes.filter((s) => s.is_complete).length}/{dayScenes.length} complete
+                    </span>
+                  </div>
+
+                  {/* Scenes */}
+                  <div className="divide-y divide-black/5">
+                    {dayScenes.map((scene) => (
+                      <Link
+                        key={scene.id}
+                        href={`/cloud/productions/${cloudId}/breakdown`}
+                        className="flex items-center gap-3 py-2.5 hover:bg-black/3 transition-colors group -mx-2 px-2"
+                      >
+                        <span className="text-xs font-mono opacity-30 w-8 shrink-0 tabular-nums">
+                          {scene.scene_number}
+                        </span>
+                        <span
+                          className={`text-xs font-bold px-1 py-0.5 shrink-0 ${
+                            scene.int_ext === "EXT"
+                              ? "bg-green-100 text-green-700"
+                              : scene.int_ext === "INT/EXT"
+                              ? "bg-orange-100 text-orange-700"
+                              : "bg-blue-100 text-blue-700"
+                          }`}
+                        >
+                          {scene.int_ext || "INT"}
+                        </span>
+                        <span className="text-sm flex-1 truncate">
+                          {scene.location}
+                          {scene.time_of_day && scene.time_of_day !== "UNSPECIFIED" && (
+                            <span className="opacity-40 ml-1.5 text-xs">{scene.time_of_day}</span>
+                          )}
+                        </span>
+                        {scene.element_count > 0 && (
+                          <span className="text-xs opacity-30 shrink-0">
+                            {scene.element_count} element{scene.element_count !== 1 ? "s" : ""}
+                          </span>
+                        )}
+                        {scene.is_complete ? (
+                          <span className="text-xs text-green-600 font-bold shrink-0">✓</span>
+                        ) : (
+                          <span className="w-3 shrink-0" />
+                        )}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {totalScenes === 0 && canEdit && (
+          <div className="text-center py-16">
+            <p className="text-sm opacity-30 mb-4">No script uploaded yet.</p>
+            <Link
+              href={`/cloud/productions/${cloudId}/upload`}
+              className="bg-black text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 hover:opacity-80 transition-opacity"
+            >
+              Upload Script PDF
+            </Link>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
