@@ -114,10 +114,16 @@ export function buildScenes(
     const trimmed = line.trim();
     const match = parseSlugLine(trimmed);
     if (match) {
-      if (current) scenes.push(current);
       autoNumber++;
+      const num = match.sceneNumber ?? String(autoNumber);
+
+      // If this number matches the current scene it's a running page header
+      // repeating the slug at the top of a continuation page — skip it.
+      if (current !== null && current.sceneNumber === num) continue;
+
+      if (current) scenes.push(current);
       current = {
-        sceneNumber: match.sceneNumber ?? String(autoNumber),
+        sceneNumber: num,
         slugLine: match.cleanSlug,
         intExt: match.intExt,
         location: match.location,
@@ -130,7 +136,15 @@ export function buildScenes(
     }
   }
   if (current) scenes.push(current);
-  return scenes;
+
+  // Final dedup: remove any remaining duplicate scene numbers (e.g. a running
+  // header that appeared after other scenes had started). Keep first occurrence.
+  const seen = new Set<string>();
+  return scenes.filter(s => {
+    if (seen.has(s.sceneNumber)) return false;
+    seen.add(s.sceneNumber);
+    return true;
+  });
 }
 
 // ── PDF text extraction ────────────────────────────────────────────────────────
