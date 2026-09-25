@@ -339,8 +339,8 @@ export default function UploadClient({
 
         {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
-        {/* Diff summary (amendments only) */}
-        {isAmendment && (() => {
+        {/* Diff summary (amendments to existing episode only) */}
+        {isAmendment && !isNewEpisode && (() => {
           const oldMap = new Map(currentScenes.map(s => [s.scene_number, s.slug_line]));
           const newNums = new Set(parseResult.scenes.map(s => s.sceneNumber));
           const changed = parseResult.scenes.filter(s => {
@@ -362,17 +362,18 @@ export default function UploadClient({
 
         {/* Scene list preview */}
         {(() => {
-          const oldMap = isAmendment
+          const showDiff = isAmendment && !isNewEpisode;
+          const oldMap = showDiff
             ? new Map(currentScenes.map(s => [s.scene_number, s.slug_line]))
             : null;
-          const removedScenes = isAmendment
+          const removedScenes = showDiff
             ? currentScenes.filter(s => !parseResult.scenes.find(n => n.sceneNumber === s.scene_number))
             : [];
           return (
           <div className="border border-black/10 divide-y divide-black/10">
           {parseResult.scenes.map((s, i) => {
             const old = oldMap?.get(s.sceneNumber);
-            const status: SceneDiffStatus = !isAmendment ? "same"
+            const status: SceneDiffStatus = !showDiff ? "same"
               : old === undefined ? "new"
               : old !== s.slugLine ? "changed"
               : "same";
