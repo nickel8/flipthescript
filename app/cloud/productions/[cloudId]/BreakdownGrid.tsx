@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import type { SceneData, ProductionElement, SheetData, SceneElementData, FlagData, CategoryData } from "./types";
 import { updateSynopsis, addElement, removeElement, toggleComplete, ensureSheet } from "./actions";
+import { useNotesContext } from "./NotesContext";
 import { compareSceneNumbers } from "@/lib/sort-scenes";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -986,13 +987,20 @@ function GridRow({
     await removeElement(sceneElementId);
   }
 
+  const { setFocus } = useNotesContext();
+
   return (
     <tr className={`border-b border-black/5 transition-colors ${isComplete ? "opacity-40" : "hover:bg-black/[0.015]"}`}>
       <td className="sticky left-0 z-10 bg-white px-2 border-r border-black/10">
         <input type="checkbox" checked={isComplete} onChange={handleToggleComplete}
           disabled={readOnly} className="cursor-pointer disabled:cursor-default" />
       </td>
-      <td className="sticky z-10 bg-white px-2 py-2 align-top" style={{ left: COL_CHECK }}>
+      <td
+        className="sticky z-10 bg-white px-2 py-2 align-top cursor-pointer hover:bg-black/5 transition-colors"
+        style={{ left: COL_CHECK }}
+        title="Note on this scene"
+        onClick={() => setFocus("scene", scene.id, `Scene ${scene.scene_number} — ${scene.location ?? ""}`)}
+      >
         <div className="font-mono text-xs font-bold opacity-50 leading-none truncate">{scene.scene_number}</div>
         <div className={`text-[9px] font-bold mt-1 ${
           scene.int_ext === "EXT" ? "text-green-700" : scene.int_ext === "INT/EXT" ? "text-orange-600" : "text-blue-700"
@@ -1078,12 +1086,13 @@ function SynopsisCell({
 // ── Element cell ──────────────────────────────────────────────────────────────
 
 function GridElementCell({
-  category: _category, sceneElements, allElements, flags, onAdd, onRemove, readOnly,
+  category, sceneElements, allElements, flags, onAdd, onRemove, readOnly,
 }: {
   category: string; sceneElements: SceneElementData[]; allElements: ProductionElement[];
   flags: Map<string, FlagData>; onAdd: (name: string) => Promise<void>;
   onRemove: (sceneElementId: string) => Promise<void>; readOnly: boolean;
 }) {
+  const { setFocus } = useNotesContext();
   const [input, setInput] = useState("");
   const [open, setOpen] = useState(false);
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
@@ -1121,9 +1130,15 @@ function GridElementCell({
             const flagged = flags.has(se.id);
             return (
               <span key={se.id} className={`group/chip inline-flex items-center gap-0.5 text-[11px] border px-1.5 py-px whitespace-nowrap ${flagged ? "border-amber-400 bg-amber-50" : "border-black/15 bg-white"}`}>
-                {se.element.name}
+                <button
+                  onClick={() => setFocus("element", se.element.id, `${se.element.name} (${category})`)}
+                  className="hover:underline underline-offset-2 leading-none"
+                  title={`Note on ${se.element.name}`}
+                >
+                  {se.element.name}
+                </button>
                 {!readOnly && (
-                  <button onClick={() => onRemove(se.id)}
+                  <button onClick={(e) => { e.stopPropagation(); onRemove(se.id); }}
                     className="opacity-0 group-hover/chip:opacity-40 hover:!opacity-80 leading-none transition-opacity"
                     aria-label={`Remove ${se.element.name}`}>×</button>
                 )}
