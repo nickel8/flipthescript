@@ -137,14 +137,19 @@ export function buildScenes(
   }
   if (current) scenes.push(current);
 
-  // Final dedup: remove any remaining duplicate scene numbers (e.g. a running
-  // header that appeared after other scenes had started). Keep first occurrence.
-  const seen = new Set<string>();
-  return scenes.filter(s => {
-    if (seen.has(s.sceneNumber)) return false;
-    seen.add(s.sceneNumber);
-    return true;
-  });
+  // Final dedup: remove duplicate scene numbers caused by a scene index
+  // (table of contents) at the start of the PDF. Index entries contain only
+  // the slug line; real scenes have dialogue/action text. Keep the occurrence
+  // with the most raw text — that's always the real scene.
+  const best = new Map<string, ParsedScene>();
+  for (const s of scenes) {
+    const existing = best.get(s.sceneNumber);
+    if (!existing || s.rawText.length > existing.rawText.length) {
+      best.set(s.sceneNumber, s);
+    }
+  }
+  const kept = new Set(best.values());
+  return scenes.filter(s => kept.has(s));
 }
 
 // ── PDF text extraction ────────────────────────────────────────────────────────
