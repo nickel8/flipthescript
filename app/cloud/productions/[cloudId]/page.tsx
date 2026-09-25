@@ -1,7 +1,7 @@
 import { requireCloudSession } from "@/lib/cloud-session";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import DigestSceneList from "./DigestSceneList";
+import BlocksView, { type BlockData, type EpisodeData } from "./BlocksView";
 
 export const metadata = {
   title: "Overview — FlipTheScript",
@@ -17,15 +17,7 @@ function dbFetch(path: string) {
   });
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-export default async function ProductionDigestPage({
+export default async function ProductionOverviewPage({
   params,
 }: {
   params: Promise<{ cloudId: string }>;
@@ -34,10 +26,10 @@ export default async function ProductionDigestPage({
   const session = await requireCloudSession();
 
   // Production + access check
-  const prodRes = await dbFetch(`productions?cloud_id=eq.${cloudId}&select=id,name,owner_id,published_at`);
+  const prodRes = await dbFetch(`productions?cloud_id=eq.${cloudId}&select=id,name,owner_id`);
   const prods = await prodRes.json();
   if (!Array.isArray(prods) || prods.length === 0) notFound();
-  const prodRaw = prods[0] as { id: string; name: string; owner_id: string; published_at: string };
+  const prodRaw = prods[0] as { id: string; name: string; owner_id: string };
 
   let userRole: "owner" | "collaborator" | "viewer" = "viewer";
   if (prodRaw.owner_id === session.id) {
@@ -53,122 +45,88 @@ export default async function ProductionDigestPage({
   }
 
   const productionId = prodRaw.id;
+  const canEdit = userRole !== "viewer";
 
-  // Episodes → scripts → scenes
-  const episodesRes = await dbFetch(`episodes?production_id=eq.${productionId}&select=id`);
-  const episodes = await episodesRes.json();
-  const episodeIds: string[] = Array.isArray(episodes)
-    ? episodes.map((e: { id: string }) => e.id)
-    : [];
+  // Blocks
+  const blocksRes = await dbFetch(
+    `blocks?production_id=eq.${productionId}&order=block_number.asc&select=id,block_number,label,status,series_id,wrapped_at`
+  );
+  const blocksRaw = await blocksRes.json();
+  const rawBlocks: Array<{
+    id: string; block_number: number; label: string;
+    status: string; series_id: string | null; wrapped_at: string | null;
+  }> = Array.isArray(blocksRaw) ? blocksRaw : [];
 
-  type DigestScene = {
+  // Episodes with scripts + scene counts
+  const episodesRes = await dbFetch(
+    `episodes?production_id=eq.${productionId}&order=episode_number.asc` +
+    `&select=id,episode_number,title,status,block_id,scripts(id,is_current,scenes(id,is_complete))`
+  );
+  const episodesRaw = await episodesRes.json();
+
+  type RawEpisode = {
     id: string;
-    scene_number: string;
-    int_ext: string;
-    location: string;
-    time_of_day: string;
-    is_complete: boolean;
-    shoot_day: number;
-    elements: { name: string; category: string }[];
+    episode_number: number | null;
+    title: string | null;
+    status: string | null;
+    block_id: string | null;
+    scripts: Array<{
+      id: string;
+      is_current: boolean;
+      scenes: Array<{ id: string; is_complete: boolean }>;
+    }> | null;
   };
 
-  let scenes: DigestScene[] = [];
-  let scriptId: string | null = null;
-  let scriptUploadedAt: string | null = null;
-  let scriptFilename: string | null = null;
+  function toEpisodeData(r: RawEpisode): EpisodeData {
+    const currentScript = (r.scripts ?? []).find((s) => s.is_current);
+    const scenes = currentScript?.scenes ?? [];
+    return {
+      id: r.id,
+      episode_number: r.episode_number ?? null,
+      title: r.title ?? null,
+      status: (r.status as EpisodeData["status"]) ?? "prep",
+      total_scenes: scenes.length,
+      complete_scenes: scenes.filter((s) => s.is_complete).length,
+      has_script: !!currentScript,
+    };
+  }
 
-  if (episodeIds.length > 0) {
-    const scriptsRes = await dbFetch(
-      `scripts?episode_id=in.(${episodeIds.join(",")})&is_current=eq.true&select=id,filename,imported_at`
-    );
-    const scripts = await scriptsRes.json();
-    if (Array.isArray(scripts) && scripts.length > 0) {
-      scriptId = scripts[0].id as string;
-      scriptUploadedAt = scripts[0].imported_at as string;
-      scriptFilename = scripts[0].filename as string;
+  const episodes: Array<RawEpisode & { _data: EpisodeData }> = Array.isArray(episodesRaw)
+    ? (episodesRaw as RawEpisode[]).map((r) => ({ ...r, _data: toEpisodeData(r) }))
+    : [];
 
-      const scenesRes = await dbFetch(
-        `scenes?script_id=eq.${scriptId}&is_deleted=eq.false` +
-          `&order=shoot_day.asc,shoot_order.asc,scene_number.asc` +
-          `&select=id,scene_number,int_ext,location,time_of_day,is_complete,shoot_day,shoot_order,` +
-          `breakdown_sheets(scene_elements(elements(name,category)))`
-      );
-      const rawScenes = await scenesRes.json();
-      if (Array.isArray(rawScenes)) {
-        scenes = rawScenes.map((r: Record<string, unknown>) => {
-          const sheets = (r.breakdown_sheets as Record<string, unknown>[] | null) ?? [];
-          const ses = (sheets[0]?.scene_elements as Record<string, unknown>[] | null) ?? [];
-          const elements = ses
-            .filter((se) => se.elements)
-            .map((se) => {
-              const el = se.elements as { name: string; category: string };
-              return { name: el.name, category: el.category };
-            });
-          return {
-            id: r.id as string,
-            scene_number: r.scene_number as string,
-            int_ext: (r.int_ext as string) ?? "",
-            location: (r.location as string) ?? "",
-            time_of_day: (r.time_of_day as string) ?? "",
-            is_complete: (r.is_complete as boolean) ?? false,
-            shoot_day: (r.shoot_day as number) ?? 0,
-            elements,
-          };
-        });
-      }
+  // Group episodes into blocks
+  const blockMap = new Map<string, EpisodeData[]>();
+  const unblockedEpisodes: EpisodeData[] = [];
+
+  for (const ep of episodes) {
+    if (ep.block_id) {
+      if (!blockMap.has(ep.block_id)) blockMap.set(ep.block_id, []);
+      blockMap.get(ep.block_id)!.push(ep._data);
+    } else {
+      unblockedEpisodes.push(ep._data);
     }
   }
 
-  // Shoot days
-  const shootDaysRes = await dbFetch(
-    `shoot_days?production_id=eq.${productionId}&order=day_number.asc&select=day_number,shoot_date`
-  );
-  const shootDaysRaw = await shootDaysRes.json();
-  const shootDays: { dayNumber: number; shootDate: string | null }[] = Array.isArray(shootDaysRaw)
-    ? shootDaysRaw.map((r: { day_number: number; shoot_date: string | null }) => ({
-        dayNumber: r.day_number,
-        shootDate: r.shoot_date ?? null,
-      }))
-    : [];
+  const blocks: BlockData[] = rawBlocks.map((b) => ({
+    id: b.id,
+    block_number: b.block_number,
+    label: b.label,
+    status: b.status as BlockData["status"],
+    series_id: b.series_id,
+    wrapped_at: b.wrapped_at,
+    episodes: blockMap.get(b.id) ?? [],
+  }));
 
-  // Serialisable map for client component
-  const shootDates: Record<number, string | null> = {};
-  for (const d of shootDays) shootDates[d.dayNumber] = d.shootDate;
-
-  const today = new Date().toISOString().slice(0, 10);
-  const datedDays = shootDays.filter((d) => d.shootDate);
-  const nextDay = datedDays.find((d) => d.shootDate! >= today) ?? datedDays[datedDays.length - 1] ?? null;
-  const firstShootDate = shootDays.find((d) => d.shootDate)?.shootDate ?? null;
-
-  const totalScenes = scenes.length;
-  const completeScenes = scenes.filter((s) => s.is_complete).length;
-  const canEdit = userRole !== "viewer";
-
-  // Script card: clickable if script exists
-  const ScriptCard = scriptId ? (
-    <a
-      href={`/api/script-pdf?scriptId=${scriptId}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="p-2 sm:p-3 border-r border-black hover:bg-black hover:text-white transition-colors group block"
-    >
-      <p className="text-xs uppercase tracking-widest opacity-40 group-hover:opacity-60 mb-1">Script</p>
-      <p className="font-bold text-sm truncate">{scriptFilename ?? "Current version"}</p>
-      {scriptUploadedAt && (
-        <p className="text-xs opacity-40 mt-0.5">{formatDate(scriptUploadedAt)}</p>
-      )}
-    </a>
-  ) : (
-    <div className="p-2 sm:p-3 border-r border-black">
-      <p className="text-xs uppercase tracking-widest opacity-40 mb-1">Script</p>
-      <p className="text-sm opacity-40">No script uploaded</p>
-    </div>
-  );
+  // Production-level totals
+  const allEpisodeData = episodes.map((e) => e._data);
+  const totalScenes = allEpisodeData.reduce((n, e) => n + e.total_scenes, 0);
+  const completeScenes = allEpisodeData.reduce((n, e) => n + e.complete_scenes, 0);
 
   return (
     <div className="flex flex-col overflow-hidden" style={{ height: "calc(100vh - 57px)" }}>
 
-      {/* Sub-header */}
+      {/* Header */}
       <div className="shrink-0 border-b border-black px-4 sm:px-6 py-3 flex items-center gap-2 sm:gap-3">
         <Link
           href="/cloud/dashboard"
@@ -183,133 +141,90 @@ export default async function ProductionDigestPage({
             View only
           </span>
         )}
-        {userRole === "owner" && (
-          <Link
-            href={`/cloud/productions/${cloudId}/members`}
-            className="ml-auto text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
-          >
-            Members
-          </Link>
-        )}
-      </div>
-
-      {/* Fixed content: stats + nav */}
-      <div className="shrink-0 px-4 sm:px-6 pt-4 pb-2 max-w-4xl w-full mx-auto">
-
-        {/* At a glance — compact stat bar */}
-        <div className="grid grid-cols-3 border border-black mb-4">
-          {ScriptCard}
-
-          <div className="p-2 sm:p-3 border-r border-black">
-            <p className="text-xs uppercase tracking-widest opacity-40 mb-1">Shoot start</p>
-            {firstShootDate ? (
-              <>
-                <p className="font-bold text-sm">{formatDate(firstShootDate)}</p>
-                <p className="text-xs opacity-40 mt-0.5">Day 1 of {shootDays.length}</p>
-              </>
-            ) : (
-              <p className="text-sm opacity-40">Not scheduled</p>
-            )}
-          </div>
-
-          <div className="p-2 sm:p-3">
-            <p className="text-xs uppercase tracking-widest opacity-40 mb-1">Breakdown</p>
-            {totalScenes > 0 ? (
-              <>
-                <p className="font-bold text-sm">{completeScenes}/{totalScenes} complete</p>
-                <div className="mt-1.5 h-0.5 bg-black/10">
-                  <div
-                    className="h-0.5 bg-black"
-                    style={{ width: `${(completeScenes / totalScenes) * 100}%` }}
-                  />
-                </div>
-              </>
-            ) : (
-              <p className="text-sm opacity-40">No scenes yet</p>
-            )}
-          </div>
-        </div>
-
-        {/* Navigation tiles */}
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
-          <Link
-            href={`/cloud/productions/${cloudId}/breakdown`}
-            className="border border-black p-3 hover:bg-black hover:text-white transition-colors group col-span-1"
-          >
-            <p className="text-[10px] uppercase tracking-widest opacity-50 group-hover:opacity-60 mb-1">Breakdown</p>
-            <p className="font-bold text-sm">{totalScenes > 0 ? `${totalScenes} scenes` : "—"}</p>
-          </Link>
-
-          <Link
-            href={`/cloud/productions/${cloudId}/sides`}
-            className="border border-black p-3 hover:bg-black hover:text-white transition-colors group col-span-1"
-          >
-            <p className="text-[10px] uppercase tracking-widest opacity-50 group-hover:opacity-60 mb-1">Sides</p>
-            <p className="font-bold text-sm">{nextDay ? `Day ${nextDay.dayNumber}` : "—"}</p>
-          </Link>
-
-          <Link
-            href={`/cloud/productions/${cloudId}/tasks`}
-            className="border border-black/20 p-3 transition-colors group col-span-1"
-          >
-            <p className="text-[10px] uppercase tracking-widest opacity-30 mb-1">Tasks</p>
-            <p className="font-bold text-sm opacity-30">Soon</p>
-          </Link>
-
-          <Link
-            href={`/cloud/productions/${cloudId}/continuity`}
-            className="border border-black/20 p-3 transition-colors group col-span-1"
-          >
-            <p className="text-[10px] uppercase tracking-widest opacity-30 mb-1">Continuity</p>
-            <p className="font-bold text-sm opacity-30">Soon</p>
-          </Link>
-
-          <Link
-            href={`/cloud/productions/${cloudId}/budget`}
-            className="border border-black/20 p-3 transition-colors group col-span-1"
-          >
-            <p className="text-[10px] uppercase tracking-widest opacity-30 mb-1">Budget</p>
-            <p className="font-bold text-sm opacity-30">Soon</p>
-          </Link>
-
-          {canEdit && totalScenes > 0 ? (
+        <div className="ml-auto flex items-center gap-4">
+          {totalScenes > 0 && (
+            <span className="text-xs opacity-25 tabular-nums hidden sm:inline">
+              {completeScenes}/{totalScenes} scenes
+            </span>
+          )}
+          {canEdit && totalScenes > 0 && (
             <a
               href={`/api/export-breakdown?cloudId=${cloudId}`}
-              className="border border-black/20 p-3 hover:border-black/40 transition-colors col-span-1"
+              className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity hidden sm:inline"
             >
-              <p className="text-[10px] uppercase tracking-widest opacity-30 mb-1">Export</p>
-              <p className="font-bold text-sm opacity-40">PDF</p>
+              Export PDF
             </a>
-          ) : (
-            <div className="col-span-1" />
+          )}
+          {userRole === "owner" && (
+            <Link
+              href={`/cloud/productions/${cloudId}/members`}
+              className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity"
+            >
+              Members
+            </Link>
           )}
         </div>
-
-        {/* Scenes section label */}
-        {totalScenes > 0 && (
-          <p className="text-xs uppercase tracking-widest opacity-30">Scenes — shoot order</p>
-        )}
       </div>
 
-      {/* Scrollable scenes list */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 max-w-4xl w-full mx-auto">
-        {totalScenes > 0 ? (
-          <DigestSceneList
-            scenes={scenes}
-            shootDates={shootDates}
-            cloudId={cloudId}
-          />
-        ) : canEdit ? (
-          <div className="text-center py-12">
-            <p className="text-sm opacity-30 mb-4">No script uploaded yet.</p>
+      {/* Scrollable body */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-4 sm:px-6 py-6 max-w-3xl mx-auto space-y-6">
+
+          {/* Quick nav */}
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
             <Link
-              href={`/cloud/productions/${cloudId}/upload`}
-              className="bg-black text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 hover:opacity-80 transition-opacity"
+              href={`/cloud/productions/${cloudId}/breakdown`}
+              className="border border-black p-3 hover:bg-black hover:text-white transition-colors group"
             >
-              Upload Script PDF
+              <p className="text-[10px] uppercase tracking-widest opacity-50 group-hover:opacity-60 mb-1">Breakdown</p>
+              <p className="font-bold text-sm">{totalScenes > 0 ? `${totalScenes} scenes` : "—"}</p>
+            </Link>
+
+            <Link
+              href={`/cloud/productions/${cloudId}/sides`}
+              className="border border-black p-3 hover:bg-black hover:text-white transition-colors group"
+            >
+              <p className="text-[10px] uppercase tracking-widest opacity-50 group-hover:opacity-60 mb-1">Sides</p>
+              <p className="font-bold text-sm">—</p>
+            </Link>
+
+            {canEdit && (
+              <Link
+                href={`/cloud/productions/${cloudId}/upload`}
+                className="border border-black p-3 hover:bg-black hover:text-white transition-colors group"
+              >
+                <p className="text-[10px] uppercase tracking-widest opacity-50 group-hover:opacity-60 mb-1">Upload</p>
+                <p className="font-bold text-sm">Script</p>
+              </Link>
+            )}
+
+            <Link
+              href={`/cloud/productions/${cloudId}/schedule`}
+              className="border border-black/20 p-3 group col-span-1"
+            >
+              <p className="text-[10px] uppercase tracking-widest opacity-30 mb-1">Schedule</p>
+              <p className="font-bold text-sm opacity-30">Soon</p>
+            </Link>
+
+            <Link
+              href={`/cloud/productions/${cloudId}/continuity`}
+              className="border border-black/20 p-3 group col-span-1"
+            >
+              <p className="text-[10px] uppercase tracking-widest opacity-30 mb-1">Continuity</p>
+              <p className="font-bold text-sm opacity-30">Soon</p>
             </Link>
           </div>
-        ) : null}
+
+          {/* Blocks */}
+          <BlocksView
+            blocks={blocks}
+            unblockedEpisodes={unblockedEpisodes}
+            productionId={productionId}
+            cloudId={cloudId}
+            canEdit={canEdit}
+          />
+
+        </div>
       </div>
     </div>
   );
