@@ -112,6 +112,15 @@ export default function BreakdownEditor({
     []
   );
 
+  const selectedIndex = selectedId ? scenes.findIndex((s) => s.id === selectedId) : -1;
+  const prevScene = selectedIndex > 0 ? scenes[selectedIndex - 1] : null;
+  const nextScene = selectedIndex < scenes.length - 1 ? scenes[selectedIndex + 1] : null;
+
+  function navigateTo(scene: { id: string }) {
+    setSelectedId(scene.id);
+    setMobilePanel("editor");
+  }
+
   const editorPane = (
     <main className="flex-1 overflow-y-auto min-w-0">
       {/* Mobile back button */}
@@ -123,6 +132,28 @@ export default function BreakdownEditor({
           ← Scenes
         </button>
       </div>
+      {/* Prev / Next navigation */}
+      {scenes.length > 1 && (
+        <div className="shrink-0 flex items-center border-b border-black/10 px-3 py-1.5 gap-2">
+          <button
+            onClick={() => prevScene && navigateTo(prevScene)}
+            disabled={!prevScene}
+            className="text-xs opacity-40 hover:opacity-80 disabled:opacity-15 transition-opacity"
+          >
+            ← {prevScene ? prevScene.scene_number : ""}
+          </button>
+          <span className="flex-1 text-center text-xs opacity-20 tabular-nums">
+            {selectedIndex + 1} / {scenes.length}
+          </span>
+          <button
+            onClick={() => nextScene && navigateTo(nextScene)}
+            disabled={!nextScene}
+            className="text-xs opacity-40 hover:opacity-80 disabled:opacity-15 transition-opacity"
+          >
+            {nextScene ? nextScene.scene_number : ""} →
+          </button>
+        </div>
+      )}
       {selectedScene ? (
         <SceneEditor
           key={selectedScene.id}
