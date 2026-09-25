@@ -35,29 +35,29 @@ export default function BreakdownGrid({
 }: Props) {
   return (
     <div className="overflow-auto h-full w-full">
-      <table className="border-collapse text-sm" style={{ minWidth: "max-content" }}>
+      <table className="border-collapse text-sm w-full">
         <thead className="sticky top-0 z-20">
           <tr className="border-b border-black/15 bg-white">
             {/* Checkbox */}
             <th className="sticky left-0 z-30 bg-white w-10 px-2 py-2 text-left font-normal border-r border-black/10" />
             {/* Scene # */}
-            <th className="sticky left-10 z-30 bg-white w-14 px-2 py-2 text-left">
+            <th className="sticky left-10 z-30 bg-white w-12 px-2 py-2 text-left">
               <span className="text-[10px] font-bold uppercase tracking-widest opacity-30">#</span>
             </th>
-            {/* Location */}
+            {/* Location — sticky, fixed width */}
             <th
               className="sticky z-30 bg-white px-3 py-2 text-left border-r border-black/15"
-              style={{ left: 96, minWidth: 180 }}
+              style={{ left: 88, width: 160, minWidth: 120 }}
             >
               <span className="text-[10px] font-bold uppercase tracking-widest opacity-30">Location</span>
             </th>
-            {/* Synopsis */}
-            <th className="px-3 py-2 text-left" style={{ minWidth: 220 }}>
+            {/* Synopsis — auto width */}
+            <th className="px-3 py-2 text-left" style={{ minWidth: 160 }}>
               <span className="text-[10px] font-bold uppercase tracking-widest opacity-30">Synopsis</span>
             </th>
-            {/* Category columns */}
+            {/* Category columns — auto width, sized by content */}
             {categories.map((cat) => (
-              <th key={cat} className="px-3 py-2 text-left border-l border-black/5" style={{ minWidth: 160 }}>
+              <th key={cat} className="px-3 py-2 text-left border-l border-black/5" style={{ minWidth: 100 }}>
                 <span className="text-[10px] font-bold uppercase tracking-widest opacity-30">{cat}</span>
               </th>
             ))}
@@ -180,10 +180,10 @@ function GridRow({
       </td>
 
       {/* Scene # + INT/EXT */}
-      <td className="sticky left-10 z-10 bg-white w-14 px-2 py-2 align-top">
-        <div className="font-mono text-xs font-bold opacity-50">{scene.scene_number}</div>
+      <td className="sticky left-10 z-10 bg-white w-12 px-2 py-2 align-top">
+        <div className="font-mono text-xs font-bold opacity-50 leading-none">{scene.scene_number}</div>
         <div
-          className={`text-[9px] font-bold mt-0.5 ${
+          className={`text-[9px] font-bold mt-1 ${
             scene.int_ext === "EXT"
               ? "text-green-700"
               : scene.int_ext === "INT/EXT"
@@ -198,12 +198,14 @@ function GridRow({
       {/* Location */}
       <td
         className="sticky z-10 bg-white px-3 py-2 align-top border-r border-black/15 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.06)]"
-        style={{ left: 96, minWidth: 180 }}
+        style={{ left: 88, width: 160, minWidth: 120 }}
       >
-        <div className="text-xs font-medium leading-snug">{scene.location}</div>
-        {scene.time_of_day && scene.time_of_day !== "UNSPECIFIED" && (
-          <div className="text-[10px] opacity-30 mt-0.5">{scene.time_of_day}</div>
-        )}
+        <div className="max-h-16 overflow-hidden">
+          <div className="text-xs font-medium leading-snug">{scene.location}</div>
+          {scene.time_of_day && scene.time_of_day !== "UNSPECIFIED" && (
+            <div className="text-[10px] opacity-30 mt-0.5">{scene.time_of_day}</div>
+          )}
+        </div>
       </td>
 
       {/* Synopsis */}
@@ -271,10 +273,10 @@ function SynopsisCell({
 
   if (readOnly) {
     return (
-      <td className="px-3 py-2 align-top" style={{ minWidth: 220 }}>
-        <p className="text-xs text-black/50 leading-snug line-clamp-3">
+      <td className="px-3 py-2 align-top" style={{ minWidth: 160 }}>
+        <div className="max-h-16 overflow-hidden text-xs text-black/50 leading-snug">
           {text || <span className="opacity-30">—</span>}
-        </p>
+        </div>
       </td>
     );
   }
@@ -282,7 +284,7 @@ function SynopsisCell({
   return (
     <td
       className="px-0 py-0 align-top cursor-text"
-      style={{ minWidth: 220 }}
+      style={{ minWidth: 160 }}
       onClick={() => !editing && setEditing(true)}
     >
       {editing ? (
@@ -291,12 +293,11 @@ function SynopsisCell({
           value={text}
           onChange={(e) => handleChange(e.target.value)}
           onBlur={() => setEditing(false)}
-          rows={3}
+          rows={4}
           className="w-full px-3 py-2 text-xs focus:outline-none resize-none bg-amber-50 leading-snug"
-          style={{ minWidth: 220 }}
         />
       ) : (
-        <div className="px-3 py-2 text-xs text-black/50 leading-snug line-clamp-3 min-h-[36px] hover:bg-black/[0.03]">
+        <div className="max-h-16 overflow-hidden px-3 py-2 text-xs text-black/50 leading-snug min-h-[36px] hover:bg-black/[0.03]">
           {text || <span className="opacity-25">Add synopsis…</span>}
         </div>
       )}
@@ -364,11 +365,11 @@ function GridElementCell({
   return (
     <td
       className="px-2 py-1.5 align-top border-l border-black/5 relative"
-      style={{ minWidth: 160 }}
+      style={{ minWidth: 100 }}
     >
-      {/* Chips */}
+      {/* Chips — wrap freely up to 2× row height */}
       {sceneElements.length > 0 && (
-        <div className="flex flex-wrap gap-0.5 mb-1">
+        <div className="flex flex-wrap gap-0.5 mb-1 max-h-16 overflow-hidden">
           {sceneElements.map((se) => {
             const flagged = flags.has(se.id);
             return (
