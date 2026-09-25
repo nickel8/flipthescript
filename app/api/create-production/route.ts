@@ -35,5 +35,18 @@ export async function POST(req: NextRequest) {
   }
 
   const [production] = await res.json();
+
+  // Create the owner's production_members row so the dashboard can find it
+  await fetch(`${SB_URL}/rest/v1/production_members`, {
+    method: "POST",
+    headers: HEADERS,
+    body: JSON.stringify({
+      production_id: production.id,
+      user_id: session.id,
+      role: "owner",
+      tier: "paid",
+    }),
+  });
+
   return NextResponse.json({ cloudId: production.cloud_id });
 }
