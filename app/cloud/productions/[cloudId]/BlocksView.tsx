@@ -45,6 +45,14 @@ interface Props {
   canEdit: boolean;
 }
 
+async function patchEpisodeBlock(episodeId: string, blockId: string | null) {
+  return fetch("/api/episodes", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: episodeId, block_id: blockId }),
+  });
+}
+
 export default function BlocksView({
   blocks: initialBlocks,
   unblockedEpisodes,
@@ -57,6 +65,22 @@ export default function BlocksView({
   const [newLabel, setNewLabel] = useState("");
   const [creating, setCreating] = useState(false);
   const [wrappedOpen, setWrappedOpen] = useState(false);
+
+  const allBlockOptions = blocks.map((b) => ({ id: b.id, label: b.label }));
+
+  function moveEpisode(episodeId: string, fromBlockId: string | null, toBlockId: string | null) {
+    patchEpisodeBlock(episodeId, toBlockId);
+    setBlocks((prev) =>
+      prev.map((b) => {
+        if (b.id === fromBlockId) return { ...b, episodes: b.episodes.filter((e) => e.id !== episodeId) };
+        if (b.id === toBlockId) {
+          const ep = prev.flatMap((x) => x.episodes).find((e) => e.id === episodeId);
+          return ep ? { ...b, episodes: [...b.episodes, ep] } : b;
+        }
+        return b;
+      })
+    );
+  }
 
   const filmingBlocks = blocks.filter((b) => b.status === "filming");
   const prepBlocks = blocks.filter((b) => b.status === "prep");
@@ -108,7 +132,9 @@ export default function BlocksView({
           block={block}
           cloudId={cloudId}
           canEdit={canEdit}
+          allBlocks={allBlockOptions}
           onStatusChange={(s) => setBlockStatus(block.id, s)}
+          onMoveEpisode={(epId, toId) => moveEpisode(epId, block.id, toId)}
         />
       ))}
 
@@ -119,17 +145,27 @@ export default function BlocksView({
           block={block}
           cloudId={cloudId}
           canEdit={canEdit}
+          allBlocks={allBlockOptions}
           onStatusChange={(s) => setBlockStatus(block.id, s)}
+          onMoveEpisode={(epId, toId) => moveEpisode(epId, block.id, toId)}
         />
       ))}
 
-      {/* Unblocked episodes (no block assigned yet) */}
+      {/* Unblocked episodes */}
       {unblockedEpisodes.length > 0 && (
         <div className="border border-black/15 p-4">
           <p className="text-[10px] uppercase tracking-widest opacity-30 mb-3">Unassigned</p>
           <div className="space-y-1">
             {unblockedEpisodes.map((ep) => (
-              <EpisodeRow key={ep.id} episode={ep} cloudId={cloudId} />
+              <EpisodeRow
+                key={ep.id}
+                episode={ep}
+                cloudId={cloudId}
+                canEdit={canEdit}
+                allBlocks={allBlockOptions}
+                currentBlockId={null}
+                onMove={(toId) => moveEpisode(ep.id, null, toId)}
+              />
             ))}
           </div>
         </div>
@@ -152,7 +188,9 @@ export default function BlocksView({
                   block={block}
                   cloudId={cloudId}
                   canEdit={canEdit}
+                  allBlocks={allBlockOptions}
                   onStatusChange={(s) => setBlockStatus(block.id, s)}
+                  onMoveEpisode={(epId, toId) => moveEpisode(epId, block.id, toId)}
                 />
               ))}
             </div>
@@ -216,12 +254,16 @@ function BlockCard({
   block,
   cloudId,
   canEdit,
+  allBlocks,
   onStatusChange,
+  onMoveEpisode,
 }: {
   block: BlockData;
   cloudId: string;
   canEdit: boolean;
+  allBlocks: { id: string; label: string }[];
   onStatusChange: (s: Status) => void;
+  onMoveEpisode: (episodeId: string, toBlockId: string | null) => void;
 }) {
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const totalScenes = block.episodes.reduce((n, e) => n + e.total_scenes, 0);
@@ -286,7 +328,15 @@ function BlockCard({
           </div>
         ) : (
           block.episodes.map((ep) => (
-            <EpisodeRow key={ep.id} episode={ep} cloudId={cloudId} />
+            <EpisodeRow
+              key={ep.id}
+              episode={ep}
+              cloudId={cloudId}
+              canEdit={canEdit}
+              allBlocks={allBlocks}
+              currentBlockId={block.id}
+              onMove={(toId) => onMoveEpisode(ep.id, toId)}
+            />
           ))
         )}
       </div>
@@ -296,11 +346,26 @@ function BlockCard({
 
 // ── Episode row ───────────────────────────────────────────────────────────────
 
-function EpisodeRow({ episode: ep, cloudId }: { episode: EpisodeData; cloudId: string }) {
+function EpisodeRow({
+  episode: ep,
+  cloudId,
+  canEdit,
+  allBlocks,
+  currentBlockId,
+  onMove,
+}: {
+  episode: EpisodeData;
+  cloudId: string;
+  canEdit: boolean;
+  allBlocks: { id: string; label: string }[];
+  currentBlockId: string | null;
+  onMove: (toBlockId: string | null) => void;
+}) {
+  const [showBlockPicker, setShowBlockPicker] = useState(false);
   const pct = ep.total_scenes > 0 ? (ep.complete_scenes / ep.total_scenes) * 100 : 0;
 
   return (
-    <div className="flex items-center gap-3 px-4 py-2.5 hover:bg-black/[0.02] group">
+    <div className="flex items-center gap-3 px-4 py-2.5 hover:bg-black/[0.02] group relative">
       <span className="text-xs font-bold opacity-40 w-14 shrink-0 tabular-nums">
         {ep.episode_number != null ? `Ep ${ep.episode_number}` : "—"}
       </span>
@@ -319,6 +384,41 @@ function EpisodeRow({ episode: ep, cloudId }: { episode: EpisodeData; cloudId: s
         </div>
       ) : (
         <span className="text-[10px] opacity-25 shrink-0">No script</span>
+      )}
+
+      {/* Block picker */}
+      {canEdit && allBlocks.length > 1 && (
+        <div className="relative shrink-0">
+          <button
+            onClick={() => setShowBlockPicker((p) => !p)}
+            className="text-[10px] opacity-0 group-hover:opacity-30 hover:!opacity-70 transition-opacity uppercase tracking-widest"
+          >
+            Move
+          </button>
+          {showBlockPicker && (
+            <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-black shadow-sm min-w-44">
+              {allBlocks
+                .filter((b) => b.id !== currentBlockId)
+                .map((b) => (
+                  <button
+                    key={b.id}
+                    onClick={() => { onMove(b.id); setShowBlockPicker(false); }}
+                    className="w-full text-left px-3 py-1.5 text-xs hover:bg-black/5 truncate"
+                  >
+                    {b.label}
+                  </button>
+                ))}
+              {currentBlockId && (
+                <button
+                  onClick={() => { onMove(null); setShowBlockPicker(false); }}
+                  className="w-full text-left px-3 py-1.5 text-xs hover:bg-black/5 opacity-40"
+                >
+                  Unassign
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       )}
 
       <Link

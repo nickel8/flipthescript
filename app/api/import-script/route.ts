@@ -18,6 +18,9 @@ interface ImportBody {
   scenes: ParsedScene[];
   mode: "blank" | "inherit";
   currentScriptId: string | null;
+  isNewEpisode?: boolean;
+  episodeNumber?: number | null;
+  episodeTitle?: string | null;
 }
 
 // Breakdown data from an existing scene that we'll copy forward
@@ -28,12 +31,66 @@ interface OldBreakdown {
   scene_elements: Array<{ element_id: string; notes: string }>;
 }
 
+async function autoAssignToBlock(productionId: string, episodeId: string) {
+  // 1. Find existing prep block
+  const prepRes = await fetch(
+    `${SB_URL}/rest/v1/blocks?production_id=eq.${productionId}&status=eq.prep&order=block_number.asc&limit=1&select=id`,
+    { headers: HEADERS }
+  );
+  const prepBlocks = await prepRes.json();
+
+  if (Array.isArray(prepBlocks) && prepBlocks.length > 0) {
+    await fetch(`${SB_URL}/rest/v1/episodes?id=eq.${episodeId}`, {
+      method: "PATCH",
+      headers: HEADERS,
+      body: JSON.stringify({ block_id: prepBlocks[0].id }),
+    });
+    return;
+  }
+
+  // 2. No prep block — auto-create one only if filming is already underway
+  const filmingRes = await fetch(
+    `${SB_URL}/rest/v1/blocks?production_id=eq.${productionId}&status=eq.filming&limit=1&select=id`,
+    { headers: HEADERS }
+  );
+  const filmingBlocks = await filmingRes.json();
+  if (!Array.isArray(filmingBlocks) || filmingBlocks.length === 0) return;
+
+  const allRes = await fetch(
+    `${SB_URL}/rest/v1/blocks?production_id=eq.${productionId}&select=block_number&order=block_number.desc&limit=1`,
+    { headers: HEADERS }
+  );
+  const allBlocks = await allRes.json();
+  const nextNum = Array.isArray(allBlocks) && allBlocks.length > 0
+    ? (allBlocks[0].block_number as number) + 1 : 1;
+
+  const blockRes = await fetch(`${SB_URL}/rest/v1/blocks`, {
+    method: "POST",
+    headers: { ...HEADERS, Prefer: "return=representation" },
+    body: JSON.stringify({
+      production_id: productionId,
+      block_number: nextNum,
+      label: `Block ${nextNum}`,
+      status: "prep",
+    }),
+  });
+  const [newBlock] = await blockRes.json();
+  if (newBlock?.id) {
+    await fetch(`${SB_URL}/rest/v1/episodes?id=eq.${episodeId}`, {
+      method: "PATCH",
+      headers: HEADERS,
+      body: JSON.stringify({ block_id: newBlock.id }),
+    });
+  }
+}
+
 export async function POST(req: NextRequest) {
   const session = await getCloudSession();
   if (!session) return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
 
   const body: ImportBody = await req.json();
-  const { productionId, filename, version, blobUrl, scenes, mode, currentScriptId } = body;
+  const { productionId, filename, version, blobUrl, scenes, mode, currentScriptId,
+          isNewEpisode, episodeNumber, episodeTitle } = body;
 
   if (!productionId || !scenes?.length) {
     return NextResponse.json({ error: "productionId and scenes required" }, { status: 400 });
@@ -87,30 +144,61 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // ── Find or create default episode ──────────────────────────────────────────
-  const epRes = await fetch(
-    `${SB_URL}/rest/v1/episodes?production_id=eq.${productionId}&is_default=eq.true&select=id&limit=1`,
-    { headers: HEADERS }
-  );
-  const epRows = await epRes.json();
-
+  // ── Find or create episode ───────────────────────────────────────────────────
   let episodeId: string;
-  if (Array.isArray(epRows) && epRows.length > 0) {
-    episodeId = epRows[0].id;
-  } else {
+
+  if (isNewEpisode) {
+    // Create a fresh episode for this upload
     const newEp = await fetch(`${SB_URL}/rest/v1/episodes`, {
       method: "POST",
       headers: { ...HEADERS, Prefer: "return=representation" },
       body: JSON.stringify({
         cloud_id: crypto.randomUUID(),
         production_id: productionId,
-        name: "Episode 1",
-        number: 1,
-        is_default: true,
+        name: episodeTitle ?? (episodeNumber ? `Episode ${episodeNumber}` : "New Episode"),
+        number: episodeNumber ?? null,
+        episode_number: episodeNumber ?? null,
+        title: episodeTitle ?? null,
+        is_default: false,
+        status: "prep",
       }),
     });
     const [ep] = await newEp.json();
     episodeId = ep.id;
+
+    // Auto-assign to a prep block (create one if filming is already underway)
+    await autoAssignToBlock(productionId, episodeId);
+  } else {
+    // Amendment / first upload — reuse or create the default episode
+    const epRes = await fetch(
+      `${SB_URL}/rest/v1/episodes?production_id=eq.${productionId}&is_default=eq.true&select=id&limit=1`,
+      { headers: HEADERS }
+    );
+    const epRows = await epRes.json();
+
+    if (Array.isArray(epRows) && epRows.length > 0) {
+      episodeId = epRows[0].id;
+    } else {
+      const newEp = await fetch(`${SB_URL}/rest/v1/episodes`, {
+        method: "POST",
+        headers: { ...HEADERS, Prefer: "return=representation" },
+        body: JSON.stringify({
+          cloud_id: crypto.randomUUID(),
+          production_id: productionId,
+          name: episodeTitle ?? (episodeNumber ? `Episode ${episodeNumber}` : "Episode 1"),
+          number: episodeNumber ?? 1,
+          episode_number: episodeNumber ?? null,
+          title: episodeTitle ?? null,
+          is_default: true,
+          status: "prep",
+        }),
+      });
+      const [ep] = await newEp.json();
+      episodeId = ep.id;
+
+      // Auto-assign on first episode creation too
+      await autoAssignToBlock(productionId, episodeId);
+    }
   }
 
   // ── Create new script record ─────────────────────────────────────────────────

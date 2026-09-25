@@ -46,11 +46,17 @@ export default function UploadClient({
   const [pdfLink, setPdfLink] = useState("");
   const [version, setVersion] = useState("");
   const [mode, setMode] = useState<Mode>("inherit");
+  const [uploadType, setUploadType] = useState<"amendment" | "new-episode">(
+    currentScriptId ? "amendment" : "new-episode"
+  );
+  const [episodeNumber, setEpisodeNumber] = useState("");
+  const [episodeTitle, setEpisodeTitle] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [parsing, setParsing] = useState(false);
   const [dragging, setDragging] = useState(false);
 
   const isAmendment = !!currentScriptId;
+  const isNewEpisode = uploadType === "new-episode";
 
   async function handleFile(file: File) {
     if (file.type !== "application/pdf") {
@@ -90,11 +96,14 @@ export default function UploadClient({
       body: JSON.stringify({
         productionId,
         filename: parseResult.filename,
-        version: version || (isAmendment ? "amendment" : "v1"),
+        version: version || (isNewEpisode ? "v1" : "amendment"),
         blobUrl: pdfLink.trim() || null,
         scenes: parseResult.scenes,
-        mode: isAmendment ? mode : "blank",
-        currentScriptId: isAmendment ? currentScriptId : null,
+        mode: isNewEpisode ? "blank" : mode,
+        currentScriptId: isNewEpisode ? null : currentScriptId,
+        isNewEpisode,
+        episodeNumber: episodeNumber ? parseInt(episodeNumber, 10) : null,
+        episodeTitle: episodeTitle.trim() || null,
       }),
     });
     const data = await res.json();
@@ -209,6 +218,54 @@ export default function UploadClient({
           </div>
         </div>
 
+        {/* Upload type — only when an existing script is present */}
+        {isAmendment && (
+          <div className="mb-6 flex gap-0 border border-black/20 w-fit">
+            {(["amendment", "new-episode"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setUploadType(t)}
+                className={`text-xs font-bold uppercase tracking-widest px-4 py-2 transition-colors ${
+                  uploadType === t ? "bg-black text-white" : "opacity-30 hover:opacity-60"
+                }`}
+              >
+                {t === "amendment" ? "Amendment" : "New episode"}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Episode number + title — for new episodes */}
+        {isNewEpisode && (
+          <div className="mb-6 flex gap-3">
+            <div>
+              <label className="text-xs font-bold uppercase tracking-widest opacity-30 block mb-1.5">
+                Episode number
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={episodeNumber}
+                onChange={(e) => setEpisodeNumber(e.target.value)}
+                placeholder="e.g. 3"
+                className="border border-black/20 px-2.5 py-1 text-sm focus:outline-none focus:border-black/50 w-28"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="text-xs font-bold uppercase tracking-widest opacity-30 block mb-1.5">
+                Episode title <span className="font-normal normal-case tracking-normal opacity-70">— optional</span>
+              </label>
+              <input
+                type="text"
+                value={episodeTitle}
+                onChange={(e) => setEpisodeTitle(e.target.value)}
+                placeholder="e.g. The New Kid"
+                className="w-full border border-black/20 px-2.5 py-1 text-sm focus:outline-none focus:border-black/50"
+              />
+            </div>
+          </div>
+        )}
+
         {/* Version label */}
         <div className="mb-6 flex items-center gap-3">
           <label className="text-xs font-bold uppercase tracking-widest opacity-30 whitespace-nowrap">
@@ -218,7 +275,7 @@ export default function UploadClient({
             type="text"
             value={version}
             onChange={(e) => setVersion(e.target.value)}
-            placeholder={isAmendment ? "e.g. v2, pink pages…" : "v1"}
+            placeholder={isNewEpisode ? "v1" : "e.g. v2, pink pages…"}
             className="border border-black/20 px-2.5 py-1 text-sm focus:outline-none focus:border-black/50 w-40"
           />
         </div>
@@ -240,8 +297,8 @@ export default function UploadClient({
           </p>
         </div>
 
-        {/* Mode selector — only shown for amendments */}
-        {isAmendment && (
+        {/* Mode selector — only shown for amendments to an existing episode */}
+        {isAmendment && !isNewEpisode && (
           <div className="mb-8 border border-black/10 divide-y divide-black/10">
             <button
               onClick={() => setMode("inherit")}
