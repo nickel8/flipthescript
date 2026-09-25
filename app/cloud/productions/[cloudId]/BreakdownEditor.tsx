@@ -28,10 +28,11 @@ export default function BreakdownEditor({
   const [categories, setCategories] = useState<CategoryData[]>(initialCategories);
   const [flags, setFlags] = useState<Map<string, FlagData>>(new Map());
 
-  // PDF pane
-  const [showScript, setShowScript] = useState(true);
+  // PDF pane — only open by default when there's already a script
+  const [showScript, setShowScript] = useState(scriptId !== null);
   const [urlInput, setUrlInput] = useState("");
   const [externalUrl, setExternalUrl] = useState<string | null>(null);
+  const [editingUrl, setEditingUrl] = useState(false);
 
   const pdfSrc = scriptId
     ? `/api/script-pdf?scriptId=${scriptId}`
@@ -76,60 +77,78 @@ export default function BreakdownEditor({
     <div className="flex flex-col h-full overflow-hidden">
 
       {/* ── Script pane ── */}
-      <div className="shrink-0 flex flex-col border-b border-black/15 overflow-hidden"
-        style={{ height: showScript ? "40%" : "auto" }}
-      >
+      <div className="shrink-0 flex flex-col border-b border-black/15">
         {/* Strip header */}
-        <div className="shrink-0 flex items-center border-b border-black/10 h-7 px-3 gap-2">
-          <button
-            onClick={() => setShowScript((p) => !p)}
-            className={`text-[10px] font-bold uppercase tracking-widest transition-opacity ${
-              showScript ? "opacity-60 hover:opacity-100" : "opacity-25 hover:opacity-60"
-            }`}
-          >
-            {showScript ? "▲ Script" : "▼ Script"}
-          </button>
+        <div className="shrink-0 flex items-center border-b border-black/10 h-8 px-3 gap-2">
+          {pdfSrc ? (
+            /* Has a script — show toggle */
+            <button
+              onClick={() => setShowScript((p) => !p)}
+              className="text-[10px] font-bold uppercase tracking-widest opacity-40 hover:opacity-80 transition-opacity"
+            >
+              {showScript ? "▲" : "▼"} Script
+            </button>
+          ) : (
+            /* No script — always show URL input inline */
+            <>
+              <span className="text-[10px] font-bold uppercase tracking-widest opacity-25 shrink-0">
+                Script
+              </span>
+              {editingUrl ? (
+                <form onSubmit={handleLinkUrl} className="flex flex-1 gap-2">
+                  <input
+                    autoFocus
+                    type="url"
+                    value={urlInput}
+                    onChange={(e) => setUrlInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Escape" && setEditingUrl(false)}
+                    placeholder="Paste script URL (OneDrive, Google Drive, Dropbox…)"
+                    className="flex-1 text-xs border-0 border-b border-black/20 focus:outline-none focus:border-black/50 placeholder:opacity-30 bg-transparent py-0.5"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!urlInput.trim()}
+                    className="text-[10px] font-bold uppercase tracking-widest opacity-60 hover:opacity-100 disabled:opacity-20 transition-opacity shrink-0"
+                  >
+                    Link
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingUrl(false)}
+                    className="text-[10px] opacity-30 hover:opacity-60 transition-opacity shrink-0"
+                  >
+                    Cancel
+                  </button>
+                </form>
+              ) : (
+                <button
+                  onClick={() => setEditingUrl(true)}
+                  className="text-[10px] opacity-40 hover:opacity-80 transition-opacity underline underline-offset-2"
+                >
+                  Link a script URL…
+                </button>
+              )}
+            </>
+          )}
+
           {externalUrl && !scriptId && (
             <button
-              onClick={() => { setExternalUrl(null); setUrlInput(""); }}
-              className="text-[10px] opacity-30 hover:opacity-60 transition-opacity ml-1"
+              onClick={() => { setExternalUrl(null); setUrlInput(""); setShowScript(false); }}
+              className="text-[10px] opacity-25 hover:opacity-60 transition-opacity ml-auto"
             >
               × unlink
             </button>
           )}
         </div>
 
-        {/* Pane body */}
-        {showScript && (
-          pdfSrc ? (
-            <iframe
-              src={pdfSrc}
-              className="flex-1 border-0 min-h-0"
-              title="Script"
-            />
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6">
-              <p className="text-xs opacity-30 text-center">
-                No script linked. Paste a URL to pin it here.
-              </p>
-              <form onSubmit={handleLinkUrl} className="flex w-full max-w-md gap-2">
-                <input
-                  type="url"
-                  value={urlInput}
-                  onChange={(e) => setUrlInput(e.target.value)}
-                  placeholder="https://…"
-                  className="flex-1 text-xs border border-black/20 px-3 py-1.5 focus:outline-none focus:border-black/50 placeholder:opacity-30"
-                />
-                <button
-                  type="submit"
-                  disabled={!urlInput.trim()}
-                  className="text-xs font-bold uppercase tracking-widest px-3 py-1.5 bg-black text-white disabled:opacity-30 hover:opacity-80 transition-opacity"
-                >
-                  Link
-                </button>
-              </form>
-            </div>
-          )
+        {/* Iframe — fixed height when open */}
+        {showScript && pdfSrc && (
+          <iframe
+            src={pdfSrc}
+            className="border-0 w-full"
+            style={{ height: 320 }}
+            title="Script"
+          />
         )}
       </div>
 
