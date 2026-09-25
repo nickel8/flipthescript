@@ -1,6 +1,7 @@
 import { requireCloudSession } from "@/lib/cloud-session";
 import { notFound } from "next/navigation";
 import UploadClient from "./UploadClient";
+import { compareSceneNumbers } from "@/lib/sort-scenes";
 
 const SB_URL = process.env.SUPABASE_URL!;
 const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -53,10 +54,12 @@ export default async function UploadScriptPage({
       );
       const raw = await scenesRes.json();
       if (Array.isArray(raw)) {
-        currentScenes = raw.map((s: { scene_number: string; slug_line: string }) => ({
-          scene_number: s.scene_number,
-          slug_line: s.slug_line,
-        }));
+        currentScenes = raw
+          .map((s: { scene_number: string; slug_line: string }) => ({
+            scene_number: s.scene_number,
+            slug_line: s.slug_line,
+          }))
+          .sort((a, b) => compareSceneNumbers(a.scene_number, b.scene_number));
       }
     }
   }

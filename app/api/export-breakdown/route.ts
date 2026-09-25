@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCloudSession } from "@/lib/cloud-session";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { BreakdownDocument, type SceneRow } from "@/lib/breakdown-pdf";
+import { compareSceneNumbers } from "@/lib/sort-scenes";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const React = require("react");
 
@@ -92,6 +93,7 @@ export async function GET(req: NextRequest) {
         : null,
     };
   });
+  scenes.sort((a, b) => compareSceneNumbers(a.scene_number, b.scene_number));
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const buffer = await renderToBuffer(

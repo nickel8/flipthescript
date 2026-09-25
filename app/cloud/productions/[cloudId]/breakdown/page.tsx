@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import BreakdownEditor from "../BreakdownEditor";
 import type { SceneData, ProductionElement, ShootDayData, CategoryData } from "../types";
+import { compareSceneNumbers } from "@/lib/sort-scenes";
 
 export const metadata = {
   title: "Breakdown — FlipTheScript",
@@ -123,6 +124,7 @@ export default async function BreakdownPage({
             };
           })
         : [];
+      scenes.sort((a, b) => compareSceneNumbers(a.scene_number, b.scene_number));
     }
   }
 
