@@ -268,9 +268,20 @@ export default function BreakdownGrid({
       }),
     });
     const data = await res.json();
-    if (data?.id) {
-      setViews((prev) => [...prev, data as GridView]);
-      setActiveViewId(data.id);
+    if (!data?.id) throw new Error(data?.error ?? "Failed to save view");
+    setViews((prev) => [...prev, data as GridView]);
+    setActiveViewId(data.id);
+  }
+
+  async function toggleViewSharing(id: string, isShared: boolean) {
+    const res = await fetch("/api/breakdown-views", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, isShared }),
+    });
+    const data = await res.json();
+    if (data?.ok) {
+      setViews((prev) => prev.map((v) => v.id === id ? { ...v, isShared } : v));
     }
   }
 
@@ -338,6 +349,7 @@ export default function BreakdownGrid({
               activeViewId={activeViewId}
               onApplyView={applyView}
               onSaveView={saveView}
+              onToggleViewSharing={toggleViewSharing}
               onDeleteView={deleteView}
               productionId={productionId}
               onCategoryCreate={onCategoryCreate}
@@ -685,7 +697,7 @@ function FilterPopover({
 
 function ColPicker({
   catNames, categoryLibrary, visibleCols, setVisibleCols,
-  views, activeViewId, onApplyView, onSaveView, onDeleteView,
+  views, activeViewId, onApplyView, onSaveView, onToggleViewSharing, onDeleteView,
   productionId, onCategoryCreate, readOnly,
 }: {
   catNames: string[]; categoryLibrary: CategoryData[];
@@ -693,6 +705,7 @@ function ColPicker({
   views: GridView[]; activeViewId: string | null;
   onApplyView: (v: GridView | null) => void;
   onSaveView: (name: string, isShared: boolean) => Promise<void>;
+  onToggleViewSharing: (id: string, isShared: boolean) => Promise<void>;
   onDeleteView: (id: string) => Promise<void>;
   productionId: string; onCategoryCreate: (cat: CategoryData) => void;
   readOnly: boolean;
@@ -700,8 +713,8 @@ function ColPicker({
   const [newCatInput, setNewCatInput] = useState("");
   const [adding, setAdding] = useState(false);
   const [viewName, setViewName] = useState("");
-  const [shareMode, setShareMode] = useState<"private" | "shared">("private");
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   function toggleCol(col: string) {
     setVisibleCols((prev) => {
@@ -746,34 +759,48 @@ function ColPicker({
           >
             <span className="w-3 shrink-0 font-bold">{activeViewId === v.id ? "●" : ""}</span>
             <span className="truncate flex-1">{v.name}</span>
-            {v.isShared && (
-              <span className="text-[9px] font-bold uppercase tracking-widest opacity-30 shrink-0">
-                Shared
-              </span>
-            )}
           </button>
-          {v.isOwn && (
-            <button
-              onClick={() => onDeleteView(v.id)}
-              className="pr-3 text-xs opacity-0 group-hover/view:opacity-30 hover:!opacity-70 transition-opacity shrink-0"
-            >
-              ×
-            </button>
+          {v.isOwn ? (
+            <div className="flex items-center gap-1 pr-2 opacity-0 group-hover/view:opacity-100 transition-opacity shrink-0">
+              <button
+                onClick={() => onToggleViewSharing(v.id, !v.isShared)}
+                title={v.isShared ? "Make private" : "Share with team"}
+                className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 border transition-colors ${
+                  v.isShared
+                    ? "border-black bg-black text-white"
+                    : "border-black/20 opacity-50 hover:opacity-100"
+                }`}
+              >
+                {v.isShared ? "Shared" : "Private"}
+              </button>
+              <button
+                onClick={() => onDeleteView(v.id)}
+                className="text-xs opacity-40 hover:opacity-80 transition-opacity"
+              >
+                ×
+              </button>
+            </div>
+          ) : (
+            <span className="text-[9px] font-bold uppercase tracking-widest opacity-25 pr-3 shrink-0">
+              Shared
+            </span>
           )}
         </div>
       ))}
 
       {/* Save form */}
-      <div className="px-3 pt-1 pb-2">
-        <div className="flex gap-1.5 mb-1.5">
+      <div className="px-3 pt-1 pb-2 border-t border-black/10 mt-1">
+        <div className="flex gap-1.5">
           <input
             type="text" value={viewName} onChange={(e) => setViewName(e.target.value)}
-            placeholder="Save current as…"
+            placeholder="Save current view as…"
             onKeyDown={(e) => {
               if (e.key === "Enter" && viewName.trim() && !saving) {
                 setSaving(true);
-                onSaveView(viewName.trim(), shareMode === "shared")
+                setSaveError(null);
+                onSaveView(viewName.trim(), false)
                   .then(() => setViewName(""))
+                  .catch((err: Error) => setSaveError(err.message))
                   .finally(() => setSaving(false));
               }
             }}
@@ -783,8 +810,10 @@ function ColPicker({
             onClick={() => {
               if (!viewName.trim() || saving) return;
               setSaving(true);
-              onSaveView(viewName.trim(), shareMode === "shared")
+              setSaveError(null);
+              onSaveView(viewName.trim(), false)
                 .then(() => setViewName(""))
+                .catch((err: Error) => setSaveError(err.message))
                 .finally(() => setSaving(false));
             }}
             disabled={!viewName.trim() || saving}
@@ -793,20 +822,9 @@ function ColPicker({
             {saving ? "…" : "Save"}
           </button>
         </div>
-        {/* Private / Shared toggle */}
-        <div className="flex gap-0 border border-black/15 self-start w-fit">
-          {(["private", "shared"] as const).map((mode) => (
-            <button
-              key={mode}
-              onClick={() => setShareMode(mode)}
-              className={`text-[9px] font-bold uppercase tracking-widest px-2 py-1 transition-colors ${
-                shareMode === mode ? "bg-black text-white" : "opacity-30 hover:opacity-60"
-              }`}
-            >
-              {mode}
-            </button>
-          ))}
-        </div>
+        {saveError && (
+          <p className="text-[10px] text-red-600 mt-1">{saveError}</p>
+        )}
       </div>
 
       <div className="border-t border-black/10 my-1" />

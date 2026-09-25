@@ -84,8 +84,10 @@ export async function POST(req: NextRequest) {
     }),
   });
   const rows = await res.json();
-  if (!Array.isArray(rows) || rows.length === 0)
-    return NextResponse.json({ error: "Failed to create" }, { status: 500 });
+  if (!Array.isArray(rows) || rows.length === 0) {
+    const detail = !Array.isArray(rows) ? (rows as Record<string, unknown>)?.message ?? "Failed to create" : "Failed to create";
+    return NextResponse.json({ error: String(detail) }, { status: 500 });
+  }
 
   const r = rows[0] as Record<string, unknown>;
   return NextResponse.json({
@@ -97,6 +99,30 @@ export async function POST(req: NextRequest) {
     filters: r.filters,
     sort: r.sort,
   });
+}
+
+// PATCH /api/breakdown-views  — toggle is_shared (only creator)
+export async function PATCH(req: NextRequest) {
+  const session = await getCloudSession();
+  if (!session) return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
+
+  const { id, isShared } = await req.json();
+  if (!id || typeof isShared !== "boolean")
+    return NextResponse.json({ error: "id and isShared required" }, { status: 400 });
+
+  const res = await dbFetch(
+    `breakdown_views?id=eq.${id}&created_by=eq.${session.id}`,
+    {
+      method: "PATCH",
+      headers: { Prefer: "return=representation" } as Record<string, string>,
+      body: JSON.stringify({ is_shared: isShared }),
+    }
+  );
+  const rows = await res.json();
+  if (!Array.isArray(rows) || rows.length === 0)
+    return NextResponse.json({ error: "Not found or forbidden" }, { status: 404 });
+
+  return NextResponse.json({ ok: true, isShared: rows[0].is_shared });
 }
 
 // DELETE /api/breakdown-views  — only the creator can delete
