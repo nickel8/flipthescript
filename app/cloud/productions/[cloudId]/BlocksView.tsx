@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useNotesContext } from "./NotesContext";
 
 type Status = "prep" | "filming" | "wrapped";
 
@@ -69,11 +70,20 @@ export default function BlocksView({
   canEdit,
   activeSeries,
 }: Props) {
+  const { setFocus } = useNotesContext();
   const [blocks, setBlocks] = useState<BlockData[]>(initialBlocks);
   const [showCreateBlock, setShowCreateBlock] = useState(false);
   const [newLabel, setNewLabel] = useState("");
   const [creating, setCreating] = useState(false);
   const [wrappedOpen, setWrappedOpen] = useState(false);
+
+  // Set notes context to the active series (or production) on mount
+  useEffect(() => {
+    if (activeSeries) {
+      setFocus("series", activeSeries.id, activeSeries.name);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSeries?.id]);
 
   const allBlockOptions = blocks.map((b) => ({ id: b.id, label: b.label }));
 
@@ -144,6 +154,8 @@ export default function BlocksView({
           allBlocks={allBlockOptions}
           onStatusChange={(s) => setBlockStatus(block.id, s)}
           onMoveEpisode={(epId, toId) => moveEpisode(epId, block.id, toId)}
+          onSelect={() => setFocus("block", block.id, block.label)}
+          onSelectEpisode={(ep) => setFocus("episode", ep.id, ep.title ? `Ep ${ep.episode_number}: ${ep.title}` : `Ep ${ep.episode_number ?? "—"}`)}
         />
       ))}
 
@@ -167,6 +179,8 @@ export default function BlocksView({
                   allBlocks={allBlockOptions}
                   onStatusChange={(s) => setBlockStatus(block.id, s)}
                   onMoveEpisode={(epId, toId) => moveEpisode(epId, block.id, toId)}
+                  onSelect={() => setFocus("block", block.id, block.label)}
+                  onSelectEpisode={(ep) => setFocus("episode", ep.id, ep.title ? `Ep ${ep.episode_number}: ${ep.title}` : `Ep ${ep.episode_number ?? "—"}`)}
                 />
               ))}
             </div>
@@ -188,6 +202,7 @@ export default function BlocksView({
                 allBlocks={allBlockOptions}
                 currentBlockId={null}
                 onMove={(toId) => moveEpisode(ep.id, null, toId)}
+                onSelect={() => setFocus("episode", ep.id, ep.title ? `Ep ${ep.episode_number}: ${ep.title}` : `Ep ${ep.episode_number ?? "—"}`)}
               />
             ))}
           </div>
@@ -317,6 +332,8 @@ function BlockCard({
   allBlocks,
   onStatusChange,
   onMoveEpisode,
+  onSelect,
+  onSelectEpisode,
 }: {
   block: BlockData;
   cloudId: string;
@@ -324,15 +341,22 @@ function BlockCard({
   allBlocks: { id: string; label: string }[];
   onStatusChange: (s: Status) => void;
   onMoveEpisode: (episodeId: string, toBlockId: string | null) => void;
+  onSelect: () => void;
+  onSelectEpisode: (ep: EpisodeData) => void;
 }) {
   const totalScenes = block.episodes.reduce((n, e) => n + e.total_scenes, 0);
   const completeScenes = block.episodes.reduce((n, e) => n + e.complete_scenes, 0);
 
   return (
     <div className={`border ${block.status === "wrapped" ? "border-black/10" : "border-black"}`}>
-      {/* Block header */}
-      <div className="flex items-center gap-3 px-4 py-2.5 border-b border-black/10">
-        <StatusBadge status={block.status} canEdit={canEdit} onChange={onStatusChange} />
+      {/* Block header — clicking sets notes context to this block */}
+      <div
+        className="flex items-center gap-3 px-4 py-2.5 border-b border-black/10 cursor-pointer hover:bg-black/[0.015]"
+        onClick={onSelect}
+      >
+        <div onClick={(e) => e.stopPropagation()}>
+          <StatusBadge status={block.status} canEdit={canEdit} onChange={onStatusChange} />
+        </div>
 
         <span className={`font-bold text-sm truncate flex-1 ${block.status === "wrapped" ? "opacity-40" : ""}`}>
           {block.label}
@@ -373,6 +397,7 @@ function BlockCard({
               allBlocks={allBlocks}
               currentBlockId={block.id}
               onMove={(toId) => onMoveEpisode(ep.id, toId)}
+              onSelect={() => onSelectEpisode(ep)}
             />
           ))
         )}
@@ -390,6 +415,7 @@ function EpisodeRow({
   allBlocks,
   currentBlockId,
   onMove,
+  onSelect,
 }: {
   episode: EpisodeData;
   cloudId: string;
@@ -397,12 +423,16 @@ function EpisodeRow({
   allBlocks: { id: string; label: string }[];
   currentBlockId: string | null;
   onMove: (toBlockId: string | null) => void;
+  onSelect: () => void;
 }) {
   const [showBlockPicker, setShowBlockPicker] = useState(false);
   const pct = ep.total_scenes > 0 ? (ep.complete_scenes / ep.total_scenes) * 100 : 0;
 
   return (
-    <div className="flex items-center gap-3 px-4 py-2.5 hover:bg-black/[0.02] group relative">
+    <div
+      className="flex items-center gap-3 px-4 py-2.5 hover:bg-black/[0.02] group relative cursor-pointer"
+      onClick={onSelect}
+    >
       <span className="text-xs font-bold opacity-40 w-14 shrink-0 tabular-nums">
         {ep.episode_number != null ? `Ep ${ep.episode_number}` : "—"}
       </span>
@@ -425,7 +455,7 @@ function EpisodeRow({
 
       {/* Block picker */}
       {canEdit && allBlocks.length > 1 && (
-        <div className="relative shrink-0">
+        <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => setShowBlockPicker((p) => !p)}
             className="text-[10px] opacity-0 group-hover:opacity-30 hover:!opacity-70 transition-opacity uppercase tracking-widest"
@@ -460,6 +490,7 @@ function EpisodeRow({
 
       <Link
         href={`/cloud/productions/${cloudId}/breakdown`}
+        onClick={(e) => e.stopPropagation()}
         className="text-[10px] uppercase tracking-widest opacity-0 group-hover:opacity-40 hover:!opacity-80 transition-opacity shrink-0"
       >
         Breakdown →
@@ -468,6 +499,7 @@ function EpisodeRow({
       {!ep.has_script && (
         <Link
           href={`/cloud/productions/${cloudId}/upload`}
+          onClick={(e) => e.stopPropagation()}
           className="text-[10px] uppercase tracking-widest opacity-0 group-hover:opacity-40 hover:!opacity-80 transition-opacity shrink-0"
         >
           Upload →

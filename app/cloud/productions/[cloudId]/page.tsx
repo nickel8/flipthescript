@@ -163,7 +163,7 @@ export default async function ProductionOverviewPage({
   const completeScenes = episodes.reduce((n, e) => n + e._data.complete_scenes, 0);
 
   return (
-    <div className="flex flex-col overflow-hidden" style={{ height: "calc(100vh - 57px)" }}>
+    <div className="flex flex-col overflow-hidden" style={{ height: "100%" }}>
 
       {/* Header */}
       <div className="shrink-0 border-b border-black px-4 sm:px-6 py-3 flex items-center gap-2 sm:gap-3">
