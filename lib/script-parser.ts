@@ -157,7 +157,22 @@ function extractCharacters(rawText: string): string[] {
   const lines = rawText.split("\n").slice(1); // skip the slug line (first line)
   const seen = new Set<string>();
   for (const line of lines) {
-    const c = extractCharacterCue(line);
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    // BBC shooting scripts often list cast on one line: "MARC, NISHA." or "JOHN, MARY, TEACHER"
+    // Detect: all-caps text containing at least one comma, optional trailing period
+    const stripped = trimmed.endsWith(".") ? trimmed.slice(0, -1).trim() : trimmed;
+    if (stripped.includes(",") && /^[A-Z][A-Z\s,'.\-/]+$/.test(stripped)) {
+      for (const part of stripped.split(",")) {
+        const c = extractCharacterCue(part.trim());
+        if (c) seen.add(c);
+      }
+      continue;
+    }
+
+    // Standard single-line character cue (screenplay format: one name per line)
+    const c = extractCharacterCue(trimmed);
     if (c) seen.add(c);
   }
   return [...seen];
@@ -246,10 +261,12 @@ export function buildScenes(
       if (gap > maxGapSoFar) maxGapSoFar = gap;
     }
     if (cutoff !== null) {
-      return withBody.filter(s => {
-        const n = leadingInt(s);
-        return n === null || n < cutoff!;
-      });
+      return withBody
+        .filter(s => {
+          const n = leadingInt(s);
+          return n === null || n < cutoff!;
+        })
+        .map(s => ({ ...s, characters: extractCharacters(s.rawText) }));
     }
   }
 
