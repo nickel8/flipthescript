@@ -125,25 +125,32 @@ const NON_CHARACTER_CAPS = new Set([
 
 function extractCharacterCue(line: string): string | null {
   const trimmed = line.trim();
-  if (trimmed.length < 2 || trimmed.length > 50) return null;
+  if (trimmed.length < 2 || trimmed.length > 60) return null;
 
   // Strip trailing extension: (V.O.), (O.S.), (CONT'D), (PRE-LAP), etc.
-  const withoutExt = trimmed.replace(/\s*\([^)]*\)\s*$/, "").trim();
-  if (withoutExt.length < 2) return null;
+  let work = trimmed.replace(/\s*\([^)]*\)\s*$/, "").trim();
+
+  // Strip trailing colon — some formats use "CHARACTER:" before dialogue
+  if (work.endsWith(":")) work = work.slice(0, -1).trim();
+
+  // Strip trailing period — but keep initials like "MR." by only stripping
+  // a trailing period when it's not part of an abbreviation (single letter before it)
+  if (work.endsWith(".") && !/[A-Z]\.$/.test(work.slice(-2))) {
+    work = work.slice(0, -1).trim();
+  }
+
+  if (work.length < 2) return null;
 
   // Must be ALL CAPS — letters, digits, spaces, apostrophes, hyphens, periods (initials)
-  if (!/^[A-Z][A-Z0-9\s'./-]*$/.test(withoutExt)) return null;
-
-  // Transitions and directions end with a colon or period
-  if (withoutExt.endsWith(":") || withoutExt.endsWith(".")) return null;
+  if (!/^[A-Z][A-Z0-9\s'.\-/]*$/.test(work)) return null;
 
   // Known non-character phrases
-  if (NON_CHARACTER_CAPS.has(withoutExt)) return null;
+  if (NON_CHARACTER_CAPS.has(work)) return null;
 
   // Max 4 words — character names are never long phrases
-  if (withoutExt.split(/\s+/).length > 4) return null;
+  if (work.split(/\s+/).length > 4) return null;
 
-  return withoutExt;
+  return work;
 }
 
 function extractCharacters(rawText: string): string[] {

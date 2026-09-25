@@ -218,6 +218,8 @@ export async function POST(req: NextRequest) {
     if (s.characters?.length) sceneCharMap.set(s.sceneNumber, s.characters);
   }
 
+  console.log(`[import-script] scenes with characters: ${sceneCharMap.size}/${scenes.length}, sample:`, [...sceneCharMap.entries()].slice(0, 3));
+
   if (sceneCharMap.size > 0) {
     // Collect unique character names across all scenes
     const allChars = new Set<string>();
@@ -232,10 +234,10 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({ production_id: productionId, name: "Characters", display_order: 10 }),
     });
 
-    // Create an element per unique character (skip if already exists)
-    const elemRes = await fetch(`${SB_URL}/rest/v1/elements`, {
+    // Insert new character elements (ignore conflicts on cloud_id)
+    await fetch(`${SB_URL}/rest/v1/elements`, {
       method: "POST",
-      headers: { ...HEADERS, Prefer: "return=representation,resolution=ignore-duplicates" },
+      headers: { ...HEADERS, Prefer: "return=minimal,resolution=ignore-duplicates" },
       body: JSON.stringify(
         [...allChars].map(name => ({
           cloud_id: crypto.randomUUID(),
@@ -246,10 +248,18 @@ export async function POST(req: NextRequest) {
         }))
       ),
     });
-    const insertedElements: Array<{ id: string; name: string }> = await elemRes.json();
-    const elementIdByName = new Map(
-      Array.isArray(insertedElements) ? insertedElements.map(e => [e.name, e.id]) : []
+
+    // Fetch ALL character elements for this production to get their IDs
+    // (ignore-duplicates only returns newly inserted rows, so we always re-fetch)
+    const allElemsRes = await fetch(
+      `${SB_URL}/rest/v1/elements?production_id=eq.${productionId}&category=eq.Characters&select=id,name`,
+      { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } }
     );
+    const allElems: Array<{ id: string; name: string }> = await allElemsRes.json();
+    const elementIdByName = new Map(
+      Array.isArray(allElems) ? allElems.map(e => [e.name, e.id]) : []
+    );
+    console.log(`[import-script] characters found: ${allChars.size}, elements fetched: ${allElems.length}`);
 
     // Create breakdown sheets for scenes that have characters
     const sceneIdByNumber = new Map(insertedSceneIds.map(x => [x.scene_number, x.id]));
