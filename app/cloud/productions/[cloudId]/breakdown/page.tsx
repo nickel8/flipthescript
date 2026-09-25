@@ -233,7 +233,6 @@ export default async function BreakdownPage({
           productionElements={productionElements}
           productionId={production.id}
           scriptId={currentScriptId}
-          initialShootDays={shootDays}
           initialCategories={categories}
           categoryLibrary={categoryLibrary}
           readOnly={userRole === "viewer"}
