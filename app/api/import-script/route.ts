@@ -211,10 +211,98 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ── Auto-populate characters from parsed scene data ─────────────────────────
+  // Build a map of scene_number → characters, skipping scenes with no characters.
+  const sceneCharMap = new Map<string, string[]>();
+  for (const s of scenes) {
+    if (s.characters?.length) sceneCharMap.set(s.sceneNumber, s.characters);
+  }
+
+  if (sceneCharMap.size > 0) {
+    // Collect unique character names across all scenes
+    const allChars = new Set<string>();
+    for (const chars of sceneCharMap.values()) {
+      for (const c of chars) allChars.add(c);
+    }
+
+    // Ensure "Characters" category exists for this production
+    await fetch(`${SB_URL}/rest/v1/production_categories`, {
+      method: "POST",
+      headers: { ...HEADERS, Prefer: "return=minimal,resolution=ignore-duplicates" },
+      body: JSON.stringify({ production_id: productionId, name: "Characters", display_order: 10 }),
+    });
+
+    // Create an element per unique character (skip if already exists)
+    const elemRes = await fetch(`${SB_URL}/rest/v1/elements`, {
+      method: "POST",
+      headers: { ...HEADERS, Prefer: "return=representation,resolution=ignore-duplicates" },
+      body: JSON.stringify(
+        [...allChars].map(name => ({
+          cloud_id: crypto.randomUUID(),
+          production_id: productionId,
+          name,
+          category: "Characters",
+          notes: "",
+        }))
+      ),
+    });
+    const insertedElements: Array<{ id: string; name: string }> = await elemRes.json();
+    const elementIdByName = new Map(
+      Array.isArray(insertedElements) ? insertedElements.map(e => [e.name, e.id]) : []
+    );
+
+    // Create breakdown sheets for scenes that have characters
+    const sceneIdByNumber = new Map(insertedSceneIds.map(x => [x.scene_number, x.id]));
+    const sheetRows = [...sceneCharMap.keys()]
+      .map(num => {
+        const sceneId = sceneIdByNumber.get(num);
+        return sceneId ? { cloud_id: crypto.randomUUID(), scene_id: sceneId } : null;
+      })
+      .filter((r): r is { cloud_id: string; scene_id: string } => r !== null);
+
+    if (sheetRows.length > 0) {
+      const sheetRes = await fetch(`${SB_URL}/rest/v1/breakdown_sheets`, {
+        method: "POST",
+        headers: { ...HEADERS, Prefer: "return=representation" },
+        body: JSON.stringify(sheetRows),
+      });
+      const insertedSheets: Array<{ id: string; scene_id: string }> = await sheetRes.json();
+
+      // Map scene_id → sheet_id
+      const sheetIdBySceneId = new Map(
+        Array.isArray(insertedSheets) ? insertedSheets.map(sh => [sh.scene_id, sh.id]) : []
+      );
+
+      // Build scene_elements rows: one per (sheet, character)
+      const seRows: Array<{ cloud_id: string; breakdown_sheet_id: string; element_id: string }> = [];
+      for (const [sceneNum, chars] of sceneCharMap) {
+        const sceneId = sceneIdByNumber.get(sceneNum);
+        if (!sceneId) continue;
+        const sheetId = sheetIdBySceneId.get(sceneId);
+        if (!sheetId) continue;
+        for (const char of chars) {
+          const elementId = elementIdByName.get(char);
+          if (elementId) {
+            seRows.push({ cloud_id: crypto.randomUUID(), breakdown_sheet_id: sheetId, element_id: elementId });
+          }
+        }
+      }
+
+      if (seRows.length > 0) {
+        await fetch(`${SB_URL}/rest/v1/scene_elements`, {
+          method: "POST",
+          headers: { ...HEADERS, Prefer: "return=minimal" },
+          body: JSON.stringify(seRows),
+        });
+      }
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     scriptId: script.id,
     sceneCount: scenes.length,
     inheritedCount: mode === "inherit" ? breakdownMap.size : 0,
+    charactersFound: [...new Set(scenes.flatMap(s => s.characters ?? []))].length,
   });
 }

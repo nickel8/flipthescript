@@ -9,6 +9,7 @@ export interface ParsedScene {
   timeOfDay: string;
   pageStart: number;
   rawText: string;
+  characters: string[]; // ALL-CAPS character cues extracted from body text
 }
 
 interface SlugMatch {
@@ -103,6 +104,58 @@ function parseSlugLine(line: string): SlugMatch | null {
   return tryFormatA(work) ?? tryFormatB(work);
 }
 
+// ── Character extraction ──────────────────────────────────────────────────────
+// In standard screenplay format, a character cue is an ALL-CAPS line that
+// appears immediately before dialogue. We identify these from each scene's
+// body text and collect them as the scene's character list.
+
+const NON_CHARACTER_CAPS = new Set([
+  "FADE IN", "FADE OUT", "FADE TO BLACK", "FADE TO WHITE",
+  "CUT TO", "CUT BACK TO", "SMASH CUT TO", "JUMP CUT TO", "HARD CUT TO",
+  "DISSOLVE TO", "MATCH CUT TO", "WIPE TO",
+  "INTERCUT", "INTERCUT WITH",
+  "BACK TO", "BACK TO SCENE",
+  "FLASHBACK", "END FLASHBACK", "FLASH FORWARD", "END FLASH FORWARD",
+  "TITLE CARD", "SUPER", "SUBTITLE", "OVER BLACK", "ON SCREEN",
+  "THE END", "END OF SHOW", "END OF EPISODE", "END OF PILOT",
+  "ACT ONE", "ACT TWO", "ACT THREE", "ACT FOUR", "END OF ACT",
+  "COLD OPEN", "TAG", "TEASER", "EPILOGUE", "PROLOGUE", "RECAP",
+  "CONTINUED", "MORE",
+]);
+
+function extractCharacterCue(line: string): string | null {
+  const trimmed = line.trim();
+  if (trimmed.length < 2 || trimmed.length > 50) return null;
+
+  // Strip trailing extension: (V.O.), (O.S.), (CONT'D), (PRE-LAP), etc.
+  const withoutExt = trimmed.replace(/\s*\([^)]*\)\s*$/, "").trim();
+  if (withoutExt.length < 2) return null;
+
+  // Must be ALL CAPS — letters, digits, spaces, apostrophes, hyphens, periods (initials)
+  if (!/^[A-Z][A-Z0-9\s'./-]*$/.test(withoutExt)) return null;
+
+  // Transitions and directions end with a colon or period
+  if (withoutExt.endsWith(":") || withoutExt.endsWith(".")) return null;
+
+  // Known non-character phrases
+  if (NON_CHARACTER_CAPS.has(withoutExt)) return null;
+
+  // Max 4 words — character names are never long phrases
+  if (withoutExt.split(/\s+/).length > 4) return null;
+
+  return withoutExt;
+}
+
+function extractCharacters(rawText: string): string[] {
+  const lines = rawText.split("\n").slice(1); // skip the slug line (first line)
+  const seen = new Set<string>();
+  for (const line of lines) {
+    const c = extractCharacterCue(line);
+    if (c) seen.add(c);
+  }
+  return [...seen];
+}
+
 export function buildScenes(
   linesByPage: Array<{ line: string; page: number }>
 ): ParsedScene[] {
@@ -130,6 +183,7 @@ export function buildScenes(
         timeOfDay: match.timeOfDay,
         pageStart: page,
         rawText: match.cleanSlug + "\n",
+        characters: [],
       };
     } else if (current && trimmed !== "") {
       current.rawText += trimmed + "\n";
@@ -192,7 +246,7 @@ export function buildScenes(
     }
   }
 
-  return withBody;
+  return withBody.map(s => ({ ...s, characters: extractCharacters(s.rawText) }));
 }
 
 // ── PDF text extraction ────────────────────────────────────────────────────────
