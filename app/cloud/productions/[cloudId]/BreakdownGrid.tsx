@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import type { SceneData, ProductionElement, SheetData, SceneElementData, FlagData } from "./types";
 import {
   updateSynopsis,
@@ -9,6 +9,19 @@ import {
   toggleComplete,
   ensureSheet,
 } from "./actions";
+
+// ── Column widths ─────────────────────────────────────────────────────────────
+
+const COL_SCENE = 48;   // fixed
+const COL_CHECK = 40;   // fixed
+
+function defaultWidths(categories: string[]): Record<string, number> {
+  const w: Record<string, number> = { location: 160, synopsis: 200 };
+  for (const cat of categories) w[cat] = 140;
+  return w;
+}
+
+// ── Props ─────────────────────────────────────────────────────────────────────
 
 interface Props {
   scenes: SceneData[];
@@ -22,6 +35,8 @@ interface Props {
   readOnly?: boolean;
 }
 
+// ── Main component ────────────────────────────────────────────────────────────
+
 export default function BreakdownGrid({
   scenes,
   productionElements,
@@ -33,36 +48,85 @@ export default function BreakdownGrid({
   onElementCreated,
   readOnly = false,
 }: Props) {
+  const [colWidths, setColWidths] = useState<Record<string, number>>(() =>
+    defaultWidths(categories)
+  );
+  const colWidthsRef = useRef(colWidths);
+  useEffect(() => { colWidthsRef.current = colWidths; }, [colWidths]);
+
+  // Location column left offset changes as scene-# column is fixed
+  const locationLeft = COL_CHECK + COL_SCENE;
+
+  const startResize = useCallback((col: string, startX: number) => {
+    const startWidth = colWidthsRef.current[col] ?? 120;
+    function onMove(e: MouseEvent) {
+      const w = Math.max(60, startWidth + e.clientX - startX);
+      setColWidths((prev) => ({ ...prev, [col]: w }));
+    }
+    function onUp() {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }, []);
+
   return (
-    <div className="overflow-auto h-full w-full">
-      <table className="border-collapse text-sm w-full">
+    <div className="overflow-auto h-full w-full select-none">
+      <table
+        className="border-collapse text-sm"
+        style={{ tableLayout: "fixed" }}
+      >
+        <colgroup>
+          <col style={{ width: COL_CHECK }} />
+          <col style={{ width: COL_SCENE }} />
+          <col style={{ width: colWidths.location }} />
+          <col style={{ width: colWidths.synopsis }} />
+          {categories.map((cat) => (
+            <col key={cat} style={{ width: colWidths[cat] ?? 140 }} />
+          ))}
+        </colgroup>
+
         <thead className="sticky top-0 z-20">
           <tr className="border-b border-black/15 bg-white">
             {/* Checkbox */}
-            <th className="sticky left-0 z-30 bg-white w-10 px-2 py-2 text-left font-normal border-r border-black/10" />
+            <th className="sticky left-0 z-30 bg-white px-2 py-2 text-left font-normal border-r border-black/10" />
+
             {/* Scene # */}
-            <th className="sticky left-10 z-30 bg-white w-12 px-2 py-2 text-left">
+            <th
+              className="sticky z-30 bg-white px-2 py-2 text-left"
+              style={{ left: COL_CHECK }}
+            >
               <span className="text-[10px] font-bold uppercase tracking-widest opacity-30">#</span>
             </th>
-            {/* Location — sticky, fixed width */}
-            <th
-              className="sticky z-30 bg-white px-3 py-2 text-left border-r border-black/15"
-              style={{ left: 88, width: 160, minWidth: 120 }}
-            >
-              <span className="text-[10px] font-bold uppercase tracking-widest opacity-30">Location</span>
-            </th>
-            {/* Synopsis — auto width */}
-            <th className="px-3 py-2 text-left" style={{ minWidth: 160 }}>
-              <span className="text-[10px] font-bold uppercase tracking-widest opacity-30">Synopsis</span>
-            </th>
-            {/* Category columns — auto width, sized by content */}
+
+            {/* Location */}
+            <ResizableTh
+              label="Location"
+              col="location"
+              left={locationLeft}
+              sticky
+              borderRight
+              shadow
+              onStartResize={startResize}
+            />
+
+            {/* Synopsis */}
+            <ResizableTh label="Synopsis" col="synopsis" onStartResize={startResize} />
+
+            {/* Category columns */}
             {categories.map((cat) => (
-              <th key={cat} className="px-3 py-2 text-left border-l border-black/5" style={{ minWidth: 100 }}>
-                <span className="text-[10px] font-bold uppercase tracking-widest opacity-30">{cat}</span>
-              </th>
+              <ResizableTh
+                key={cat}
+                label={cat}
+                col={cat}
+                borderLeft
+                onStartResize={startResize}
+              />
             ))}
           </tr>
         </thead>
+
         <tbody>
           {scenes.map((scene) => (
             <GridRow
@@ -71,6 +135,7 @@ export default function BreakdownGrid({
               categories={categories}
               productionElements={productionElements}
               productionId={productionId}
+              locationLeft={locationLeft}
               flags={flags}
               onCompleteToggle={onCompleteToggle}
               onSheetChange={onSheetChange}
@@ -84,6 +149,55 @@ export default function BreakdownGrid({
   );
 }
 
+// ── Resizable column header ───────────────────────────────────────────────────
+
+function ResizableTh({
+  label,
+  col,
+  left,
+  sticky,
+  borderRight,
+  borderLeft,
+  shadow,
+  onStartResize,
+}: {
+  label: string;
+  col: string;
+  left?: number;
+  sticky?: boolean;
+  borderRight?: boolean;
+  borderLeft?: boolean;
+  shadow?: boolean;
+  onStartResize: (col: string, startX: number) => void;
+}) {
+  return (
+    <th
+      className={[
+        "relative px-3 py-2 text-left bg-white font-normal",
+        sticky ? `sticky z-30` : "",
+        borderRight ? "border-r border-black/15" : "",
+        borderLeft ? "border-l border-black/5" : "",
+        shadow ? "shadow-[2px_0_4px_-2px_rgba(0,0,0,0.06)]" : "",
+      ].join(" ")}
+      style={left !== undefined ? { left } : undefined}
+    >
+      <span className="text-[10px] font-bold uppercase tracking-widest opacity-30">
+        {label}
+      </span>
+      {/* Drag-to-resize handle */}
+      <div
+        className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize z-10 group"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          onStartResize(col, e.clientX);
+        }}
+      >
+        <div className="absolute right-0 top-1/4 bottom-1/4 w-px bg-black/0 group-hover:bg-black/20 transition-colors" />
+      </div>
+    </th>
+  );
+}
+
 // ── Grid row ──────────────────────────────────────────────────────────────────
 
 function GridRow({
@@ -91,6 +205,7 @@ function GridRow({
   categories,
   productionElements,
   productionId,
+  locationLeft,
   flags,
   onCompleteToggle,
   onSheetChange,
@@ -101,6 +216,7 @@ function GridRow({
   categories: string[];
   productionElements: ProductionElement[];
   productionId: string;
+  locationLeft: number;
   flags: Map<string, FlagData>;
   onCompleteToggle: (sceneId: string, isComplete: boolean) => void;
   onSheetChange: (sceneId: string, sheet: SheetData | null) => void;
@@ -111,7 +227,6 @@ function GridRow({
   const sheetRef = useRef<SheetData | null>(scene.sheet);
   const [isComplete, setIsComplete] = useState(scene.is_complete);
 
-  // Keep in sync when parent state changes (e.g. switching back from form view)
   useEffect(() => {
     sheetRef.current = scene.sheet;
     setSheet(scene.sheet);
@@ -164,12 +279,12 @@ function GridRow({
 
   return (
     <tr
-      className={`border-b border-black/5 hover:bg-black/[0.015] transition-colors ${
-        isComplete ? "opacity-40" : ""
+      className={`border-b border-black/5 transition-colors ${
+        isComplete ? "opacity-40" : "hover:bg-black/[0.015]"
       }`}
     >
       {/* Checkbox */}
-      <td className="sticky left-0 z-10 bg-white w-10 px-2 border-r border-black/10">
+      <td className="sticky left-0 z-10 bg-white px-2 border-r border-black/10">
         <input
           type="checkbox"
           checked={isComplete}
@@ -180,8 +295,13 @@ function GridRow({
       </td>
 
       {/* Scene # + INT/EXT */}
-      <td className="sticky left-10 z-10 bg-white w-12 px-2 py-2 align-top">
-        <div className="font-mono text-xs font-bold opacity-50 leading-none">{scene.scene_number}</div>
+      <td
+        className="sticky z-10 bg-white px-2 py-2 align-top"
+        style={{ left: COL_CHECK }}
+      >
+        <div className="font-mono text-xs font-bold opacity-50 leading-none truncate">
+          {scene.scene_number}
+        </div>
         <div
           className={`text-[9px] font-bold mt-1 ${
             scene.int_ext === "EXT"
@@ -197,11 +317,11 @@ function GridRow({
 
       {/* Location */}
       <td
-        className="sticky z-10 bg-white px-3 py-2 align-top border-r border-black/15 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.06)]"
-        style={{ left: 88, width: 160, minWidth: 120 }}
+        className="sticky z-10 bg-white px-3 py-2 align-top border-r border-black/15 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.06)] overflow-hidden"
+        style={{ left: locationLeft }}
       >
         <div className="max-h-16 overflow-hidden">
-          <div className="text-xs font-medium leading-snug">{scene.location}</div>
+          <div className="text-xs font-medium leading-snug truncate">{scene.location}</div>
           {scene.time_of_day && scene.time_of_day !== "UNSPECIFIED" && (
             <div className="text-[10px] opacity-30 mt-0.5">{scene.time_of_day}</div>
           )}
@@ -273,7 +393,7 @@ function SynopsisCell({
 
   if (readOnly) {
     return (
-      <td className="px-3 py-2 align-top" style={{ minWidth: 160 }}>
+      <td className="px-3 py-2 align-top overflow-hidden">
         <div className="max-h-16 overflow-hidden text-xs text-black/50 leading-snug">
           {text || <span className="opacity-30">—</span>}
         </div>
@@ -283,8 +403,7 @@ function SynopsisCell({
 
   return (
     <td
-      className="px-0 py-0 align-top cursor-text"
-      style={{ minWidth: 160 }}
+      className="px-0 py-0 align-top overflow-hidden"
       onClick={() => !editing && setEditing(true)}
     >
       {editing ? (
@@ -294,10 +413,10 @@ function SynopsisCell({
           onChange={(e) => handleChange(e.target.value)}
           onBlur={() => setEditing(false)}
           rows={4}
-          className="w-full px-3 py-2 text-xs focus:outline-none resize-none bg-amber-50 leading-snug"
+          className="w-full h-full px-3 py-2 text-xs focus:outline-none resize-none bg-amber-50 leading-snug"
         />
       ) : (
-        <div className="max-h-16 overflow-hidden px-3 py-2 text-xs text-black/50 leading-snug min-h-[36px] hover:bg-black/[0.03]">
+        <div className="max-h-16 overflow-hidden px-3 py-2 text-xs text-black/50 leading-snug min-h-[36px] hover:bg-black/[0.03] cursor-text">
           {text || <span className="opacity-25">Add synopsis…</span>}
         </div>
       )}
@@ -363,11 +482,8 @@ function GridElementCell({
   }
 
   return (
-    <td
-      className="px-2 py-1.5 align-top border-l border-black/5 relative"
-      style={{ minWidth: 100 }}
-    >
-      {/* Chips — wrap freely up to 2× row height */}
+    <td className="px-2 py-1.5 align-top border-l border-black/5 relative overflow-hidden">
+      {/* Chips — wrap to fill cell, max 2 rows */}
       {sceneElements.length > 0 && (
         <div className="flex flex-wrap gap-0.5 mb-1 max-h-16 overflow-hidden">
           {sceneElements.map((se) => {
@@ -375,7 +491,7 @@ function GridElementCell({
             return (
               <span
                 key={se.id}
-                className={`group/chip inline-flex items-center gap-0.5 text-[11px] border px-1.5 py-px ${
+                className={`group/chip inline-flex items-center gap-0.5 text-[11px] border px-1.5 py-px whitespace-nowrap ${
                   flagged ? "border-amber-400 bg-amber-50" : "border-black/15 bg-white"
                 }`}
               >
@@ -403,10 +519,7 @@ function GridElementCell({
             type="text"
             value={input}
             placeholder={sceneElements.length === 0 ? "+" : ""}
-            onChange={(e) => {
-              setInput(e.target.value);
-              setOpen(true);
-            }}
+            onChange={(e) => { setInput(e.target.value); setOpen(true); }}
             onFocus={() => setOpen(true)}
             onBlur={() => setTimeout(() => { setOpen(false); setInput(""); }, 150)}
             onKeyDown={(e) => {
@@ -419,7 +532,7 @@ function GridElementCell({
                 setInput("");
               }
             }}
-            className="text-xs border-0 border-b border-black/10 focus:outline-none focus:border-black/30 placeholder:opacity-25 bg-transparent w-8 focus:w-full transition-[width] duration-150"
+            className="text-xs border-0 border-b border-black/10 focus:outline-none focus:border-black/30 placeholder:opacity-25 bg-transparent w-5 focus:w-full transition-[width] duration-150"
           />
           {showDropdown && (
             <div
@@ -434,9 +547,7 @@ function GridElementCell({
                     key={el.id}
                     onClick={() => { toggle(el); setInput(""); }}
                     disabled={isPending}
-                    className={`w-full text-left text-xs px-2.5 py-1.5 flex items-center gap-2 hover:bg-black/5 ${
-                      isPending ? "opacity-30" : ""
-                    }`}
+                    className={`w-full text-left text-xs px-2.5 py-1.5 flex items-center gap-2 hover:bg-black/5 ${isPending ? "opacity-30" : ""}`}
                   >
                     <span className="w-3 shrink-0 text-green-600 font-bold">{isLinked ? "✓" : ""}</span>
                     <span className={isLinked ? "opacity-40" : ""}>{el.name}</span>
