@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import type { SceneData, ProductionElement, SheetData, SceneElementData, FlagData } from "./types";
+import type { SceneData, ProductionElement, SheetData, SceneElementData, FlagData, NoteData } from "./types";
 // sheetRef lets async handlers always read the current sheet without stale closures
 import {
   updateSynopsis,
@@ -44,6 +44,10 @@ export default function SceneEditor({
   // Keep a ref so async handlers always read the latest sheet without stale closures
   const sheetRef = useRef<SheetData | null>(scene.sheet);
 
+  const [notes, setNotes] = useState<NoteData[]>([]);
+  const [newNote, setNewNote] = useState("");
+  const [addingNote, setAddingNote] = useState(false);
+
   function applySheet(next: SheetData | null) {
     sheetRef.current = next;
     setSheet(next);
@@ -55,7 +59,49 @@ export default function SceneEditor({
     setSheet(scene.sheet);
     setSynopsis(scene.sheet?.synopsis ?? "");
     setIsComplete(scene.is_complete);
+    setNotes([]);
+    setNewNote("");
   }, [scene.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load notes when sheet is available
+  useEffect(() => {
+    const sheetId = sheetRef.current?.id ?? scene.sheet?.id;
+    if (!sheetId) return;
+    fetch(`/api/sheet-notes?sheetId=${sheetId}`)
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data)) setNotes(data); })
+      .catch(() => {});
+  }, [scene.sheet?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleAddNote() {
+    const body = newNote.trim();
+    if (!body || addingNote) return;
+    const sheetId = await getOrCreateSheet();
+    setAddingNote(true);
+    try {
+      const res = await fetch("/api/sheet-notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sheetId, body }),
+      });
+      const data = await res.json();
+      if (data?.id) {
+        setNotes((prev) => [...prev, data]);
+        setNewNote("");
+      }
+    } finally {
+      setAddingNote(false);
+    }
+  }
+
+  async function handleDeleteNote(id: string) {
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+    await fetch("/api/sheet-notes", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+  }
 
   async function getOrCreateSheet(): Promise<string> {
     if (sheetRef.current?.id) return sheetRef.current.id;
@@ -177,6 +223,54 @@ export default function SceneEditor({
             placeholder="What happens in this scene…"
             className="w-full border border-black/20 px-3 py-2 text-sm focus:outline-none focus:border-black/50 resize-none leading-relaxed"
           />
+        )}
+      </div>
+
+      {/* Notes */}
+      <div className="mb-3">
+        <p className="text-xs font-bold uppercase tracking-widest opacity-30 mb-1">Notes</p>
+        {notes.length > 0 && (
+          <ul className="mb-2 space-y-1">
+            {notes.map((n) => (
+              <li
+                key={n.id}
+                className="group flex items-start gap-2 text-sm border-b border-black/5 pb-1 last:border-0"
+              >
+                <span className="flex-1 leading-snug">{n.body}</span>
+                {!readOnly && (
+                  <button
+                    onClick={() => handleDeleteNote(n.id)}
+                    className="shrink-0 opacity-0 group-hover:opacity-30 hover:!opacity-70 text-xs transition-opacity mt-0.5"
+                    aria-label="Delete note"
+                  >
+                    ×
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+        {!readOnly && (
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddNote(); } }}
+              placeholder="Add a note…"
+              className="flex-1 text-xs border border-black/15 px-2 py-1 focus:outline-none focus:border-black/40 placeholder:opacity-25"
+            />
+            <button
+              onClick={handleAddNote}
+              disabled={!newNote.trim() || addingNote}
+              className="text-xs font-bold uppercase tracking-widest px-3 py-1 border border-black/20 hover:border-black/50 disabled:opacity-20 transition-colors"
+            >
+              Add
+            </button>
+          </div>
+        )}
+        {readOnly && notes.length === 0 && (
+          <p className="text-sm text-black/30 italic">No notes.</p>
         )}
       </div>
 

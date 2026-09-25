@@ -59,3 +59,10 @@ export interface FlagData {
   due_date: string | null;
   is_done: boolean;
 }
+
+export interface NoteData {
+  id: string;
+  body: string;
+  author_id: string;
+  created_at: string;
+}
