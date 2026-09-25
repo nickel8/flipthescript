@@ -34,6 +34,7 @@ export default function BreakdownEditor({
   const [externalUrl, setExternalUrl] = useState<string | null>(null);
   const [localFileName, setLocalFileName] = useState<string | null>(null);
   const [editingUrl, setEditingUrl] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
 
   // Revoke blob URL on unmount to avoid memory leaks
   useEffect(() => {
@@ -95,14 +96,17 @@ export default function BreakdownEditor({
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div
+      className="flex flex-col overflow-hidden bg-white"
+      style={focusMode ? { position: "fixed", inset: 0, zIndex: 40 } : { height: "100%" }}
+    >
 
       {/* ── Script pane ── */}
       <div className="shrink-0 flex flex-col border-b border-black/15">
         {/* Strip header */}
         <div className="shrink-0 flex items-center border-b border-black/10 h-8 px-3 gap-2">
           {pdfSrc ? (
-            /* Has a script — show toggle */
+            /* Has a script — show toggle + focus mode */
             <>
               <button
                 onClick={() => setShowScript((p) => !p)}
@@ -112,6 +116,15 @@ export default function BreakdownEditor({
               </button>
               {localFileName && (
                 <span className="text-[10px] opacity-25 truncate">{localFileName}</span>
+              )}
+              {showScript && (
+                <button
+                  onClick={() => setFocusMode((p) => !p)}
+                  title={focusMode ? "Exit focus mode" : "Focus mode"}
+                  className="ml-auto text-[10px] opacity-25 hover:opacity-60 transition-opacity"
+                >
+                  {focusMode ? "⊠ Exit focus" : "⊞ Focus"}
+                </button>
               )}
             </>
           ) : (
