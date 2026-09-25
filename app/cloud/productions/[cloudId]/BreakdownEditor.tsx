@@ -35,6 +35,7 @@ export default function BreakdownEditor({
     initialScenes[0]?.id ?? null
   );
   const [showPdf, setShowPdf] = useState(false);
+  const [pdfLayout, setPdfLayout] = useState<"side" | "top">("side");
   const [showSceneList, setShowSceneList] = useState(true);
   const [showRightPanel, setShowRightPanel] = useState(!readOnly);
   // Mobile: "list" shows the scene list full-width; "editor" shows the scene editor full-width
@@ -122,7 +123,7 @@ export default function BreakdownEditor({
   }
 
   const editorPane = (
-    <main className="flex-1 overflow-y-auto min-w-0">
+    <main className="flex-1 overflow-y-auto min-w-0 min-h-0">
       {/* Mobile back button */}
       <div className="sm:hidden shrink-0 flex items-center border-b border-black/10 px-3 py-2">
         <button
@@ -214,10 +215,14 @@ export default function BreakdownEditor({
         <div className={[
           mobilePanel === "editor" ? "flex" : "hidden",
           "sm:flex flex-1 overflow-hidden border-r border-black/10",
+          pdfLayout === "top" ? "flex-col" : "",
         ].join(" ")}>
           <iframe
             src={`/api/script-pdf?scriptId=${scriptId}`}
-            className="flex-1 min-w-0 h-full border-0 border-r border-black/10"
+            className={[
+              "flex-1 min-h-0 min-w-0 border-0",
+              pdfLayout === "side" ? "border-r border-black/10" : "border-b border-black/10",
+            ].join(" ")}
             title="Script PDF"
           />
           {editorPane}
@@ -252,14 +257,25 @@ export default function BreakdownEditor({
                 </span>
               )}
               {scriptId && (
-                <button
-                  onClick={() => setShowPdf((p) => !p)}
-                  className={`text-xs font-bold uppercase tracking-wide py-2 px-3 transition-colors ${
-                    showPdf ? "bg-black text-white" : "hover:bg-black/5 opacity-40"
-                  }`}
-                >
-                  Script
-                </button>
+                <>
+                  {showPdf && (
+                    <button
+                      onClick={() => setPdfLayout((p) => (p === "side" ? "top" : "side"))}
+                      title={pdfLayout === "side" ? "Switch to stacked layout" : "Switch to side-by-side layout"}
+                      className="text-xs py-2 px-2 opacity-30 hover:opacity-70 transition-opacity"
+                    >
+                      {pdfLayout === "side" ? "↕" : "↔"}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowPdf((p) => !p)}
+                    className={`text-xs font-bold uppercase tracking-wide py-2 px-3 transition-colors ${
+                      showPdf ? "bg-black text-white" : "hover:bg-black/5 opacity-40"
+                    }`}
+                  >
+                    Script
+                  </button>
+                </>
               )}
             </div>
 
@@ -286,14 +302,25 @@ export default function BreakdownEditor({
               ←
             </button>
             {scriptId && (
-              <button
-                onClick={() => setShowPdf((p) => !p)}
-                title={showPdf ? "Hide script" : "Show script"}
-                className={`text-xs font-bold uppercase py-1 transition-opacity ${showPdf ? "opacity-100" : "opacity-25 hover:opacity-60"}`}
-                style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
-              >
-                Script
-              </button>
+              <>
+                <button
+                  onClick={() => setShowPdf((p) => !p)}
+                  title={showPdf ? "Hide script" : "Show script"}
+                  className={`text-xs font-bold uppercase py-1 transition-opacity ${showPdf ? "opacity-100" : "opacity-25 hover:opacity-60"}`}
+                  style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+                >
+                  Script
+                </button>
+                {showPdf && (
+                  <button
+                    onClick={() => setPdfLayout((p) => (p === "side" ? "top" : "side"))}
+                    title={pdfLayout === "side" ? "Switch to stacked" : "Switch to side-by-side"}
+                    className="text-xs opacity-30 hover:opacity-70 transition-opacity"
+                  >
+                    {pdfLayout === "side" ? "↕" : "↔"}
+                  </button>
+                )}
+              </>
             )}
           </div>
         )}
