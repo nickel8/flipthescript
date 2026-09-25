@@ -28,6 +28,13 @@ export async function GET(req: NextRequest) {
 
   if (!blob_url) return new NextResponse("No PDF on record", { status: 404 });
 
+  // External links (OneDrive, Google Drive, Dropbox etc.) are redirected directly.
+  // Only Vercel Blob URLs need to be proxied with an auth header.
+  const isVercelBlob = blob_url.includes("vercel-storage.com");
+  if (!isVercelBlob) {
+    return NextResponse.redirect(blob_url);
+  }
+
   // Verify ownership: episode → production → owner
   const epRes = await fetch(
     `${SB_URL}/rest/v1/episodes?id=eq.${episode_id}&select=production_id`,

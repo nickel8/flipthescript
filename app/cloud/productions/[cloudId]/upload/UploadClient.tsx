@@ -3,12 +3,12 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { ParsedScene } from "@/lib/script-parser";
+import type { ParsedScene } from "@/lib/scene-builder";
+import { parsePdfInBrowser } from "@/lib/parse-pdf-client";
 
 type Mode = "blank" | "inherit";
 
 interface ParseResult {
-  blobUrl: string;
   filename: string;
   pageCount: number;
   scenes: ParsedScene[];
@@ -43,6 +43,7 @@ export default function UploadClient({
 
   const [step, setStep] = useState<"upload" | "preview" | "importing">("upload");
   const [parseResult, setParseResult] = useState<ParseResult | null>(null);
+  const [pdfLink, setPdfLink] = useState("");
   const [version, setVersion] = useState("");
   const [mode, setMode] = useState<Mode>("inherit");
   const [error, setError] = useState<string | null>(null);
@@ -60,25 +61,22 @@ export default function UploadClient({
     setParsing(true);
 
     try {
-      const form = new FormData();
-      form.append("pdf", file);
+      // Parse entirely in the browser — the PDF never leaves this device
+      const { scenes, pageCount } = await parsePdfInBrowser(file);
 
-      const res = await fetch("/api/parse-script", { method: "POST", body: form });
-      const data = await res.json().catch(() => ({}));
-      setParsing(false);
-
-      if (!res.ok) {
-        setError(data.error ?? `Parsing failed (${res.status}).`);
+      if (scenes.length === 0) {
+        setError("No scenes detected. Check that the PDF is a text-based screenplay.");
+        setParsing(false);
         return;
       }
 
-      setParseResult(data);
-      // Default version label: increment if amendment
+      setParseResult({ filename: file.name, pageCount, scenes });
       setVersion(isAmendment ? "" : "v1");
       setStep("preview");
     } catch (err) {
-      setParsing(false);
       setError(err instanceof Error ? err.message : "Parsing failed — please try again.");
+    } finally {
+      setParsing(false);
     }
   }
 
@@ -93,7 +91,7 @@ export default function UploadClient({
         productionId,
         filename: parseResult.filename,
         version: version || (isAmendment ? "amendment" : "v1"),
-        blobUrl: parseResult.blobUrl,
+        blobUrl: pdfLink.trim() || null,
         scenes: parseResult.scenes,
         mode: isAmendment ? mode : "blank",
         currentScriptId: isAmendment ? currentScriptId : null,
@@ -130,10 +128,13 @@ export default function UploadClient({
           </p>
         )}
         {!isAmendment && (
-          <p className="text-sm opacity-40 mb-10">
+          <p className="text-sm opacity-40 mb-2">
             PDF screenplay only. Text-based PDFs work best.
           </p>
         )}
+        <p className="text-xs opacity-30 mb-10">
+          The script is parsed on your device and never uploaded to our servers.
+        </p>
 
         <div
           onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
@@ -220,6 +221,23 @@ export default function UploadClient({
             placeholder={isAmendment ? "e.g. v2, pink pages…" : "v1"}
             className="border border-black/20 px-2.5 py-1 text-sm focus:outline-none focus:border-black/50 w-40"
           />
+        </div>
+
+        {/* Optional PDF link */}
+        <div className="mb-6">
+          <label className="text-xs font-bold uppercase tracking-widest opacity-30 block mb-1.5">
+            Script link <span className="font-normal normal-case tracking-normal opacity-70">— optional</span>
+          </label>
+          <input
+            type="url"
+            value={pdfLink}
+            onChange={(e) => setPdfLink(e.target.value)}
+            placeholder="Paste a OneDrive, Google Drive, or Dropbox link…"
+            className="w-full border border-black/20 px-2.5 py-1.5 text-sm focus:outline-none focus:border-black/50"
+          />
+          <p className="text-xs opacity-30 mt-1">
+            If provided, the script will be viewable alongside the breakdown. The PDF itself is stored wherever you choose — not on our servers.
+          </p>
         </div>
 
         {/* Mode selector — only shown for amendments */}

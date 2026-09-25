@@ -6,7 +6,6 @@ const nextConfig: NextConfig = {
   // Vercel output file tracing doesn't detect the dynamically-loaded worker;
   // include it explicitly so it's present in the serverless function bundle.
   outputFileTracingIncludes: {
-    "/api/parse-script": ["./node_modules/pdfjs-dist/legacy/build/**"],
     "/api/import-schedule": ["./node_modules/pdfjs-dist/legacy/build/**"],
   },
 };
