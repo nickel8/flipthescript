@@ -34,8 +34,8 @@ export default function BreakdownEditor({
   const [selectedId, setSelectedId] = useState<string | null>(
     initialScenes[0]?.id ?? null
   );
-  const [showPdf, setShowPdf] = useState(false);
-  const [pdfLayout, setPdfLayout] = useState<"side" | "top">("side");
+  const [showPdf, setShowPdf] = useState(scriptId !== null);
+  const [pdfLayout, setPdfLayout] = useState<"side" | "top">("top");
   const [showSceneList, setShowSceneList] = useState(true);
   const [showRightPanel, setShowRightPanel] = useState(!readOnly);
   // Mobile: "list" shows the scene list full-width; "editor" shows the scene editor full-width
