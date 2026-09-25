@@ -45,13 +45,12 @@ export interface SeriesData {
 }
 
 interface Props {
-  series: SeriesData[];
   blocks: BlockData[];
   unblockedEpisodes: EpisodeData[];
   productionId: string;
   cloudId: string;
   canEdit: boolean;
-  isOwner: boolean;
+  activeSeries: SeriesData | null;
 }
 
 async function patchEpisodeBlock(episodeId: string, blockId: string | null) {
@@ -63,24 +62,18 @@ async function patchEpisodeBlock(episodeId: string, blockId: string | null) {
 }
 
 export default function BlocksView({
-  series: initialSeries,
   blocks: initialBlocks,
   unblockedEpisodes,
   productionId,
   cloudId,
   canEdit,
-  isOwner,
+  activeSeries,
 }: Props) {
-  const [series, setSeries] = useState<SeriesData[]>(initialSeries);
   const [blocks, setBlocks] = useState<BlockData[]>(initialBlocks);
   const [showCreateBlock, setShowCreateBlock] = useState(false);
   const [newLabel, setNewLabel] = useState("");
   const [creating, setCreating] = useState(false);
   const [wrappedOpen, setWrappedOpen] = useState(false);
-  const [showCreateSeries, setShowCreateSeries] = useState(false);
-  const [newSeriesNumber, setNewSeriesNumber] = useState("");
-  const [newSeriesName, setNewSeriesName] = useState("");
-  const [creatingSeries, setCreatingSeries] = useState(false);
 
   const allBlockOptions = blocks.map((b) => ({ id: b.id, label: b.label }));
 
@@ -98,46 +91,7 @@ export default function BlocksView({
     );
   }
 
-  const filmingBlocks = blocks.filter((b) => b.status === "filming");
-  const prepBlocks = blocks.filter((b) => b.status === "prep");
-  const wrappedBlocks = blocks.filter((b) => b.status === "wrapped");
-
-  async function createSeries() {
-    if (!newSeriesNumber.trim() || creatingSeries) return;
-    setCreatingSeries(true);
-    try {
-      const res = await fetch("/api/series", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productionId,
-          series_number: parseInt(newSeriesNumber, 10),
-          name: newSeriesName.trim() || `Series ${newSeriesNumber}`,
-        }),
-      });
-      const data = await res.json();
-      if (data?.id) {
-        setSeries((prev) => [...prev, data as SeriesData]);
-        setNewSeriesNumber("");
-        setNewSeriesName("");
-        setShowCreateSeries(false);
-      }
-    } finally {
-      setCreatingSeries(false);
-    }
-  }
-
-  async function setSeriesStatus(seriesId: string, status: Status) {
-    const res = await fetch("/api/series", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: seriesId, status }),
-    });
-    const data = await res.json();
-    if (data?.ok) setSeries((prev) => prev.map((s) => s.id === seriesId ? { ...s, status } : s));
-  }
-
-  async function createBlock(seriesId?: string) {
+  async function createBlock() {
     if (!newLabel.trim() || creating) return;
     setCreating(true);
     const nextNum = blocks.length > 0 ? Math.max(...blocks.map((b) => b.block_number)) + 1 : 1;
@@ -145,7 +99,7 @@ export default function BlocksView({
       const res = await fetch("/api/blocks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productionId, block_number: nextNum, label: newLabel.trim(), series_id: seriesId ?? null }),
+        body: JSON.stringify({ productionId, block_number: nextNum, label: newLabel.trim(), series_id: activeSeries?.id ?? null }),
       });
       const data = await res.json();
       if (data?.id) {
@@ -174,109 +128,55 @@ export default function BlocksView({
     }
   }
 
-  const renderBlocks = (blocksToRender: BlockData[]) => {
-    const active = blocksToRender.filter((b) => b.status !== "wrapped");
-    const wrapped = blocksToRender.filter((b) => b.status === "wrapped");
-    return (
-      <div className="space-y-2">
-        {active.map((block) => (
-          <BlockCard
-            key={block.id}
-            block={block}
-            cloudId={cloudId}
-            canEdit={canEdit}
-            allBlocks={allBlockOptions}
-            onStatusChange={(s) => setBlockStatus(block.id, s)}
-            onMoveEpisode={(epId, toId) => moveEpisode(epId, block.id, toId)}
-          />
-        ))}
-        {wrapped.length > 0 && (
-          <div>
-            <button
-              onClick={() => setWrappedOpen((p) => !p)}
-              className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity mt-1 mb-1"
-            >
-              {wrappedOpen ? "▼" : "▶"} Wrapped ({wrapped.length})
-            </button>
-            {wrappedOpen && (
-              <div className="space-y-2">
-                {wrapped.map((block) => (
-                  <BlockCard
-                    key={block.id}
-                    block={block}
-                    cloudId={cloudId}
-                    canEdit={canEdit}
-                    allBlocks={allBlockOptions}
-                    onStatusChange={(s) => setBlockStatus(block.id, s)}
-                    onMoveEpisode={(epId, toId) => moveEpisode(epId, block.id, toId)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Blocks that belong to each series
-  const unseriedBlocks = blocks.filter((b) => !b.series_id);
+  const activeBlocks = blocks.filter((b) => b.status !== "wrapped");
+  const wrappedBlocks = blocks.filter((b) => b.status === "wrapped");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
 
-      {/* Series sections */}
-      {series.map((s) => {
-        const seriesBlocks = blocks.filter((b) => b.series_id === s.id);
-        return (
-          <div key={s.id}>
-            {/* Series header */}
-            <div className="flex items-center gap-3 mb-3 pb-2 border-b border-black">
-              <span className="text-xs font-bold uppercase tracking-widest">{s.name}</span>
-              <StatusBadge
-                status={s.status}
-                canEdit={isOwner}
-                onChange={(st) => setSeriesStatus(s.id, st)}
-              />
-            </div>
+      {/* Active blocks */}
+      {activeBlocks.map((block) => (
+        <BlockCard
+          key={block.id}
+          block={block}
+          cloudId={cloudId}
+          canEdit={canEdit}
+          allBlocks={allBlockOptions}
+          onStatusChange={(s) => setBlockStatus(block.id, s)}
+          onMoveEpisode={(epId, toId) => moveEpisode(epId, block.id, toId)}
+        />
+      ))}
 
-            {/* Blocks within series */}
-            {seriesBlocks.length > 0
-              ? renderBlocks(seriesBlocks)
-              : <p className="text-xs opacity-25 pb-2">No blocks yet.</p>
-            }
-
-            {/* Add block to this series */}
-            {canEdit && (
-              <CreateBlockForm
-                seriesId={s.id}
-                label={newLabel}
-                setLabel={setNewLabel}
-                show={showCreateBlock}
-                setShow={setShowCreateBlock}
-                creating={creating}
-                onCreate={createBlock}
-              />
-            )}
-          </div>
-        );
-      })}
-
-      {/* Blocks without a series */}
-      {unseriedBlocks.length > 0 && (
+      {/* Wrapped blocks (collapsed) */}
+      {wrappedBlocks.length > 0 && (
         <div>
-          {series.length > 0 && (
-            <div className="flex items-center gap-3 mb-3 pb-2 border-b border-black/20">
-              <span className="text-xs font-bold uppercase tracking-widest opacity-30">Unassigned</span>
+          <button
+            onClick={() => setWrappedOpen((p) => !p)}
+            className="text-xs uppercase tracking-widest opacity-30 hover:opacity-60 transition-opacity mt-1 mb-1"
+          >
+            {wrappedOpen ? "▼" : "▶"} Wrapped ({wrappedBlocks.length})
+          </button>
+          {wrappedOpen && (
+            <div className="space-y-2">
+              {wrappedBlocks.map((block) => (
+                <BlockCard
+                  key={block.id}
+                  block={block}
+                  cloudId={cloudId}
+                  canEdit={canEdit}
+                  allBlocks={allBlockOptions}
+                  onStatusChange={(s) => setBlockStatus(block.id, s)}
+                  onMoveEpisode={(epId, toId) => moveEpisode(epId, block.id, toId)}
+                />
+              ))}
             </div>
           )}
-          {renderBlocks(unseriedBlocks)}
         </div>
       )}
 
       {/* Unblocked episodes */}
       {unblockedEpisodes.length > 0 && (
-        <div className="border border-black/15 p-4">
+        <div className="border border-black/15 p-4 mt-2">
           <p className="text-[10px] uppercase tracking-widest opacity-30 mb-3">Episodes without a block</p>
           <div className="space-y-1">
             {unblockedEpisodes.map((ep) => (
@@ -294,10 +194,9 @@ export default function BlocksView({
         </div>
       )}
 
-      {/* Create block (when no series, or below series list) */}
-      {canEdit && series.length === 0 && (
+      {/* Create block */}
+      {canEdit && (
         <CreateBlockForm
-          seriesId={undefined}
           label={newLabel}
           setLabel={setNewLabel}
           show={showCreateBlock}
@@ -308,62 +207,8 @@ export default function BlocksView({
       )}
 
       {/* Empty state */}
-      {series.length === 0 && blocks.length === 0 && unblockedEpisodes.length === 0 && (
-        <p className="text-sm opacity-30 py-2">No blocks yet. Create a series or a block to get started.</p>
-      )}
-
-      {/* Create series — owner only */}
-      {isOwner && (
-        <div className="pt-2 border-t border-black/10">
-          {showCreateSeries ? (
-            <div className="flex gap-2 items-center flex-wrap">
-              <input
-                autoFocus
-                type="number"
-                min="1"
-                value={newSeriesNumber}
-                onChange={(e) => setNewSeriesNumber(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") createSeries();
-                  if (e.key === "Escape") { setShowCreateSeries(false); setNewSeriesNumber(""); setNewSeriesName(""); }
-                }}
-                placeholder="Series no."
-                className="text-sm border border-black/20 px-3 py-1.5 focus:outline-none focus:border-black/50 w-28"
-              />
-              <input
-                type="text"
-                value={newSeriesName}
-                onChange={(e) => setNewSeriesName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") createSeries();
-                  if (e.key === "Escape") { setShowCreateSeries(false); setNewSeriesNumber(""); setNewSeriesName(""); }
-                }}
-                placeholder="Name — optional"
-                className="text-sm border border-black/20 px-3 py-1.5 focus:outline-none focus:border-black/50 flex-1 min-w-40"
-              />
-              <button
-                onClick={createSeries}
-                disabled={!newSeriesNumber.trim() || creatingSeries}
-                className="text-xs font-bold uppercase tracking-widest px-3 py-1.5 bg-black text-white disabled:opacity-30 shrink-0"
-              >
-                {creatingSeries ? "…" : "Create series"}
-              </button>
-              <button
-                onClick={() => { setShowCreateSeries(false); setNewSeriesNumber(""); setNewSeriesName(""); }}
-                className="text-xs opacity-40 hover:opacity-70 transition-opacity shrink-0"
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowCreateSeries(true)}
-              className="text-xs uppercase tracking-widest opacity-25 hover:opacity-50 transition-opacity"
-            >
-              + New series
-            </button>
-          )}
-        </div>
+      {blocks.length === 0 && unblockedEpisodes.length === 0 && (
+        <p className="text-sm opacity-30 py-2">No blocks yet.</p>
       )}
     </div>
   );
@@ -410,7 +255,6 @@ function StatusBadge({
 // ── Create block form ─────────────────────────────────────────────────────────
 
 function CreateBlockForm({
-  seriesId,
   label,
   setLabel,
   show,
@@ -418,13 +262,12 @@ function CreateBlockForm({
   creating,
   onCreate,
 }: {
-  seriesId: string | undefined;
   label: string;
   setLabel: (v: string) => void;
   show: boolean;
   setShow: (v: boolean) => void;
   creating: boolean;
-  onCreate: (seriesId?: string) => void;
+  onCreate: () => void;
 }) {
   return (
     <div className="pt-2">
@@ -436,14 +279,14 @@ function CreateBlockForm({
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") onCreate(seriesId);
+              if (e.key === "Enter") onCreate();
               if (e.key === "Escape") { setShow(false); setLabel(""); }
             }}
             placeholder="e.g. Block 1 — Eps 1 & 2"
             className="flex-1 text-sm border border-black/20 px-3 py-1.5 focus:outline-none focus:border-black/50"
           />
           <button
-            onClick={() => onCreate(seriesId)}
+            onClick={() => onCreate()}
             disabled={!label.trim() || creating}
             className="text-xs font-bold uppercase tracking-widest px-3 py-1.5 bg-black text-white disabled:opacity-30 shrink-0"
           >
