@@ -5,6 +5,7 @@ import type { SceneData, ProductionElement, SheetData, ShootDayData, CategoryDat
 import SceneList from "./SceneList";
 import SceneEditor from "./SceneEditor";
 import CategoriesPanel from "./CategoriesPanel";
+import BreakdownGrid from "./BreakdownGrid";
 
 interface Props {
   scenes: SceneData[];
@@ -34,6 +35,7 @@ export default function BreakdownEditor({
   const [selectedId, setSelectedId] = useState<string | null>(
     initialScenes[0]?.id ?? null
   );
+  const [viewMode, setViewMode] = useState<"form" | "grid">("form");
   const [showPdf, setShowPdf] = useState(scriptId !== null);
   const [pdfLayout, setPdfLayout] = useState<"side" | "top">("top");
   const [showSceneList, setShowSceneList] = useState(true);
@@ -95,6 +97,11 @@ export default function BreakdownEditor({
       prev.map((s) => (s.id === sceneId ? { ...s, sheet } : s))
     );
   }, []);
+
+  // Variant used by SceneEditor (doesn't know its own sceneId)
+  const handleSheetChangeForSelected = useCallback((sheet: SheetData | null) => {
+    if (selectedId) handleSheetChange(selectedId, sheet);
+  }, [selectedId, handleSheetChange]);
 
   const handleElementCreated = useCallback((el: ProductionElement) => {
     setElements((prev) => (prev.some((e) => e.id === el.id) ? prev : [...prev, el]));
@@ -165,7 +172,7 @@ export default function BreakdownEditor({
           flags={flags}
           onCompleteToggle={handleCompleteToggle}
           onElementCreated={handleElementCreated}
-          onSheetChange={(sheet) => handleSheetChange(selectedScene.id, sheet)}
+          onSheetChange={handleSheetChangeForSelected}
           onFlagToggle={handleFlagToggle}
           readOnly={readOnly}
         />
@@ -176,6 +183,48 @@ export default function BreakdownEditor({
       )}
     </main>
   );
+
+  // ── Grid view ────────────────────────────────────────────────────────────────
+  if (viewMode === "grid") {
+    return (
+      <div className="flex flex-col h-full overflow-hidden">
+        {/* Grid toolbar */}
+        <div className="shrink-0 flex items-center border-b border-black/10 px-3 gap-2">
+          <div className="flex border border-black/15 text-xs font-bold uppercase tracking-widest">
+            <button
+              onClick={() => setViewMode("form")}
+              className="px-3 py-1.5 opacity-30 hover:opacity-60 transition-opacity"
+            >
+              Form
+            </button>
+            <button
+              className="px-3 py-1.5 bg-black text-white"
+            >
+              Grid
+            </button>
+          </div>
+          <span className="text-xs opacity-20 tabular-nums ml-1">
+            {scenes.length} scene{scenes.length !== 1 ? "s" : ""}
+          </span>
+        </div>
+
+        {/* Grid */}
+        <div className="flex-1 overflow-hidden">
+          <BreakdownGrid
+            scenes={scenes}
+            productionElements={elements}
+            categories={categories.map((c) => c.name)}
+            productionId={productionId}
+            flags={flags}
+            onCompleteToggle={handleCompleteToggle}
+            onSheetChange={handleSheetChange}
+            onElementCreated={handleElementCreated}
+            readOnly={readOnly}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full overflow-hidden">
@@ -251,11 +300,20 @@ export default function BreakdownEditor({
               >
                 →
               </button>
-              {!readOnly && (
-                <span className="flex-1 text-xs font-bold uppercase tracking-wide py-2 px-3 opacity-40">
-                  Categories
-                </span>
-              )}
+              {/* View toggle */}
+              <div className="flex border border-black/15 text-xs font-bold uppercase tracking-widest ml-2 mr-auto">
+                <button
+                  className="px-2 py-1 bg-black text-white"
+                >
+                  Form
+                </button>
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className="px-2 py-1 opacity-30 hover:opacity-60 transition-opacity"
+                >
+                  Grid
+                </button>
+              </div>
               {scriptId && (
                 <>
                   {showPdf && (
