@@ -154,10 +154,45 @@ export function buildScenes(
   // Remove stub scenes: matches where no body text was accumulated after the
   // slug line. These are false positives from location lists, scene indices, or
   // other structured sections in the PDF that happened to match a slug pattern.
-  return deduped.filter(s => {
+  const withBody = deduped.filter(s => {
     const bodyText = s.rawText.split("\n").slice(1).join("\n").trim();
     return bodyText.length > 0;
   });
+
+  // Gap detection: scripts with a locations appendix or other numbered sections
+  // produce a large jump in scene numbers (e.g. real scenes 1–55, appendix 82–136).
+  // Sort by the leading integer, find the first gap that is more than 5× the
+  // largest gap seen so far (minimum threshold of 10), and discard everything after.
+  const leadingInt = (s: ParsedScene) => {
+    const m = s.sceneNumber.match(/^(\d+)/);
+    return m ? parseInt(m[1], 10) : null;
+  };
+
+  const numeric = withBody
+    .map(s => ({ s, n: leadingInt(s) }))
+    .filter((x): x is { s: ParsedScene; n: number } => x.n !== null)
+    .sort((a, b) => a.n - b.n);
+
+  if (numeric.length > 1) {
+    let maxGapSoFar = 1;
+    let cutoff: number | null = null;
+    for (let i = 1; i < numeric.length; i++) {
+      const gap = numeric[i].n - numeric[i - 1].n;
+      if (gap > Math.max(maxGapSoFar * 5, 10)) {
+        cutoff = numeric[i].n;
+        break;
+      }
+      if (gap > maxGapSoFar) maxGapSoFar = gap;
+    }
+    if (cutoff !== null) {
+      return withBody.filter(s => {
+        const n = leadingInt(s);
+        return n === null || n < cutoff!;
+      });
+    }
+  }
+
+  return withBody;
 }
 
 // ── PDF text extraction ────────────────────────────────────────────────────────
