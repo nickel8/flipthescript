@@ -939,6 +939,7 @@ function GridRow({
   onElementCreated: (el: ProductionElement) => void;
   readOnly: boolean;
 }) {
+  const { setFocus } = useNotesContext();
   const [sheet, setSheet] = useState<SheetData | null>(scene.sheet);
   const sheetRef = useRef<SheetData | null>(scene.sheet);
   const [isComplete, setIsComplete] = useState(scene.is_complete);
@@ -987,24 +988,23 @@ function GridRow({
     await removeElement(sceneElementId);
   }
 
-  const { setFocus } = useNotesContext();
-
   return (
     <tr className={`border-b border-black/5 transition-colors ${isComplete ? "opacity-40" : "hover:bg-black/[0.015]"}`}>
       <td className="sticky left-0 z-10 bg-white px-2 border-r border-black/10">
         <input type="checkbox" checked={isComplete} onChange={handleToggleComplete}
           disabled={readOnly} className="cursor-pointer disabled:cursor-default" />
       </td>
-      <td
-        className="sticky z-10 bg-white px-2 py-2 align-top cursor-pointer hover:bg-black/5 transition-colors"
-        style={{ left: COL_CHECK }}
-        title="Note on this scene"
-        onClick={() => setFocus("scene", scene.id, `Scene ${scene.scene_number} — ${scene.location ?? ""}`)}
-      >
-        <div className="font-mono text-xs font-bold opacity-50 leading-none truncate">{scene.scene_number}</div>
-        <div className={`text-[9px] font-bold mt-1 ${
-          scene.int_ext === "EXT" ? "text-green-700" : scene.int_ext === "INT/EXT" ? "text-orange-600" : "text-blue-700"
-        }`}>{scene.int_ext || "INT"}</div>
+      <td className="sticky z-10 bg-white px-0 py-0 align-top" style={{ left: COL_CHECK }}>
+        <button
+          onClick={() => setFocus("scene", scene.id, `Scene ${scene.scene_number} — ${scene.location ?? ""}`)}
+          title="Note on this scene"
+          className="w-full h-full px-2 py-2 text-left hover:bg-black/5 transition-colors"
+        >
+          <div className="font-mono text-xs font-bold opacity-50 leading-none truncate">{scene.scene_number}</div>
+          <div className={`text-[9px] font-bold mt-1 ${
+            scene.int_ext === "EXT" ? "text-green-700" : scene.int_ext === "INT/EXT" ? "text-orange-600" : "text-blue-700"
+          }`}>{scene.int_ext || "INT"}</div>
+        </button>
       </td>
       <td className="sticky z-10 bg-white px-3 py-2 align-top border-r border-black/15 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.06)] overflow-hidden" style={{ left: locationLeft }}>
         <div className="max-h-16 overflow-hidden">
