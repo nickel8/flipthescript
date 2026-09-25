@@ -59,13 +59,16 @@ export default async function BreakdownPage({
 
   if (episodeIds.length > 0) {
     const scriptsRes = await dbFetch(
-      `scripts?episode_id=in.(${episodeIds.join(",")})&is_current=eq.true&select=id`
+      `scripts?episode_id=in.(${episodeIds.join(",")})&is_current=eq.true&select=id,blob_url&limit=1`
     );
     const scripts = await scriptsRes.json();
     const scriptIds: string[] = Array.isArray(scripts)
       ? scripts.map((s: { id: string }) => s.id)
       : [];
-    if (scriptIds.length > 0) currentScriptId = scriptIds[0];
+    // Only set scriptId if there's actually a PDF to serve
+    if (scriptIds.length > 0 && (scripts[0] as { blob_url: string | null }).blob_url) {
+      currentScriptId = scriptIds[0];
+    }
 
     if (scriptIds.length > 0) {
       const [scenesRes, elementsRes] = await Promise.all([
