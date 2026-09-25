@@ -21,6 +21,8 @@ interface GridView {
   visibleCols: string[];
   filters: Record<string, ColumnFilter>;
   sort: { col: string | null; dir: "asc" | "desc" };
+  isShared: boolean;
+  isOwn: boolean;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -32,18 +34,6 @@ function isFilterActive(f: ColumnFilter | undefined): boolean {
 
 function activeFilterCount(filters: Record<string, ColumnFilter>): number {
   return Object.values(filters).filter(isFilterActive).length;
-}
-
-const VIEWS_KEY = (id: string) => `fts:views:${id}`;
-
-function loadViews(productionId: string): GridView[] {
-  if (typeof window === "undefined") return [];
-  try { return JSON.parse(localStorage.getItem(VIEWS_KEY(productionId)) ?? "[]"); }
-  catch { return []; }
-}
-
-function persistViews(productionId: string, views: GridView[]) {
-  try { localStorage.setItem(VIEWS_KEY(productionId), JSON.stringify(views)); } catch {}
 }
 
 function applyFilters(scenes: SceneData[], filters: Record<string, ColumnFilter>): SceneData[] {
@@ -148,7 +138,7 @@ export default function BreakdownGrid({
   const [visibleCols, setVisibleCols] = useState<Set<string>>(() => new Set(["synopsis", ...catNames]));
   const [sort, setSort] = useState<{ col: string | null; dir: "asc" | "desc" }>({ col: null, dir: "asc" });
   const [columnFilters, setColumnFilters] = useState<Record<string, ColumnFilter>>({});
-  const [views, setViews] = useState<GridView[]>(() => loadViews(productionId));
+  const [views, setViews] = useState<GridView[]>([]);
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const [colPickerOpen, setColPickerOpen] = useState(false);
   const colPickerRef = useRef<HTMLDivElement>(null);
@@ -156,7 +146,13 @@ export default function BreakdownGrid({
   // Active filter popover: tracks which column's filter is open + button position
   const [filterPopover, setFilterPopover] = useState<{ col: string; rect: DOMRect } | null>(null);
 
-  useEffect(() => { persistViews(productionId, views); }, [views, productionId]);
+  // Load views from DB
+  useEffect(() => {
+    fetch(`/api/breakdown-views?productionId=${productionId}`)
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data)) setViews(data); })
+      .catch(() => {});
+  }, [productionId]);
 
   // Auto-show new categories
   useEffect(() => {
@@ -258,13 +254,32 @@ export default function BreakdownGrid({
     setActiveViewId(view.id);
   }
 
-  function saveView(name: string) {
-    const view: GridView = { id: randomId(), name, visibleCols: [...visibleCols], filters: columnFilters, sort };
-    setViews((prev) => [...prev, view]);
-    setActiveViewId(view.id);
+  async function saveView(name: string, isShared: boolean) {
+    const res = await fetch("/api/breakdown-views", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productionId,
+        name,
+        isShared,
+        visibleCols: [...visibleCols],
+        filters: columnFilters,
+        sort,
+      }),
+    });
+    const data = await res.json();
+    if (data?.id) {
+      setViews((prev) => [...prev, data as GridView]);
+      setActiveViewId(data.id);
+    }
   }
 
-  function deleteView(id: string) {
+  async function deleteView(id: string) {
+    await fetch("/api/breakdown-views", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
     setViews((prev) => prev.filter((v) => v.id !== id));
     if (activeViewId === id) setActiveViewId(null);
   }
@@ -677,14 +692,16 @@ function ColPicker({
   visibleCols: Set<string>; setVisibleCols: React.Dispatch<React.SetStateAction<Set<string>>>;
   views: GridView[]; activeViewId: string | null;
   onApplyView: (v: GridView | null) => void;
-  onSaveView: (name: string) => void;
-  onDeleteView: (id: string) => void;
+  onSaveView: (name: string, isShared: boolean) => Promise<void>;
+  onDeleteView: (id: string) => Promise<void>;
   productionId: string; onCategoryCreate: (cat: CategoryData) => void;
   readOnly: boolean;
 }) {
   const [newCatInput, setNewCatInput] = useState("");
   const [adding, setAdding] = useState(false);
   const [viewName, setViewName] = useState("");
+  const [shareMode, setShareMode] = useState<"private" | "shared">("private");
+  const [saving, setSaving] = useState(false);
 
   function toggleCol(col: string) {
     setVisibleCols((prev) => {
@@ -723,26 +740,72 @@ function ColPicker({
       </button>
       {views.map((v) => (
         <div key={v.id} className="flex items-center group/view">
-          <button onClick={() => onApplyView(v)} className="flex-1 text-left px-3 py-1.5 text-xs flex items-center gap-2 hover:bg-black/5">
+          <button
+            onClick={() => onApplyView(v)}
+            className="flex-1 min-w-0 text-left px-3 py-1.5 text-xs flex items-center gap-2 hover:bg-black/5"
+          >
             <span className="w-3 shrink-0 font-bold">{activeViewId === v.id ? "●" : ""}</span>
-            <span className="truncate">{v.name}</span>
+            <span className="truncate flex-1">{v.name}</span>
+            {v.isShared && (
+              <span className="text-[9px] font-bold uppercase tracking-widest opacity-30 shrink-0">
+                Shared
+              </span>
+            )}
           </button>
-          <button onClick={() => onDeleteView(v.id)} className="pr-3 text-xs opacity-0 group-hover/view:opacity-30 hover:!opacity-70 transition-opacity">×</button>
+          {v.isOwn && (
+            <button
+              onClick={() => onDeleteView(v.id)}
+              className="pr-3 text-xs opacity-0 group-hover/view:opacity-30 hover:!opacity-70 transition-opacity shrink-0"
+            >
+              ×
+            </button>
+          )}
         </div>
       ))}
-      <div className="px-3 py-2">
-        <div className="flex gap-1.5">
+
+      {/* Save form */}
+      <div className="px-3 pt-1 pb-2">
+        <div className="flex gap-1.5 mb-1.5">
           <input
             type="text" value={viewName} onChange={(e) => setViewName(e.target.value)}
             placeholder="Save current as…"
-            onKeyDown={(e) => { if (e.key === "Enter" && viewName.trim()) { onSaveView(viewName.trim()); setViewName(""); } }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && viewName.trim() && !saving) {
+                setSaving(true);
+                onSaveView(viewName.trim(), shareMode === "shared")
+                  .then(() => setViewName(""))
+                  .finally(() => setSaving(false));
+              }
+            }}
             className="flex-1 text-[10px] border border-black/15 px-2 py-1 focus:outline-none focus:border-black/40 placeholder:opacity-30"
           />
           <button
-            onClick={() => { if (viewName.trim()) { onSaveView(viewName.trim()); setViewName(""); } }}
-            disabled={!viewName.trim()}
+            onClick={() => {
+              if (!viewName.trim() || saving) return;
+              setSaving(true);
+              onSaveView(viewName.trim(), shareMode === "shared")
+                .then(() => setViewName(""))
+                .finally(() => setSaving(false));
+            }}
+            disabled={!viewName.trim() || saving}
             className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-black text-white disabled:opacity-25 shrink-0"
-          >Save</button>
+          >
+            {saving ? "…" : "Save"}
+          </button>
+        </div>
+        {/* Private / Shared toggle */}
+        <div className="flex gap-0 border border-black/15 self-start w-fit">
+          {(["private", "shared"] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setShareMode(mode)}
+              className={`text-[9px] font-bold uppercase tracking-widest px-2 py-1 transition-colors ${
+                shareMode === mode ? "bg-black text-white" : "opacity-30 hover:opacity-60"
+              }`}
+            >
+              {mode}
+            </button>
+          ))}
         </div>
       </div>
 
