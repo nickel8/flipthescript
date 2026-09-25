@@ -241,10 +241,10 @@ export default async function ProductionDigestPage({
           </Link>
 
           <Link
-            href={`/cloud/productions/${cloudId}/sidings`}
+            href={`/cloud/productions/${cloudId}/sides`}
             className="border border-black p-3 hover:bg-black hover:text-white transition-colors group col-span-1"
           >
-            <p className="text-[10px] uppercase tracking-widest opacity-50 group-hover:opacity-60 mb-1">Sidings</p>
+            <p className="text-[10px] uppercase tracking-widest opacity-50 group-hover:opacity-60 mb-1">Sides</p>
             <p className="font-bold text-sm">{nextDay ? `Day ${nextDay.dayNumber}` : "—"}</p>
           </Link>
 

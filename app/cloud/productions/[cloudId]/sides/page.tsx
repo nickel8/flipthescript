@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import PrintButton from "./PrintButton";
 
-export const metadata = { title: "Sidings — FlipTheScript" };
+export const metadata = { title: "Sides — FlipTheScript" };
 
 const SUPABASE_URL = process.env.SUPABASE_URL!;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -24,7 +24,7 @@ function formatDate(iso: string) {
   });
 }
 
-export default async function SidingsPage({
+export default async function SidesPage({
   params,
 }: {
   params: Promise<{ cloudId: string }>;
@@ -171,16 +171,16 @@ export default async function SidingsPage({
           <span>/</span>
           <span>{prodRaw.name}</span>
           <span>/</span>
-          <span>Sidings</span>
+          <span>Sides</span>
         </div>
         {scenes.length > 0 && <PrintButton />}
       </div>
 
-      {/* Sidings header */}
+      {/* Sides header */}
       <div className="border-b-2 border-black pb-4 mb-6">
         <div className="flex items-baseline justify-between">
           <div>
-            <p className="text-xs uppercase tracking-widest opacity-40 mb-1">Sidings</p>
+            <p className="text-xs uppercase tracking-widest opacity-40 mb-1">Sides</p>
             <h1 className="text-2xl font-bold">{prodRaw.name}</h1>
           </div>
           <div className="text-right">
@@ -285,7 +285,7 @@ export default async function SidingsPage({
       {/* Print footer */}
       {scenes.length > 0 && (
         <div className="hidden print:block mt-12 pt-4 border-t border-black/20 text-xs opacity-40 flex justify-between">
-          <span>FlipTheScript — Sidings</span>
+          <span>FlipTheScript — Sides</span>
           <span>{prodRaw.name} — Day {activeDayNumber}</span>
         </div>
       )}
