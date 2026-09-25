@@ -32,7 +32,15 @@ export default function BreakdownEditor({
   const [showScript, setShowScript] = useState(scriptId !== null);
   const [urlInput, setUrlInput] = useState("");
   const [externalUrl, setExternalUrl] = useState<string | null>(null);
+  const [localFileName, setLocalFileName] = useState<string | null>(null);
   const [editingUrl, setEditingUrl] = useState(false);
+
+  // Revoke blob URL on unmount to avoid memory leaks
+  useEffect(() => {
+    return () => {
+      if (externalUrl?.startsWith("blob:")) URL.revokeObjectURL(externalUrl);
+    };
+  }, [externalUrl]);
 
   const pdfSrc = scriptId
     ? `/api/script-pdf?scriptId=${scriptId}`
@@ -69,8 +77,21 @@ export default function BreakdownEditor({
     e.preventDefault();
     const trimmed = urlInput.trim();
     if (!trimmed) return;
+    if (externalUrl?.startsWith("blob:")) URL.revokeObjectURL(externalUrl);
     setExternalUrl(trimmed);
+    setLocalFileName(null);
     setShowScript(true);
+    setEditingUrl(false);
+  }
+
+  function handleLocalFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (externalUrl?.startsWith("blob:")) URL.revokeObjectURL(externalUrl);
+    setExternalUrl(URL.createObjectURL(file));
+    setLocalFileName(file.name);
+    setShowScript(true);
+    setEditingUrl(false);
   }
 
   return (
@@ -82,12 +103,17 @@ export default function BreakdownEditor({
         <div className="shrink-0 flex items-center border-b border-black/10 h-8 px-3 gap-2">
           {pdfSrc ? (
             /* Has a script — show toggle */
-            <button
-              onClick={() => setShowScript((p) => !p)}
-              className="text-[10px] font-bold uppercase tracking-widest opacity-40 hover:opacity-80 transition-opacity"
-            >
-              {showScript ? "▲" : "▼"} Script
-            </button>
+            <>
+              <button
+                onClick={() => setShowScript((p) => !p)}
+                className="text-[10px] font-bold uppercase tracking-widest opacity-40 hover:opacity-80 transition-opacity"
+              >
+                {showScript ? "▲" : "▼"} Script
+              </button>
+              {localFileName && (
+                <span className="text-[10px] opacity-25 truncate">{localFileName}</span>
+              )}
+            </>
           ) : (
             /* No script — always show URL input inline */
             <>
@@ -121,23 +147,46 @@ export default function BreakdownEditor({
                   </button>
                 </form>
               ) : (
-                <button
-                  onClick={() => setEditingUrl(true)}
-                  className="text-[10px] opacity-40 hover:opacity-80 transition-opacity underline underline-offset-2"
-                >
-                  Link a script URL…
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setEditingUrl(true)}
+                    className="text-[10px] opacity-40 hover:opacity-80 transition-opacity underline underline-offset-2"
+                  >
+                    Link URL…
+                  </button>
+                  <span className="opacity-15 text-[10px]">or</span>
+                  <label className="text-[10px] opacity-40 hover:opacity-80 transition-opacity underline underline-offset-2 cursor-pointer">
+                    Open local file…
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      className="hidden"
+                      onChange={handleLocalFile}
+                    />
+                  </label>
+                </div>
               )}
             </>
           )}
 
           {externalUrl && !scriptId && (
-            <button
-              onClick={() => { setExternalUrl(null); setUrlInput(""); setShowScript(false); }}
-              className="text-[10px] opacity-25 hover:opacity-60 transition-opacity ml-auto"
-            >
-              × unlink
-            </button>
+            <div className="flex items-center gap-2 ml-auto">
+              {localFileName && (
+                <span className="text-[10px] opacity-30 truncate max-w-48">{localFileName}</span>
+              )}
+              <button
+                onClick={() => {
+                  if (externalUrl?.startsWith("blob:")) URL.revokeObjectURL(externalUrl);
+                  setExternalUrl(null);
+                  setLocalFileName(null);
+                  setUrlInput("");
+                  setShowScript(false);
+                }}
+                className="text-[10px] opacity-25 hover:opacity-60 transition-opacity shrink-0"
+              >
+                × unlink
+              </button>
+            </div>
           )}
         </div>
 
