@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import type { SceneData, ProductionElement, SheetData, SceneElementData, FlagData } from "./types";
+import type { SceneData, ProductionElement, SheetData, SceneElementData, FlagData, CategoryData } from "./types";
 import {
   updateSynopsis,
   addElement,
@@ -12,12 +12,12 @@ import {
 
 // ── Column widths ─────────────────────────────────────────────────────────────
 
-const COL_SCENE = 48;   // fixed
-const COL_CHECK = 40;   // fixed
+const COL_SCENE = 48;
+const COL_CHECK = 40;
 
-function defaultWidths(categories: string[]): Record<string, number> {
+function defaultWidths(catNames: string[]): Record<string, number> {
   const w: Record<string, number> = { location: 160, synopsis: 200 };
-  for (const cat of categories) w[cat] = 140;
+  for (const cat of catNames) w[cat] = 140;
   return w;
 }
 
@@ -26,12 +26,14 @@ function defaultWidths(categories: string[]): Record<string, number> {
 interface Props {
   scenes: SceneData[];
   productionElements: ProductionElement[];
-  categories: string[];
+  categories: CategoryData[];
+  categoryLibrary: CategoryData[];
   productionId: string;
   flags: Map<string, FlagData>;
   onCompleteToggle: (sceneId: string, isComplete: boolean) => void;
   onSheetChange: (sceneId: string, sheet: SheetData | null) => void;
   onElementCreated: (el: ProductionElement) => void;
+  onCategoryCreate: (cat: CategoryData) => void;
   readOnly?: boolean;
 }
 
@@ -41,20 +43,65 @@ export default function BreakdownGrid({
   scenes,
   productionElements,
   categories,
+  categoryLibrary,
   productionId,
   flags,
   onCompleteToggle,
   onSheetChange,
   onElementCreated,
+  onCategoryCreate,
   readOnly = false,
 }: Props) {
+  const catNames = categories.map((c) => c.name);
+
   const [colWidths, setColWidths] = useState<Record<string, number>>(() =>
-    defaultWidths(categories)
+    defaultWidths(catNames)
   );
   const colWidthsRef = useRef(colWidths);
   useEffect(() => { colWidthsRef.current = colWidths; }, [colWidths]);
 
-  // Location column left offset changes as scene-# column is fixed
+  // When new categories are added, auto-show them and seed their column width
+  useEffect(() => {
+    setVisibleCols((prev) => {
+      const added = catNames.filter((c) => !prev.has(c));
+      if (added.length === 0) return prev;
+      return new Set([...prev, ...added]);
+    });
+    setColWidths((prev) => {
+      const additions: Record<string, number> = {};
+      for (const c of catNames) {
+        if (!(c in prev)) additions[c] = 140;
+      }
+      if (Object.keys(additions).length === 0) return prev;
+      return { ...prev, ...additions };
+    });
+  }, [categories]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Column visibility — all on by default
+  const [visibleCols, setVisibleCols] = useState<Set<string>>(
+    () => new Set(["synopsis", ...catNames])
+  );
+
+  // Filters
+  const [search, setSearch] = useState("");
+  const [intExtFilter, setIntExtFilter] = useState<"all" | "INT" | "EXT">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "complete" | "incomplete">("all");
+
+  // Column picker
+  const [colPickerOpen, setColPickerOpen] = useState(false);
+  const colPickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!colPickerOpen) return;
+    function onDown(e: MouseEvent) {
+      if (colPickerRef.current && !colPickerRef.current.contains(e.target as Node)) {
+        setColPickerOpen(false);
+      }
+    }
+    window.addEventListener("mousedown", onDown);
+    return () => window.removeEventListener("mousedown", onDown);
+  }, [colPickerOpen]);
+
   const locationLeft = COL_CHECK + COL_SCENE;
 
   const startResize = useCallback((col: string, startX: number) => {
@@ -71,80 +118,300 @@ export default function BreakdownGrid({
     window.addEventListener("mouseup", onUp);
   }, []);
 
+  // Filter scenes
+  const filteredScenes = scenes.filter((s) => {
+    if (search) {
+      const q = search.toLowerCase();
+      const match =
+        s.scene_number.toLowerCase().includes(q) ||
+        (s.location ?? "").toLowerCase().includes(q) ||
+        (s.slug_line ?? "").toLowerCase().includes(q);
+      if (!match) return false;
+    }
+    if (intExtFilter !== "all" && s.int_ext !== intExtFilter) return false;
+    if (statusFilter === "complete" && !s.is_complete) return false;
+    if (statusFilter === "incomplete" && s.is_complete) return false;
+    return true;
+  });
+
+  const showSynopsis = visibleCols.has("synopsis");
+  const visibleCatCols = catNames.filter((c) => visibleCols.has(c));
+
   return (
-    <div className="overflow-auto h-full w-full select-none">
-      <table
-        className="border-collapse text-sm"
-        style={{ tableLayout: "fixed" }}
-      >
-        <colgroup>
-          <col style={{ width: COL_CHECK }} />
-          <col style={{ width: COL_SCENE }} />
-          <col style={{ width: colWidths.location }} />
-          <col style={{ width: colWidths.synopsis }} />
-          {categories.map((cat) => (
-            <col key={cat} style={{ width: colWidths[cat] ?? 140 }} />
-          ))}
-        </colgroup>
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* ── Toolbar ── */}
+      <div className="shrink-0 flex items-center gap-2 px-3 py-1.5 border-b border-black/10 flex-wrap">
+        {/* Search */}
+        <input
+          type="text"
+          placeholder="Search…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="text-xs border border-black/15 px-2 py-1 focus:outline-none focus:border-black/40 w-32 placeholder:opacity-30"
+        />
 
-        <thead className="sticky top-0 z-20">
-          <tr className="border-b border-black/15 bg-white">
-            {/* Checkbox */}
-            <th className="sticky left-0 z-30 bg-white px-2 py-2 text-left font-normal border-r border-black/10" />
-
-            {/* Scene # */}
-            <th
-              className="sticky z-30 bg-white px-2 py-2 text-left"
-              style={{ left: COL_CHECK }}
+        {/* INT/EXT filter */}
+        <div className="flex border border-black/15 text-[10px] font-bold uppercase tracking-widest">
+          {(["all", "INT", "EXT"] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => setIntExtFilter(v)}
+              className={`px-2 py-1 transition-colors ${
+                intExtFilter === v ? "bg-black text-white" : "opacity-30 hover:opacity-60"
+              }`}
             >
-              <span className="text-[10px] font-bold uppercase tracking-widest opacity-30">#</span>
-            </th>
+              {v === "all" ? "All" : v}
+            </button>
+          ))}
+        </div>
 
-            {/* Location */}
-            <ResizableTh
-              label="Location"
-              col="location"
-              left={locationLeft}
-              sticky
-              borderRight
-              shadow
-              onStartResize={startResize}
-            />
+        {/* Status filter */}
+        <div className="flex border border-black/15 text-[10px] font-bold uppercase tracking-widest">
+          {([
+            { v: "all", label: "All" },
+            { v: "incomplete", label: "Todo" },
+            { v: "complete", label: "Done" },
+          ] as const).map(({ v, label }) => (
+            <button
+              key={v}
+              onClick={() => setStatusFilter(v)}
+              className={`px-2 py-1 transition-colors ${
+                statusFilter === v ? "bg-black text-white" : "opacity-30 hover:opacity-60"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
-            {/* Synopsis */}
-            <ResizableTh label="Synopsis" col="synopsis" onStartResize={startResize} />
+        {/* Filtered count */}
+        {(search || intExtFilter !== "all" || statusFilter !== "all") && (
+          <span className="text-[10px] opacity-30 tabular-nums">
+            {filteredScenes.length} / {scenes.length}
+          </span>
+        )}
 
-            {/* Category columns */}
-            {categories.map((cat) => (
-              <ResizableTh
-                key={cat}
-                label={cat}
-                col={cat}
-                borderLeft
-                onStartResize={startResize}
-              />
-            ))}
-          </tr>
-        </thead>
-
-        <tbody>
-          {scenes.map((scene) => (
-            <GridRow
-              key={scene.id}
-              scene={scene}
-              categories={categories}
-              productionElements={productionElements}
+        {/* Columns picker */}
+        <div className="relative ml-auto" ref={colPickerRef}>
+          <button
+            onClick={() => setColPickerOpen((p) => !p)}
+            className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 border border-black/15 transition-colors ${
+              colPickerOpen ? "bg-black text-white" : "opacity-40 hover:opacity-70"
+            }`}
+          >
+            Columns
+          </button>
+          {colPickerOpen && (
+            <ColPicker
+              catNames={catNames}
+              categoryLibrary={categoryLibrary}
+              visibleCols={visibleCols}
+              setVisibleCols={setVisibleCols}
               productionId={productionId}
-              locationLeft={locationLeft}
-              flags={flags}
-              onCompleteToggle={onCompleteToggle}
-              onSheetChange={onSheetChange}
-              onElementCreated={onElementCreated}
+              onCategoryCreate={onCategoryCreate}
               readOnly={readOnly}
             />
-          ))}
-        </tbody>
-      </table>
+          )}
+        </div>
+      </div>
+
+      {/* ── Grid ── */}
+      <div className="flex-1 overflow-auto select-none">
+        <table className="border-collapse text-sm" style={{ tableLayout: "fixed" }}>
+          <colgroup>
+            <col style={{ width: COL_CHECK }} />
+            <col style={{ width: COL_SCENE }} />
+            <col style={{ width: colWidths.location }} />
+            {showSynopsis && <col style={{ width: colWidths.synopsis }} />}
+            {visibleCatCols.map((cat) => (
+              <col key={cat} style={{ width: colWidths[cat] ?? 140 }} />
+            ))}
+          </colgroup>
+
+          <thead className="sticky top-0 z-20">
+            <tr className="border-b border-black/15 bg-white">
+              <th className="sticky left-0 z-30 bg-white px-2 py-2 text-left font-normal border-r border-black/10" />
+              <th
+                className="sticky z-30 bg-white px-2 py-2 text-left"
+                style={{ left: COL_CHECK }}
+              >
+                <span className="text-[10px] font-bold uppercase tracking-widest opacity-30">#</span>
+              </th>
+              <ResizableTh
+                label="Location"
+                col="location"
+                left={locationLeft}
+                sticky
+                borderRight
+                shadow
+                onStartResize={startResize}
+              />
+              {showSynopsis && (
+                <ResizableTh label="Synopsis" col="synopsis" onStartResize={startResize} />
+              )}
+              {visibleCatCols.map((cat) => (
+                <ResizableTh
+                  key={cat}
+                  label={cat}
+                  col={cat}
+                  borderLeft
+                  onStartResize={startResize}
+                />
+              ))}
+            </tr>
+          </thead>
+
+          <tbody>
+            {filteredScenes.map((scene) => (
+              <GridRow
+                key={scene.id}
+                scene={scene}
+                categories={visibleCatCols}
+                showSynopsis={showSynopsis}
+                productionElements={productionElements}
+                productionId={productionId}
+                locationLeft={locationLeft}
+                flags={flags}
+                onCompleteToggle={onCompleteToggle}
+                onSheetChange={onSheetChange}
+                onElementCreated={onElementCreated}
+                readOnly={readOnly}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ── Column picker dropdown ─────────────────────────────────────────────────────
+
+function ColPicker({
+  catNames,
+  categoryLibrary,
+  visibleCols,
+  setVisibleCols,
+  productionId,
+  onCategoryCreate,
+  readOnly,
+}: {
+  catNames: string[];
+  categoryLibrary: CategoryData[];
+  visibleCols: Set<string>;
+  setVisibleCols: React.Dispatch<React.SetStateAction<Set<string>>>;
+  productionId: string;
+  onCategoryCreate: (cat: CategoryData) => void;
+  readOnly: boolean;
+}) {
+  const [newCatInput, setNewCatInput] = useState("");
+  const [adding, setAdding] = useState(false);
+
+  function toggleCol(col: string) {
+    setVisibleCols((prev) => {
+      const next = new Set(prev);
+      if (next.has(col)) next.delete(col);
+      else next.add(col);
+      return next;
+    });
+  }
+
+  async function handleAddCategory(name: string) {
+    const trimmed = name.trim();
+    if (!trimmed || catNames.includes(trimmed)) return;
+    setAdding(true);
+    try {
+      const res = await fetch("/api/production-categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productionId, name: trimmed }),
+      });
+      const data = await res.json();
+      if (data?.name) {
+        onCategoryCreate({ name: data.name, display_order: data.display_order ?? 999 });
+        setNewCatInput("");
+      }
+    } finally {
+      setAdding(false);
+    }
+  }
+
+  const libSuggestions = categoryLibrary.filter(
+    (c) =>
+      !catNames.includes(c.name) &&
+      (!newCatInput || c.name.toLowerCase().includes(newCatInput.toLowerCase()))
+  );
+
+  return (
+    <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-black/15 shadow-lg min-w-[200px] py-1">
+      {/* Fixed columns section */}
+      <div className="px-3 pt-1 pb-0.5 text-[9px] font-bold uppercase tracking-widest opacity-30">
+        Show / Hide
+      </div>
+
+      <button
+        onClick={() => toggleCol("synopsis")}
+        className="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 hover:bg-black/5"
+      >
+        <span className="w-3 text-black font-bold shrink-0">
+          {visibleCols.has("synopsis") ? "✓" : ""}
+        </span>
+        Synopsis
+      </button>
+
+      {catNames.map((cat) => (
+        <button
+          key={cat}
+          onClick={() => toggleCol(cat)}
+          className="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 hover:bg-black/5"
+        >
+          <span className="w-3 text-black font-bold shrink-0">
+            {visibleCols.has(cat) ? "✓" : ""}
+          </span>
+          {cat}
+        </button>
+      ))}
+
+      {!readOnly && (
+        <>
+          <div className="border-t border-black/10 my-1" />
+          <div className="px-3 pt-0.5 pb-1.5 text-[9px] font-bold uppercase tracking-widest opacity-30">
+            Add column
+          </div>
+          <div className="px-3 pb-2">
+            <input
+              type="text"
+              value={newCatInput}
+              onChange={(e) => setNewCatInput(e.target.value)}
+              placeholder="Category name…"
+              disabled={adding}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && newCatInput.trim()) {
+                  e.preventDefault();
+                  handleAddCategory(newCatInput);
+                }
+              }}
+              className="w-full text-xs border border-black/15 px-2 py-1 focus:outline-none focus:border-black/40 placeholder:opacity-30 disabled:opacity-40"
+            />
+          </div>
+
+          {libSuggestions.length > 0 && (
+            <div className="border-t border-black/5">
+              {libSuggestions.slice(0, 6).map((c) => (
+                <button
+                  key={c.name}
+                  onClick={() => handleAddCategory(c.name)}
+                  disabled={adding}
+                  className="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 hover:bg-black/5 opacity-50 hover:opacity-100 disabled:opacity-20"
+                >
+                  <span className="w-3 opacity-40 shrink-0">+</span>
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -174,7 +441,7 @@ function ResizableTh({
     <th
       className={[
         "relative px-3 py-2 text-left bg-white font-normal",
-        sticky ? `sticky z-30` : "",
+        sticky ? "sticky z-30" : "",
         borderRight ? "border-r border-black/15" : "",
         borderLeft ? "border-l border-black/5" : "",
         shadow ? "shadow-[2px_0_4px_-2px_rgba(0,0,0,0.06)]" : "",
@@ -184,7 +451,6 @@ function ResizableTh({
       <span className="text-[10px] font-bold uppercase tracking-widest opacity-30">
         {label}
       </span>
-      {/* Drag-to-resize handle */}
       <div
         className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize z-10 group"
         onMouseDown={(e) => {
@@ -203,6 +469,7 @@ function ResizableTh({
 function GridRow({
   scene,
   categories,
+  showSynopsis,
   productionElements,
   productionId,
   locationLeft,
@@ -214,6 +481,7 @@ function GridRow({
 }: {
   scene: SceneData;
   categories: string[];
+  showSynopsis: boolean;
   productionElements: ProductionElement[];
   productionId: string;
   locationLeft: number;
@@ -329,16 +597,18 @@ function GridRow({
       </td>
 
       {/* Synopsis */}
-      <SynopsisCell
-        sceneId={scene.id}
-        sheet={sheet}
-        sheetRef={sheetRef}
-        getOrCreateSheet={getOrCreateSheet}
-        applySheet={applySheet}
-        readOnly={readOnly}
-      />
+      {showSynopsis && (
+        <SynopsisCell
+          sceneId={scene.id}
+          sheet={sheet}
+          sheetRef={sheetRef}
+          getOrCreateSheet={getOrCreateSheet}
+          applySheet={applySheet}
+          readOnly={readOnly}
+        />
+      )}
 
-      {/* Element cells — one per category */}
+      {/* Element cells — one per visible category */}
       {categories.map((cat) => (
         <GridElementCell
           key={cat}
@@ -483,7 +753,6 @@ function GridElementCell({
 
   return (
     <td className="px-2 py-1.5 align-top border-l border-black/5 relative overflow-hidden">
-      {/* Chips — wrap to fill cell, max 2 rows */}
       {sceneElements.length > 0 && (
         <div className="flex flex-wrap gap-0.5 mb-1 max-h-16 overflow-hidden">
           {sceneElements.map((se) => {
@@ -511,7 +780,6 @@ function GridElementCell({
         </div>
       )}
 
-      {/* Add input */}
       {!readOnly && (
         <div className="relative">
           <input

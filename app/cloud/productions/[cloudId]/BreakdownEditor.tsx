@@ -213,12 +213,14 @@ export default function BreakdownEditor({
           <BreakdownGrid
             scenes={scenes}
             productionElements={elements}
-            categories={categories.map((c) => c.name)}
+            categories={categories}
+            categoryLibrary={categoryLibrary}
             productionId={productionId}
             flags={flags}
             onCompleteToggle={handleCompleteToggle}
             onSheetChange={handleSheetChange}
             onElementCreated={handleElementCreated}
+            onCategoryCreate={(cat) => setCategories((prev) => [...prev, cat])}
             readOnly={readOnly}
           />
         </div>
