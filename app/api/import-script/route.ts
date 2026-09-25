@@ -218,6 +218,12 @@ export async function POST(req: NextRequest) {
     if (s.characters?.length) sceneCharMap.set(s.sceneNumber, s.characters);
   }
 
+  // Log first scene's rawText lines so we can see what the PDF extractor is producing
+  if (scenes.length > 0) {
+    const firstRaw = scenes[0].rawText;
+    const lines = firstRaw.split("\n").filter(Boolean);
+    console.log(`[import-script] scene 1 rawText lines (${lines.length} total):`, JSON.stringify(lines.slice(0, 20)));
+  }
   console.log(`[import-script] scenes with characters: ${sceneCharMap.size}/${scenes.length}, sample:`, [...sceneCharMap.entries()].slice(0, 3));
 
   if (sceneCharMap.size > 0) {
