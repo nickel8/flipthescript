@@ -1,7 +1,7 @@
 import { requireCloudSession } from "@/lib/cloud-session";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import BlocksView, { type BlockData, type EpisodeData } from "./BlocksView";
+import BlocksView, { type BlockData, type EpisodeData, type SeriesData } from "./BlocksView";
 
 export const metadata = {
   title: "Overview — FlipTheScript",
@@ -46,6 +46,20 @@ export default async function ProductionOverviewPage({
 
   const productionId = prodRaw.id;
   const canEdit = userRole !== "viewer";
+
+  // Series
+  const seriesRes = await dbFetch(
+    `series?production_id=eq.${productionId}&order=series_number.asc&select=id,series_number,name,status`
+  );
+  const seriesRaw = await seriesRes.json();
+  const seriesList: SeriesData[] = Array.isArray(seriesRaw)
+    ? seriesRaw.map((s: { id: string; series_number: number; name: string; status: string }) => ({
+        id: s.id,
+        series_number: s.series_number,
+        name: s.name,
+        status: s.status as SeriesData["status"],
+      }))
+    : [];
 
   // Blocks
   const blocksRes = await dbFetch(
@@ -217,11 +231,13 @@ export default async function ProductionOverviewPage({
 
           {/* Blocks */}
           <BlocksView
+            series={seriesList}
             blocks={blocks}
             unblockedEpisodes={unblockedEpisodes}
             productionId={productionId}
             cloudId={cloudId}
             canEdit={canEdit}
+            isOwner={userRole === "owner"}
           />
 
         </div>
