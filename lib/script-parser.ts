@@ -149,7 +149,15 @@ export function buildScenes(
     }
   }
   const kept = new Set(best.values());
-  return scenes.filter(s => kept.has(s));
+  const deduped = scenes.filter(s => kept.has(s));
+
+  // Remove stub scenes: matches where no body text was accumulated after the
+  // slug line. These are false positives from location lists, scene indices, or
+  // other structured sections in the PDF that happened to match a slug pattern.
+  return deduped.filter(s => {
+    const bodyText = s.rawText.split("\n").slice(1).join("\n").trim();
+    return bodyText.length > 0;
+  });
 }
 
 // ── PDF text extraction ────────────────────────────────────────────────────────
