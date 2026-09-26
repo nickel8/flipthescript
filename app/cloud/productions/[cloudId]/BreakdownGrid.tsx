@@ -1006,7 +1006,7 @@ function SortableTh({
           onClick={onSort}
           className={`flex-1 text-left flex items-center gap-1 ${onSort ? "cursor-pointer" : "cursor-default"}`}
         >
-          <span className={`text-[10px] font-bold uppercase tracking-widest ${sortDir ? "opacity-70" : "opacity-30"}`}>
+          <span className={`text-[10px] font-bold uppercase tracking-widest ${sortDir ? "opacity-100" : "opacity-60"}`}>
             {label}
           </span>
           {sortDir && <span className="text-[10px] opacity-40">{sortDir === "asc" ? "↑" : "↓"}</span>}
@@ -1105,7 +1105,7 @@ function GridRow({
           disabled={readOnly} className="cursor-pointer disabled:cursor-default" />
       </td>
       <td className="sticky z-10 bg-white px-2 py-2 align-top" style={{ left: COL_CHECK }}>
-        <div className="font-mono text-xs font-bold opacity-50 leading-none truncate">{scene.scene_number}</div>
+        <div className="font-mono text-xs font-bold leading-none truncate">{scene.scene_number}</div>
         <div className={`text-[9px] font-bold mt-1 ${
           scene.int_ext === "EXT" ? "text-green-700" : scene.int_ext === "INT/EXT" ? "text-orange-600" : "text-blue-700"
         }`}>{scene.int_ext || "INT"}</div>
@@ -1114,7 +1114,7 @@ function GridRow({
         <div className="max-h-16 overflow-hidden">
           <div className="text-xs font-medium leading-snug truncate">{scene.location}</div>
           {scene.time_of_day && scene.time_of_day !== "UNSPECIFIED" && (
-            <div className="text-[10px] opacity-30 mt-0.5">{scene.time_of_day}</div>
+            <div className="text-[10px] opacity-50 mt-0.5">{scene.time_of_day}</div>
           )}
         </div>
       </td>
@@ -1138,7 +1138,7 @@ function GridRow({
         {specialNotes.length > 0 ? (
           <div className="max-h-16 overflow-hidden space-y-0.5">
             {specialNotes.map((n, i) => (
-              <div key={i} className="text-xs text-black/60 leading-snug">{n}</div>
+              <div key={i} className="text-xs leading-snug">{n}</div>
             ))}
           </div>
         ) : null}
@@ -1175,7 +1175,7 @@ function SynopsisCell({
   if (readOnly) {
     return (
       <td className="px-3 py-2 align-top overflow-hidden">
-        <div className="max-h-16 overflow-hidden text-xs text-black/50 leading-snug">
+        <div className="max-h-16 overflow-hidden text-xs leading-snug">
           {text || <span className="opacity-30">—</span>}
         </div>
       </td>
@@ -1189,7 +1189,7 @@ function SynopsisCell({
           onBlur={() => setEditing(false)} rows={4}
           className="w-full h-full px-3 py-2 text-xs focus:outline-none resize-none bg-amber-50 leading-snug" />
       ) : (
-        <div className="max-h-16 overflow-hidden px-3 py-2 text-xs text-black/50 leading-snug min-h-[36px] hover:bg-black/[0.03] cursor-text">
+        <div className="max-h-16 overflow-hidden px-3 py-2 text-xs leading-snug min-h-[36px] hover:bg-black/[0.03] cursor-text">
           {text || <span className="opacity-25">Add synopsis…</span>}
         </div>
       )}
