@@ -73,20 +73,34 @@ function entityFKs(type: EntityType, id: string): Record<string, string> {
 }
 
 // GET /api/notes?cloudId=&entityType=&entityId=
+// GET /api/notes?cloudId=&allBreakdown=true  — all on_breakdown notes for scene grid
 export async function GET(req: NextRequest) {
   const session = await getCloudSession();
   if (!session) return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
 
   const { searchParams } = req.nextUrl;
-  const cloudId    = searchParams.get("cloudId");
-  const entityType = searchParams.get("entityType") as EntityType | null;
-  const entityId   = searchParams.get("entityId");
+  const cloudId      = searchParams.get("cloudId");
+  const entityType   = searchParams.get("entityType") as EntityType | null;
+  const entityId     = searchParams.get("entityId");
+  const allBreakdown = searchParams.get("allBreakdown") === "true";
 
-  if (!cloudId || !entityType)
-    return NextResponse.json({ error: "cloudId and entityType required" }, { status: 400 });
+  if (!cloudId)
+    return NextResponse.json({ error: "cloudId required" }, { status: 400 });
 
   const productionId = await resolveProduction(cloudId, session.id);
   if (!productionId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  if (allBreakdown) {
+    const res = await db(
+      `notes?production_id=eq.${productionId}&on_breakdown=eq.true&scene_id=not.is.null` +
+      `&order=created_at.asc&select=scene_id,body,tag`
+    );
+    const rows = await res.json();
+    return NextResponse.json(Array.isArray(rows) ? rows : []);
+  }
+
+  if (!entityType)
+    return NextResponse.json({ error: "entityType required" }, { status: 400 });
 
   const filter = entityFilter(entityType, entityId);
   const res = await db(

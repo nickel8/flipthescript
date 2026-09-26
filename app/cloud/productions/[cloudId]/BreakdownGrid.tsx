@@ -94,7 +94,7 @@ const COL_SCENE = 56;
 const COL_CHECK = 44;
 
 function defaultWidths(catNames: string[]): Record<string, number> {
-  const w: Record<string, number> = { location: 160, synopsis: 200 };
+  const w: Record<string, number> = { location: 160, synopsis: 200, notes: 200 };
   for (const cat of catNames) w[cat] = 140;
   return w;
 }
@@ -130,6 +130,7 @@ export default function BreakdownGrid({
   onCategoryCreate,
   readOnly = false,
 }: Props) {
+  const { cloudId } = useNotesContext();
   const catNames = categories.map((c) => c.name);
 
   const [colWidths, setColWidths] = useState<Record<string, number>>(() => defaultWidths(catNames));
@@ -137,6 +138,23 @@ export default function BreakdownGrid({
   useEffect(() => { colWidthsRef.current = colWidths; }, [colWidths]);
 
   const [visibleCols, setVisibleCols] = useState<Set<string>>(() => new Set(["synopsis", ...catNames]));
+
+  // Breakdown notes (on_breakdown=true) for scene grid column
+  const [breakdownNotes, setBreakdownNotes] = useState<Map<string, string[]>>(new Map());
+  useEffect(() => {
+    fetch(`/api/notes?cloudId=${cloudId}&allBreakdown=true`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!Array.isArray(data)) return;
+        const map = new Map<string, string[]>();
+        for (const n of data as { scene_id: string; body: string }[]) {
+          if (!map.has(n.scene_id)) map.set(n.scene_id, []);
+          map.get(n.scene_id)!.push(n.body);
+        }
+        setBreakdownNotes(map);
+      })
+      .catch(() => {});
+  }, [cloudId]);
   const [sort, setSort] = useState<{ col: string | null; dir: "asc" | "desc" }>({ col: null, dir: "asc" });
   const [columnFilters, setColumnFilters] = useState<Record<string, ColumnFilter>>({});
   const [views, setViews] = useState<GridView[]>([]);
@@ -298,6 +316,7 @@ export default function BreakdownGrid({
 
   const filterCount = activeFilterCount(columnFilters);
   const showSynopsis = visibleCols.has("synopsis");
+  const showNotes = visibleCols.has("notes");
   const visibleCatCols = catNames.filter((c) => visibleCols.has(c));
 
   const processedScenes = useMemo(
@@ -354,6 +373,7 @@ export default function BreakdownGrid({
               onDeleteView={deleteView}
               productionId={productionId}
               onCategoryCreate={onCategoryCreate}
+              onClose={() => setColPickerOpen(false)}
               readOnly={readOnly}
             />
           )}
@@ -368,6 +388,7 @@ export default function BreakdownGrid({
             <col style={{ width: COL_SCENE }} />
             <col style={{ width: colWidths.location }} />
             {showSynopsis && <col style={{ width: colWidths.synopsis }} />}
+            {showNotes && <col style={{ width: colWidths.notes ?? 200 }} />}
             {visibleCatCols.map((cat) => (
               <col key={cat} style={{ width: colWidths[cat] ?? 140 }} />
             ))}
@@ -429,6 +450,14 @@ export default function BreakdownGrid({
                 />
               )}
 
+              {/* Notes column */}
+              {showNotes && (
+                <SortableTh
+                  label="Notes" col="notes"
+                  onStartResize={startResize}
+                />
+              )}
+
               {/* Category columns */}
               {visibleCatCols.map((cat) => (
                 <SortableTh
@@ -449,6 +478,8 @@ export default function BreakdownGrid({
                 scene={scene}
                 categories={visibleCatCols}
                 showSynopsis={showSynopsis}
+                showNotes={showNotes}
+                specialNotes={breakdownNotes.get(scene.id) ?? []}
                 productionElements={productionElements}
                 productionId={productionId}
                 locationLeft={locationLeft}
@@ -699,7 +730,7 @@ function FilterPopover({
 function ColPicker({
   catNames, categoryLibrary, visibleCols, setVisibleCols,
   views, activeViewId, onApplyView, onSaveView, onToggleViewSharing, onDeleteView,
-  productionId, onCategoryCreate, readOnly,
+  productionId, onCategoryCreate, onClose, readOnly,
 }: {
   catNames: string[]; categoryLibrary: CategoryData[];
   visibleCols: Set<string>; setVisibleCols: React.Dispatch<React.SetStateAction<Set<string>>>;
@@ -709,10 +740,12 @@ function ColPicker({
   onToggleViewSharing: (id: string, isShared: boolean) => Promise<void>;
   onDeleteView: (id: string) => Promise<void>;
   productionId: string; onCategoryCreate: (cat: CategoryData) => void;
+  onClose: () => void;
   readOnly: boolean;
 }) {
   const [newCatInput, setNewCatInput] = useState("");
   const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
   const [viewName, setViewName] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -729,6 +762,7 @@ function ColPicker({
     const trimmed = name.trim();
     if (!trimmed || catNames.includes(trimmed)) return;
     setAdding(true);
+    setAddError(null);
     try {
       const res = await fetch("/api/production-categories", {
         method: "POST",
@@ -736,8 +770,18 @@ function ColPicker({
         body: JSON.stringify({ productionId, name: trimmed }),
       });
       const data = await res.json();
-      if (data?.name) { onCategoryCreate({ name: data.name, display_order: data.display_order ?? 999 }); setNewCatInput(""); }
-    } finally { setAdding(false); }
+      if (data?.name) {
+        onCategoryCreate({ name: data.name, display_order: data.display_order ?? 999 });
+        setNewCatInput("");
+        onClose();
+      } else {
+        setAddError(data?.error ?? "Failed to add column");
+      }
+    } catch {
+      setAddError("Network error");
+    } finally {
+      setAdding(false);
+    }
   }
 
   const libSuggestions = categoryLibrary.filter(
@@ -836,6 +880,10 @@ function ColPicker({
         <span className="w-3 shrink-0 font-bold">{visibleCols.has("synopsis") ? "✓" : ""}</span>
         Synopsis
       </button>
+      <button onClick={() => toggleCol("notes")} className="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 hover:bg-black/5">
+        <span className="w-3 shrink-0 font-bold">{visibleCols.has("notes") ? "✓" : ""}</span>
+        Notes
+      </button>
       {catNames.map((cat) => (
         <button key={cat} onClick={() => toggleCol(cat)} className="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 hover:bg-black/5">
           <span className="w-3 shrink-0 font-bold">{visibleCols.has(cat) ? "✓" : ""}</span>
@@ -849,11 +897,14 @@ function ColPicker({
           <div className="px-3 pt-0.5 pb-0.5 text-[9px] font-bold uppercase tracking-widest opacity-30">Add column</div>
           <div className="px-3 pb-2">
             <input
-              type="text" value={newCatInput} onChange={(e) => setNewCatInput(e.target.value)}
+              type="text" value={newCatInput} onChange={(e) => { setNewCatInput(e.target.value); setAddError(null); }}
               placeholder="Category name…" disabled={adding}
               onKeyDown={(e) => { if (e.key === "Enter" && newCatInput.trim()) { e.preventDefault(); handleAddCategory(newCatInput); } }}
               className="w-full text-xs border border-black/15 px-2 py-1 focus:outline-none focus:border-black/40 placeholder:opacity-30 disabled:opacity-40"
             />
+            {addError && (
+              <p className="text-[10px] text-red-600 mt-1">{addError}</p>
+            )}
           </div>
           {libSuggestions.length > 0 && (
             <div className="border-t border-black/5">
@@ -928,10 +979,11 @@ function SortableTh({
 // ── Grid row ──────────────────────────────────────────────────────────────────
 
 function GridRow({
-  scene, categories, showSynopsis, productionElements, productionId,
+  scene, categories, showSynopsis, showNotes, specialNotes, productionElements, productionId,
   locationLeft, flags, onCompleteToggle, onSheetChange, onElementCreated, readOnly,
 }: {
-  scene: SceneData; categories: string[]; showSynopsis: boolean;
+  scene: SceneData; categories: string[]; showSynopsis: boolean; showNotes: boolean;
+  specialNotes: string[];
   productionElements: ProductionElement[]; productionId: string; locationLeft: number;
   flags: Map<string, FlagData>;
   onCompleteToggle: (sceneId: string, isComplete: boolean) => void;
@@ -1014,6 +1066,17 @@ function GridRow({
       {showSynopsis && (
         <SynopsisCell sceneId={scene.id} sheet={sheet} sheetRef={sheetRef}
           getOrCreateSheet={getOrCreateSheet} applySheet={applySheet} readOnly={readOnly} />
+      )}
+      {showNotes && (
+        <td className="px-3 py-2 align-top border-l border-black/5 overflow-hidden">
+          {specialNotes.length > 0 ? (
+            <div className="max-h-16 overflow-hidden space-y-0.5">
+              {specialNotes.map((n, i) => (
+                <div key={i} className="text-xs text-black/60 leading-snug">{n}</div>
+              ))}
+            </div>
+          ) : null}
+        </td>
       )}
       {categories.map((cat) => (
         <GridElementCell
