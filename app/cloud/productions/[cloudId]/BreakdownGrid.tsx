@@ -1135,7 +1135,7 @@ function GridRow({
       </td>
       <td className="sticky z-10 bg-white px-3 py-2 align-top border-r border-black/15 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.06)] overflow-hidden" style={{ left: locationLeft }}>
         <div className="max-h-16 overflow-hidden">
-          <div className="text-xs font-medium leading-snug truncate">{scene.location}</div>
+          <div className="text-xs font-semibold text-black leading-snug truncate">{scene.location}</div>
           {scene.time_of_day && scene.time_of_day !== "UNSPECIFIED" && (
             <div className="text-[10px] opacity-50 mt-0.5">{scene.time_of_day}</div>
           )}
@@ -1347,7 +1347,7 @@ function GridElementCell({
               <span key={se.id} className={`group/chip inline-flex items-center gap-0.5 text-[11px] border px-1.5 py-px whitespace-nowrap ${flagged ? "border-amber-400 bg-amber-50" : "border-black/15 bg-white"}`}>
                 <button
                   onClick={(e) => { e.stopPropagation(); setFocus("element", se.element.id, `${se.element.name} (${category})`); }}
-                  className="hover:underline underline-offset-2 leading-none"
+                  className="text-black font-medium hover:underline underline-offset-2 leading-none"
                   title={`Note on ${se.element.name}`}
                 >
                   {se.element.name}
