@@ -73,6 +73,34 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(Array.isArray(inserted) ? inserted[0] : inserted);
 }
 
+// PATCH /api/production-categories — { productionId, order: string[] }
+export async function PATCH(req: NextRequest) {
+  const session = await getCloudSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { productionId, order } = await req.json();
+  if (!productionId || !Array.isArray(order))
+    return NextResponse.json({ error: "productionId and order required" }, { status: 400 });
+
+  if (!(await ownerOrCollaborator(productionId, session.id)))
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  await Promise.all(
+    order.map((name: string, i: number) =>
+      db(
+        `production_categories?production_id=eq.${productionId}&name=eq.${encodeURIComponent(name)}`,
+        {
+          method: "PATCH",
+          headers: { Prefer: "return=minimal" },
+          body: JSON.stringify({ display_order: (i + 1) * 10 }),
+        }
+      )
+    )
+  );
+
+  return NextResponse.json({ ok: true });
+}
+
 // DELETE /api/production-categories — { productionId, name }
 export async function DELETE(req: NextRequest) {
   const session = await getCloudSession();

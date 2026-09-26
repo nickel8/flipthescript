@@ -133,6 +133,10 @@ export default function BreakdownGrid({
   const { cloudId } = useNotesContext();
   const catNames = categories.map((c) => c.name);
 
+  const [colOrder, setColOrder] = useState<string[]>(() => catNames);
+  const dragColRef = useRef<string | null>(null);
+  const [dragOverCol, setDragOverCol] = useState<string | null>(null);
+
   const [colWidths, setColWidths] = useState<Record<string, number>>(() => defaultWidths(catNames));
   const colWidthsRef = useRef(colWidths);
   useEffect(() => { colWidthsRef.current = colWidths; }, [colWidths]);
@@ -173,16 +177,20 @@ export default function BreakdownGrid({
       .catch(() => {});
   }, [productionId]);
 
-  // Auto-show new categories
+  // Sync new categories into colOrder, visibleCols, colWidths
   useEffect(() => {
+    const names = categories.map((c) => c.name);
+    setColOrder((prev) => {
+      const added = names.filter((n) => !prev.includes(n));
+      return added.length ? [...prev, ...added] : prev;
+    });
     setVisibleCols((prev) => {
-      const added = catNames.filter((c) => !prev.has(c));
-      if (!added.length) return prev;
-      return new Set([...prev, ...added]);
+      const added = names.filter((c) => !prev.has(c));
+      return added.length ? new Set([...prev, ...added]) : prev;
     });
     setColWidths((prev) => {
       const extra: Record<string, number> = {};
-      for (const c of catNames) if (!(c in prev)) extra[c] = 140;
+      for (const c of names) if (!(c in prev)) extra[c] = 140;
       return Object.keys(extra).length ? { ...prev, ...extra } : prev;
     });
   }, [categories]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -317,7 +325,16 @@ export default function BreakdownGrid({
   const filterCount = activeFilterCount(columnFilters);
   const showSynopsis = visibleCols.has("synopsis");
   const showNotes = visibleCols.has("notes");
-  const visibleCatCols = catNames.filter((c) => visibleCols.has(c));
+  const visibleCatCols = colOrder.filter((c) => visibleCols.has(c));
+
+  function persistColOrder(order: string[]) {
+    if (readOnly) return;
+    fetch("/api/production-categories", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productionId, order }),
+    }).catch(() => {});
+  }
 
   const processedScenes = useMemo(
     () => applySort(applyFilters(scenes, columnFilters), sort),
@@ -462,10 +479,42 @@ export default function BreakdownGrid({
               {visibleCatCols.map((cat) => (
                 <SortableTh
                   key={cat} label={cat} col={cat}
-                  borderLeft
+                  borderLeft={dragOverCol !== cat}
+                  dragOver={dragOverCol === cat}
                   filterActive={isFilterActive(columnFilters[cat])}
                   onOpenFilter={(btn) => openFilterPopover(cat, btn)}
                   onStartResize={startResize}
+                  draggable={!readOnly}
+                  onDragStart={(e) => {
+                    dragColRef.current = cat;
+                    e.dataTransfer.effectAllowed = "move";
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                    if (dragOverCol !== cat) setDragOverCol(cat);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const from = dragColRef.current;
+                    setDragOverCol(null);
+                    dragColRef.current = null;
+                    if (!from || from === cat) return;
+                    setColOrder((prev) => {
+                      const order = [...prev];
+                      const fromIdx = order.indexOf(from);
+                      const toIdx = order.indexOf(cat);
+                      if (fromIdx === -1 || toIdx === -1) return prev;
+                      order.splice(fromIdx, 1);
+                      order.splice(toIdx, 0, from);
+                      persistColOrder(order);
+                      return order;
+                    });
+                  }}
+                  onDragEnd={() => {
+                    setDragOverCol(null);
+                    dragColRef.current = null;
+                  }}
                 />
               ))}
             </tr>
@@ -927,6 +976,7 @@ function ColPicker({
 function SortableTh({
   label, col, left, sticky, borderRight, borderLeft, shadow,
   sortDir, filterActive, onSort, onOpenFilter, onStartResize,
+  draggable, dragOver, onDragStart, onDragOver, onDrop, onDragEnd,
 }: {
   label: string; col: string; left?: number;
   sticky?: boolean; borderRight?: boolean; borderLeft?: boolean; shadow?: boolean;
@@ -934,17 +984,29 @@ function SortableTh({
   onSort?: () => void;
   onOpenFilter?: (btn: HTMLButtonElement) => void;
   onStartResize: (col: string, startX: number) => void;
+  draggable?: boolean;
+  dragOver?: boolean;
+  onDragStart?: (e: React.DragEvent<HTMLTableCellElement>) => void;
+  onDragOver?: (e: React.DragEvent<HTMLTableCellElement>) => void;
+  onDrop?: (e: React.DragEvent<HTMLTableCellElement>) => void;
+  onDragEnd?: () => void;
 }) {
   return (
     <th
+      draggable={draggable}
       className={[
-        "relative px-2 py-1.5 text-left bg-white font-normal",
+        "relative px-2 py-1.5 text-left bg-white font-normal select-none",
         sticky ? "sticky z-30" : "",
         borderRight ? "border-r border-black/15" : "",
-        borderLeft ? "border-l border-black/5" : "",
+        dragOver ? "border-l-2 border-black" : borderLeft ? "border-l border-black/5" : "",
         shadow ? "shadow-[2px_0_4px_-2px_rgba(0,0,0,0.06)]" : "",
+        draggable ? "cursor-grab active:cursor-grabbing" : "",
       ].join(" ")}
       style={left !== undefined ? { left } : undefined}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
     >
       <div className="flex items-center gap-1 pr-2">
         <button
