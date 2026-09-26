@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import type { SceneData, ProductionElement, SheetData, SceneElementData, FlagData, CategoryData } from "./types";
-import { updateSynopsis, addElement, removeElement, toggleComplete, ensureSheet } from "./actions";
+import { updateSynopsis, updateSheetNotes, addElement, removeElement, toggleComplete, ensureSheet } from "./actions";
 import { useNotesContext } from "./NotesContext";
 import { compareSceneNumbers } from "@/lib/sort-scenes";
 
@@ -130,7 +130,6 @@ export default function BreakdownGrid({
   onCategoryCreate,
   readOnly = false,
 }: Props) {
-  const { cloudId, notesVersion } = useNotesContext();
   const catNames = categories.map((c) => c.name);
 
   const [colOrder, setColOrder] = useState<string[]>(() => catNames);
@@ -143,22 +142,6 @@ export default function BreakdownGrid({
 
   const [visibleCols, setVisibleCols] = useState<Set<string>>(() => new Set(["synopsis", ...catNames]));
 
-  // Breakdown notes (on_breakdown=true) for scene grid column
-  const [breakdownNotes, setBreakdownNotes] = useState<Map<string, string[]>>(new Map());
-  useEffect(() => {
-    fetch(`/api/notes?cloudId=${cloudId}&allBreakdown=true`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (!Array.isArray(data)) return;
-        const map = new Map<string, string[]>();
-        for (const n of data as { scene_id: string; body: string }[]) {
-          if (!map.has(n.scene_id)) map.set(n.scene_id, []);
-          map.get(n.scene_id)!.push(n.body);
-        }
-        setBreakdownNotes(map);
-      })
-      .catch(() => {});
-  }, [cloudId, notesVersion]);
   const [sort, setSort] = useState<{ col: string | null; dir: "asc" | "desc" }>({ col: null, dir: "asc" });
   const [columnFilters, setColumnFilters] = useState<Record<string, ColumnFilter>>({});
   const [views, setViews] = useState<GridView[]>([]);
@@ -525,7 +508,6 @@ export default function BreakdownGrid({
                 scene={scene}
                 categories={visibleCatCols}
                 showSynopsis={showSynopsis}
-                specialNotes={breakdownNotes.get(scene.id) ?? []}
                 productionElements={productionElements}
                 productionId={productionId}
                 locationLeft={locationLeft}
@@ -1034,11 +1016,10 @@ function SortableTh({
 // ── Grid row ──────────────────────────────────────────────────────────────────
 
 function GridRow({
-  scene, categories, showSynopsis, specialNotes, productionElements, productionId,
+  scene, categories, showSynopsis, productionElements, productionId,
   locationLeft, flags, onCompleteToggle, onSheetChange, onElementCreated, readOnly,
 }: {
   scene: SceneData; categories: string[]; showSynopsis: boolean;
-  specialNotes: string[];
   productionElements: ProductionElement[]; productionId: string; locationLeft: number;
   flags: Map<string, FlagData>;
   onCompleteToggle: (sceneId: string, isComplete: boolean) => void;
@@ -1134,15 +1115,8 @@ function GridRow({
         />
       ))}
       {/* Notes — always rightmost */}
-      <td className="px-3 py-2 align-top border-l border-black/5 overflow-hidden">
-        {specialNotes.length > 0 ? (
-          <div className="max-h-16 overflow-hidden space-y-0.5">
-            {specialNotes.map((n, i) => (
-              <div key={i} className="text-xs leading-snug">{n}</div>
-            ))}
-          </div>
-        ) : null}
-      </td>
+      <NotesCell sheet={sheet} sheetRef={sheetRef}
+        getOrCreateSheet={getOrCreateSheet} applySheet={applySheet} readOnly={readOnly} />
     </tr>
   );
 }
@@ -1191,6 +1165,56 @@ function SynopsisCell({
       ) : (
         <div className="max-h-16 overflow-hidden px-3 py-2 text-xs leading-snug min-h-[36px] hover:bg-black/[0.03] cursor-text">
           {text || <span className="text-black/50">Add synopsis…</span>}
+        </div>
+      )}
+    </td>
+  );
+}
+
+// ── Notes cell ────────────────────────────────────────────────────────────────
+
+function NotesCell({
+  sheet, sheetRef, getOrCreateSheet, applySheet, readOnly,
+}: {
+  sheet: SheetData | null; sheetRef: React.RefObject<SheetData | null>;
+  getOrCreateSheet: () => Promise<string>; applySheet: (s: SheetData | null) => void; readOnly: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(sheet?.notes ?? "");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => { if (!editing) setText(sheet?.notes ?? ""); }, [sheet?.notes, editing]);
+
+  async function handleChange(val: string) {
+    setText(val);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      const id = await getOrCreateSheet();
+      await updateSheetNotes(id, val);
+      const current = sheetRef.current;
+      if (current) applySheet({ ...current, notes: val });
+    }, 600);
+  }
+
+  if (readOnly) {
+    return (
+      <td className="px-3 py-2 align-top border-l border-black/5 overflow-hidden">
+        <div className="max-h-16 overflow-hidden text-xs leading-snug">
+          {text || <span className="opacity-40">—</span>}
+        </div>
+      </td>
+    );
+  }
+
+  return (
+    <td className="px-0 py-0 align-top border-l border-black/5 overflow-hidden" onClick={() => !editing && setEditing(true)}>
+      {editing ? (
+        <textarea autoFocus value={text} onChange={(e) => handleChange(e.target.value)}
+          onBlur={() => setEditing(false)} rows={4}
+          className="w-full h-full px-3 py-2 text-xs focus:outline-none resize-none bg-amber-50 leading-snug" />
+      ) : (
+        <div className="max-h-16 overflow-hidden px-3 py-2 text-xs leading-snug min-h-[36px] hover:bg-black/[0.03] cursor-text">
+          {text || <span className="text-black/50">Add notes…</span>}
         </div>
       )}
     </td>

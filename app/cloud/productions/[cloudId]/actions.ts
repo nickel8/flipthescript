@@ -17,7 +17,7 @@ async function assertAuth() {
   return session;
 }
 
-// ── Synopsis ──────────────────────────────────────────────────────────────────
+// ── Synopsis / Notes ──────────────────────────────────────────────────────────
 
 export async function updateSynopsis(sheetId: string, synopsis: string): Promise<void> {
   await assertAuth();
@@ -27,6 +27,16 @@ export async function updateSynopsis(sheetId: string, synopsis: string): Promise
     body: JSON.stringify({ synopsis }),
   });
   if (!res.ok) throw new Error(`updateSynopsis: ${await res.text()}`);
+}
+
+export async function updateSheetNotes(sheetId: string, notes: string): Promise<void> {
+  await assertAuth();
+  const res = await fetch(`${SB_URL}/rest/v1/breakdown_sheets?id=eq.${sheetId}`, {
+    method: "PATCH",
+    headers: AUTH_HEADERS,
+    body: JSON.stringify({ notes }),
+  });
+  if (!res.ok) throw new Error(`updateSheetNotes: ${await res.text()}`);
 }
 
 // ── Elements ──────────────────────────────────────────────────────────────────
