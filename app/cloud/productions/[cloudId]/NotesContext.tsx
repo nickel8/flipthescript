@@ -13,6 +13,7 @@ export interface NotesFocus {
 interface NotesContextValue {
   cloudId: string;
   userId: string;
+  canEdit: boolean;
   productionName: string;
   focus: NotesFocus;
   setFocus: (type: NoteEntityType, id: string | null, label: string) => void;
@@ -24,11 +25,13 @@ export function NotesProvider({
   children,
   cloudId,
   userId,
+  canEdit,
   productionName,
 }: {
   children: React.ReactNode;
   cloudId: string;
   userId: string;
+  canEdit: boolean;
   productionName: string;
 }) {
   const [focus, setFocusState] = useState<NotesFocus>({
@@ -42,7 +45,7 @@ export function NotesProvider({
   }
 
   return (
-    <NotesCtx.Provider value={{ cloudId, userId, productionName, focus, setFocus }}>
+    <NotesCtx.Provider value={{ cloudId, userId, canEdit, productionName, focus, setFocus }}>
       {children}
     </NotesCtx.Provider>
   );

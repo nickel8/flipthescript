@@ -56,13 +56,30 @@ export async function GET(req: NextRequest) {
 
   const scenesRes = await dbFetch(
     `scenes?script_id=in.(${scriptIds})&is_deleted=eq.false&order=scene_number.asc` +
-      `&select=scene_number,slug_line,int_ext,time_of_day,page_start,is_complete,` +
+      `&select=id,scene_number,slug_line,int_ext,time_of_day,page_start,is_complete,` +
       `breakdown_sheets(synopsis,notes,scene_elements(elements(name,category)))`
   );
   const rawScenes = await scenesRes.json();
 
   if (!Array.isArray(rawScenes)) {
     return NextResponse.json({ error: "Failed to fetch scenes" }, { status: 500 });
+  }
+
+  // Fetch on_breakdown notes for all scenes in one query
+  const sceneIds = rawScenes.map((r: Record<string, unknown>) => r.id as string);
+  const specialNotesMap = new Map<string, string[]>();
+  if (sceneIds.length > 0) {
+    const notesRes = await dbFetch(
+      `notes?production_id=eq.${production.id}&on_breakdown=eq.true` +
+        `&scene_id=in.(${sceneIds.join(",")})&select=scene_id,body`
+    );
+    const notesRows = await notesRes.json();
+    if (Array.isArray(notesRows)) {
+      for (const n of notesRows as { scene_id: string; body: string }[]) {
+        if (!specialNotesMap.has(n.scene_id)) specialNotesMap.set(n.scene_id, []);
+        specialNotesMap.get(n.scene_id)!.push(n.body);
+      }
+    }
   }
 
   const scenes: SceneRow[] = rawScenes.map((r: Record<string, unknown>) => {
@@ -77,6 +94,7 @@ export async function GET(req: NextRequest) {
           })
       : [];
 
+    const sceneId = r.id as string;
     return {
       scene_number: r.scene_number as string,
       slug_line: r.slug_line as string,
@@ -89,7 +107,10 @@ export async function GET(req: NextRequest) {
             synopsis: (raw.synopsis as string) ?? "",
             notes: (raw.notes as string) ?? "",
             elements,
+            special_notes: specialNotesMap.get(sceneId) ?? [],
           }
+        : specialNotesMap.has(sceneId)
+        ? { synopsis: "", notes: "", elements: [], special_notes: specialNotesMap.get(sceneId) }
         : null,
     };
   });

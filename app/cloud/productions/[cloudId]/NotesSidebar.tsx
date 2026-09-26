@@ -7,6 +7,8 @@ interface Note {
   id: string;
   body: string;
   author_id: string;
+  tag: string | null;
+  on_breakdown: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -20,13 +22,66 @@ const ENTITY_ICON: Record<NoteEntityType, string> = {
   element:    "El",
 };
 
+const TAGS: { value: string; label: string }[] = [
+  { value: "page_turn",     label: "Page Turn" },
+  { value: "recce",         label: "Recce" },
+  { value: "shoot",         label: "Shoot" },
+  { value: "shoot_amends",  label: "Shoot Amends" },
+  { value: "syllabus",      label: "Syllabus" },
+];
+
+const TAG_STYLE: Record<string, string> = {
+  page_turn:    "border-red-300 text-red-600",
+  recce:        "border-pink-300 text-pink-600",
+  shoot:        "border-blue-300 text-blue-600",
+  shoot_amends: "border-green-300 text-green-600",
+  syllabus:     "border-black/20 text-black/50",
+};
+
+function TagLabel({ tag }: { tag: string }) {
+  const def = TAGS.find((t) => t.value === tag);
+  if (!def) return null;
+  return (
+    <span className={`text-[9px] font-bold uppercase tracking-widest border px-1.5 py-px ${TAG_STYLE[tag] ?? "border-black/20 text-black/40"}`}>
+      {def.label}
+    </span>
+  );
+}
+
+function TagPicker({
+  value,
+  onChange,
+}: {
+  value: string | null;
+  onChange: (v: string | null) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-1 mt-1.5">
+      {TAGS.map((t) => (
+        <button
+          key={t.value}
+          type="button"
+          onClick={() => onChange(value === t.value ? null : t.value)}
+          className={`text-[9px] uppercase tracking-widest border px-1.5 py-px transition-colors ${
+            value === t.value
+              ? (TAG_STYLE[t.value] ?? "border-black text-black")
+              : "border-black/15 text-black/30 hover:border-black/30 hover:text-black/50"
+          }`}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function formatDate(iso: string): string {
   const d = new Date(iso);
   const now = new Date();
   const diff = (now.getTime() - d.getTime()) / 1000;
-  if (diff < 60)    return "just now";
-  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 60)     return "just now";
+  if (diff < 3600)   return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400)  return `${Math.floor(diff / 3600)}h ago`;
   if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
@@ -38,17 +93,25 @@ export default function NotesSidebar({
   open: boolean;
   onToggle: () => void;
 }) {
-  const { cloudId, userId, focus } = useNotesContext();
+  const { cloudId, userId, canEdit, focus } = useNotesContext();
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Draft state
   const [draft, setDraft] = useState("");
+  const [draftTag, setDraftTag] = useState<string | null>(null);
+  const [draftOnBreakdown, setDraftOnBreakdown] = useState(false);
   const [posting, setPosting] = useState(false);
+
+  // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editBody, setEditBody] = useState("");
+  const [editTag, setEditTag] = useState<string | null>(null);
+  const [editOnBreakdown, setEditOnBreakdown] = useState(false);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Fetch notes whenever focus changes (and sidebar is open)
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
@@ -79,12 +142,16 @@ export default function NotesSidebar({
           entityType: focus.type,
           entityId: focus.id,
           body: draft.trim(),
+          tag: draftTag,
+          onBreakdown: draftOnBreakdown,
         }),
       });
       const note = await res.json();
       if (note?.id) {
         setNotes((prev) => [...prev, note]);
         setDraft("");
+        setDraftTag(null);
+        setDraftOnBreakdown(false);
         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
       }
     } finally {
@@ -97,11 +164,13 @@ export default function NotesSidebar({
     const res = await fetch("/api/notes", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, body: editBody.trim() }),
+      body: JSON.stringify({ id, body: editBody.trim(), tag: editTag, onBreakdown: editOnBreakdown }),
     });
     const updated = await res.json();
     if (updated?.id) {
-      setNotes((prev) => prev.map((n) => n.id === id ? { ...n, body: updated.body, updated_at: updated.updated_at } : n));
+      setNotes((prev) => prev.map((n) =>
+        n.id === id ? { ...n, body: updated.body, tag: updated.tag, on_breakdown: updated.on_breakdown, updated_at: updated.updated_at } : n
+      ));
     }
     setEditingId(null);
   }
@@ -113,6 +182,13 @@ export default function NotesSidebar({
       body: JSON.stringify({ id }),
     });
     setNotes((prev) => prev.filter((n) => n.id !== id));
+  }
+
+  function startEdit(note: Note) {
+    setEditingId(note.id);
+    setEditBody(note.body);
+    setEditTag(note.tag);
+    setEditOnBreakdown(note.on_breakdown);
   }
 
   if (!open) {
@@ -142,7 +218,7 @@ export default function NotesSidebar({
         </span>
         <button
           onClick={onToggle}
-          className="text-xs opacity-25 hover:opacity-70 transition-opacity shrink-0 ml-auto"
+          className="text-xs opacity-25 hover:opacity-70 transition-opacity shrink-0"
           title="Close notes"
         >
           ×
@@ -150,7 +226,7 @@ export default function NotesSidebar({
       </div>
 
       {/* Notes list */}
-      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-3">
+      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-4">
         {loading && (
           <p className="text-[10px] opacity-25 text-center pt-4">Loading…</p>
         )}
@@ -166,7 +242,7 @@ export default function NotesSidebar({
           return (
             <div key={note.id} className="group">
               {isEditing ? (
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <textarea
                     autoFocus
                     value={editBody}
@@ -178,7 +254,19 @@ export default function NotesSidebar({
                     rows={3}
                     className="w-full text-xs border border-black/30 px-2 py-1.5 focus:outline-none focus:border-black/60 resize-none"
                   />
-                  <div className="flex gap-2">
+                  <TagPicker value={editTag} onChange={setEditTag} />
+                  {canEdit && (
+                    <label className="flex items-center gap-1.5 cursor-pointer mt-1">
+                      <input
+                        type="checkbox"
+                        checked={editOnBreakdown}
+                        onChange={(e) => setEditOnBreakdown(e.target.checked)}
+                        className="cursor-pointer"
+                      />
+                      <span className="text-[10px] uppercase tracking-widest opacity-50">Add to breakdown</span>
+                    </label>
+                  )}
+                  <div className="flex gap-2 pt-0.5">
                     <button
                       onClick={() => saveEdit(note.id)}
                       disabled={!editBody.trim()}
@@ -196,6 +284,17 @@ export default function NotesSidebar({
                 </div>
               ) : (
                 <>
+                  {/* Tag + breakdown flag */}
+                  {(note.tag || note.on_breakdown) && (
+                    <div className="flex items-center gap-1.5 mb-1">
+                      {note.tag && <TagLabel tag={note.tag} />}
+                      {note.on_breakdown && (
+                        <span className="text-[9px] font-bold uppercase tracking-widest border border-black bg-black text-white px-1.5 py-px">
+                          BD
+                        </span>
+                      )}
+                    </div>
+                  )}
                   <p className="text-xs leading-snug whitespace-pre-wrap break-words">{note.body}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-[9px] opacity-25">
@@ -205,7 +304,7 @@ export default function NotesSidebar({
                     {isOwn && (
                       <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
-                          onClick={() => { setEditingId(note.id); setEditBody(note.body); }}
+                          onClick={() => startEdit(note)}
                           className="text-[9px] uppercase tracking-widest opacity-40 hover:opacity-80"
                         >
                           Edit
@@ -228,7 +327,7 @@ export default function NotesSidebar({
       </div>
 
       {/* Add note */}
-      <div className="shrink-0 border-t border-black/10 px-3 py-2">
+      <div className="shrink-0 border-t border-black/10 px-3 py-2 space-y-1.5">
         <textarea
           ref={textareaRef}
           value={draft}
@@ -240,10 +339,22 @@ export default function NotesSidebar({
           rows={2}
           className="w-full text-xs border border-black/20 px-2 py-1.5 focus:outline-none focus:border-black/50 resize-none placeholder:opacity-30"
         />
+        <TagPicker value={draftTag} onChange={setDraftTag} />
+        {canEdit && (
+          <label className="flex items-center gap-1.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={draftOnBreakdown}
+              onChange={(e) => setDraftOnBreakdown(e.target.checked)}
+              className="cursor-pointer"
+            />
+            <span className="text-[10px] uppercase tracking-widest opacity-50">Add to breakdown</span>
+          </label>
+        )}
         <button
           onClick={postNote}
           disabled={!draft.trim() || posting}
-          className="mt-1.5 text-[10px] font-bold uppercase tracking-widest px-3 py-1 bg-black text-white disabled:opacity-30 w-full"
+          className="text-[10px] font-bold uppercase tracking-widest px-3 py-1 bg-black text-white disabled:opacity-30 w-full"
         >
           {posting ? "…" : "Post"}
         </button>

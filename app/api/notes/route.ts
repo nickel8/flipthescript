@@ -14,6 +14,20 @@ function db(path: string, init: RequestInit = {}) {
 
 type EntityType = "production" | "series" | "block" | "episode" | "scene" | "element";
 
+// Check if user can edit (owner, collaborator, or dept_owner — not viewer).
+async function isCanEdit(productionId: string, userId: string): Promise<boolean> {
+  const prodRes = await db(`productions?id=eq.${productionId}&owner_id=eq.${userId}&select=id`);
+  const prods = await prodRes.json();
+  if (Array.isArray(prods) && prods.length > 0) return true;
+  const memRes = await db(
+    `production_members?production_id=eq.${productionId}&user_id=eq.${userId}&select=role`
+  );
+  const mems = await memRes.json();
+  if (!Array.isArray(mems) || mems.length === 0) return false;
+  const role = mems[0].role as string;
+  return role === "collaborator" || role === "dept_owner";
+}
+
 // Resolve cloudId → productionId and verify the session user is a member.
 async function resolveProduction(
   cloudId: string,
@@ -76,28 +90,34 @@ export async function GET(req: NextRequest) {
 
   const filter = entityFilter(entityType, entityId);
   const res = await db(
-    `notes?production_id=eq.${productionId}&${filter}&order=created_at.asc&select=id,body,author_id,created_at,updated_at`
+    `notes?production_id=eq.${productionId}&${filter}&order=created_at.asc&select=id,body,author_id,tag,on_breakdown,created_at,updated_at`
   );
   const rows = await res.json();
   return NextResponse.json(Array.isArray(rows) ? rows : []);
 }
 
-// POST /api/notes — { cloudId, entityType, entityId, body }
+// POST /api/notes — { cloudId, entityType, entityId, body, tag?, onBreakdown? }
 export async function POST(req: NextRequest) {
   const session = await getCloudSession();
   if (!session) return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
 
-  const { cloudId, entityType, entityId, body } = await req.json();
+  const { cloudId, entityType, entityId, body, tag, onBreakdown } = await req.json();
   if (!cloudId || !entityType || !body?.trim())
     return NextResponse.json({ error: "cloudId, entityType, and body required" }, { status: 400 });
 
   const productionId = await resolveProduction(cloudId, session.id);
   if (!productionId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+  // on_breakdown requires canEdit (owner or collaborator/dept_owner, not viewer)
+  const canEditBd = onBreakdown ? await isCanEdit(productionId, session.id) : true;
+  if (!canEditBd) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
   const insert = {
     production_id: productionId,
     author_id: session.id,
     body: body.trim(),
+    tag: tag ?? null,
+    on_breakdown: onBreakdown === true,
     ...entityFKs(entityType as EntityType, entityId),
   };
 
@@ -113,19 +133,34 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(rows[0]);
 }
 
-// PATCH /api/notes — { id, body }  (author only)
+// PATCH /api/notes — { id, body?, tag?, onBreakdown? }  (author only)
 export async function PATCH(req: NextRequest) {
   const session = await getCloudSession();
   if (!session) return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
 
-  const { id, body } = await req.json();
-  if (!id || !body?.trim())
-    return NextResponse.json({ error: "id and body required" }, { status: 400 });
+  const payload = await req.json();
+  const { id, body, tag, onBreakdown } = payload;
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+  // If setting on_breakdown=true, verify canEdit via the note's production
+  if (onBreakdown === true) {
+    const noteRes = await db(`notes?id=eq.${id}&author_id=eq.${session.id}&select=production_id`);
+    const noteRows = await noteRes.json();
+    if (!Array.isArray(noteRows) || noteRows.length === 0)
+      return NextResponse.json({ error: "Not found or not author" }, { status: 404 });
+    const canEdit = await isCanEdit(noteRows[0].production_id, session.id);
+    if (!canEdit) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (body?.trim()) update.body = body.trim();
+  if ("tag" in payload) update.tag = tag ?? null;
+  if ("onBreakdown" in payload) update.on_breakdown = onBreakdown;
 
   const res = await db(`notes?id=eq.${id}&author_id=eq.${session.id}`, {
     method: "PATCH",
     headers: { Prefer: "return=representation" } as Record<string, string>,
-    body: JSON.stringify({ body: body.trim(), updated_at: new Date().toISOString() }),
+    body: JSON.stringify(update),
   });
   const rows = await res.json();
   if (!Array.isArray(rows) || rows.length === 0)

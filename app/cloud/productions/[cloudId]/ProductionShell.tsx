@@ -9,11 +9,13 @@ export default function ProductionShell({
   cloudId,
   userId,
   productionName,
+  canEdit,
 }: {
   children: React.ReactNode;
   cloudId: string;
   userId: string;
   productionName: string;
+  canEdit: boolean;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -31,7 +33,7 @@ export default function ProductionShell({
   }
 
   return (
-    <NotesProvider cloudId={cloudId} userId={userId} productionName={productionName}>
+    <NotesProvider cloudId={cloudId} userId={userId} productionName={productionName} canEdit={canEdit}>
       <div className="flex overflow-hidden" style={{ height: "calc(100vh - 57px)" }}>
         <div className="flex-1 min-w-0 overflow-hidden">{children}</div>
         <NotesSidebar open={sidebarOpen} onToggle={toggleSidebar} />

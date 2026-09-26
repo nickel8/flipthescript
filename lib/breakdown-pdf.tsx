@@ -18,6 +18,7 @@ interface Sheet {
   synopsis: string;
   notes: string;
   elements: ElementItem[];
+  special_notes?: string[];
 }
 
 export interface SceneRow {
@@ -146,6 +147,19 @@ const s = StyleSheet.create({
     marginTop: 4,
     paddingTop: 4,
   },
+  specialNotesLabel: {
+    fontSize: 6,
+    fontFamily: "Helvetica-Bold",
+    color: "#999999",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  specialNotesItem: {
+    fontSize: 7,
+    color: "#222222",
+    lineHeight: 1.4,
+  },
   // Page number footer
   pageNum: {
     position: "absolute",
@@ -190,6 +204,8 @@ function SceneBlock({ scene }: { scene: SceneRow }) {
   const hasElements = leftCats.length > 0 || rightCats.length > 0;
   const hasSynopsis = !!scene.sheet?.synopsis?.trim();
   const hasNotes = !!scene.sheet?.notes?.trim();
+  const specialNotes = scene.sheet?.special_notes?.filter((n) => n.trim()) ?? [];
+  const hasSpecialNotes = specialNotes.length > 0;
 
   return (
     <View style={s.scene} wrap={false}>
@@ -204,7 +220,7 @@ function SceneBlock({ scene }: { scene: SceneRow }) {
       </View>
 
       {/* Body — only render if there's something to show */}
-      {(hasSynopsis || hasElements || hasNotes) && (
+      {(hasSynopsis || hasElements || hasNotes || hasSpecialNotes) && (
         <View style={s.body}>
           {hasSynopsis && (
             <Text style={s.synopsis}>{scene.sheet!.synopsis}</Text>
@@ -227,6 +243,15 @@ function SceneBlock({ scene }: { scene: SceneRow }) {
 
           {hasNotes && (
             <Text style={s.notes}>Notes: {scene.sheet!.notes}</Text>
+          )}
+
+          {hasSpecialNotes && (
+            <View style={{ borderTop: "0.5pt solid #e5e5e5", marginTop: 4, paddingTop: 4 }}>
+              <Text style={s.specialNotesLabel}>Special Notes</Text>
+              {specialNotes.map((n, i) => (
+                <Text key={i} style={s.specialNotesItem}>• {n}</Text>
+              ))}
+            </View>
           )}
         </View>
       )}
