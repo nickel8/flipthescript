@@ -93,7 +93,7 @@ export default function NotesSidebar({
   open: boolean;
   onToggle: () => void;
 }) {
-  const { cloudId, userId, canEdit, focus } = useNotesContext();
+  const { cloudId, userId, canEdit, focus, bumpNotesVersion } = useNotesContext();
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -152,6 +152,7 @@ export default function NotesSidebar({
         setDraft("");
         setDraftTag(null);
         setDraftOnBreakdown(false);
+        bumpNotesVersion();
         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
       }
     } finally {

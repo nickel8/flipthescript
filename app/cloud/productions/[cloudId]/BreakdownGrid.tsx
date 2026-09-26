@@ -130,7 +130,7 @@ export default function BreakdownGrid({
   onCategoryCreate,
   readOnly = false,
 }: Props) {
-  const { cloudId } = useNotesContext();
+  const { cloudId, notesVersion } = useNotesContext();
   const catNames = categories.map((c) => c.name);
 
   const [colOrder, setColOrder] = useState<string[]>(() => catNames);
@@ -158,7 +158,7 @@ export default function BreakdownGrid({
         setBreakdownNotes(map);
       })
       .catch(() => {});
-  }, [cloudId]);
+  }, [cloudId, notesVersion]);
   const [sort, setSort] = useState<{ col: string | null; dir: "asc" | "desc" }>({ col: null, dir: "asc" });
   const [columnFilters, setColumnFilters] = useState<Record<string, ColumnFilter>>({});
   const [views, setViews] = useState<GridView[]>([]);
@@ -1006,7 +1006,7 @@ function SortableTh({
           onClick={onSort}
           className={`flex-1 text-left flex items-center gap-1 ${onSort ? "cursor-pointer" : "cursor-default"}`}
         >
-          <span className={`text-[10px] font-bold uppercase tracking-widest ${sortDir ? "opacity-100" : "opacity-60"}`}>
+          <span className={`text-[10px] font-bold uppercase tracking-widest ${sortDir ? "" : "opacity-70"}`}>
             {label}
           </span>
           {sortDir && <span className="text-[10px] opacity-40">{sortDir === "asc" ? "↑" : "↓"}</span>}
@@ -1176,7 +1176,7 @@ function SynopsisCell({
     return (
       <td className="px-3 py-2 align-top overflow-hidden">
         <div className="max-h-16 overflow-hidden text-xs leading-snug">
-          {text || <span className="opacity-30">—</span>}
+          {text || <span className="opacity-40">—</span>}
         </div>
       </td>
     );
@@ -1190,7 +1190,7 @@ function SynopsisCell({
           className="w-full h-full px-3 py-2 text-xs focus:outline-none resize-none bg-amber-50 leading-snug" />
       ) : (
         <div className="max-h-16 overflow-hidden px-3 py-2 text-xs leading-snug min-h-[36px] hover:bg-black/[0.03] cursor-text">
-          {text || <span className="opacity-25">Add synopsis…</span>}
+          {text || <span className="opacity-40">Add synopsis…</span>}
         </div>
       )}
     </td>
@@ -1275,7 +1275,7 @@ function GridElementCell({
                 else if (filtered.length > 0) { toggle(filtered[0]); setInput(""); }
               } else if (e.key === "Escape") { setOpen(false); setInput(""); }
             }}
-            className="text-xs border-0 border-b border-black/10 focus:outline-none focus:border-black/30 placeholder:opacity-25 bg-transparent w-5 focus:w-full transition-[width] duration-150"
+            className="text-xs border-0 border-b border-black/20 focus:outline-none focus:border-black/40 placeholder:opacity-50 bg-transparent w-5 focus:w-full transition-[width] duration-150"
           />
           {showDropdown && (
             <div className="absolute top-full left-0 z-40 bg-white border border-black/20 shadow-md min-w-[140px] max-h-48 overflow-y-auto"

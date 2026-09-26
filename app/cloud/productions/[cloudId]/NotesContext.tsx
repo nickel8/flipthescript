@@ -17,6 +17,8 @@ interface NotesContextValue {
   productionName: string;
   focus: NotesFocus;
   setFocus: (type: NoteEntityType, id: string | null, label: string) => void;
+  notesVersion: number;
+  bumpNotesVersion: () => void;
 }
 
 const NotesCtx = createContext<NotesContextValue | null>(null);
@@ -39,13 +41,18 @@ export function NotesProvider({
     id: null,
     label: productionName,
   });
+  const [notesVersion, setNotesVersion] = useState(0);
 
   function setFocus(type: NoteEntityType, id: string | null, label: string) {
     setFocusState({ type, id, label });
   }
 
+  function bumpNotesVersion() {
+    setNotesVersion((v) => v + 1);
+  }
+
   return (
-    <NotesCtx.Provider value={{ cloudId, userId, canEdit, productionName, focus, setFocus }}>
+    <NotesCtx.Provider value={{ cloudId, userId, canEdit, productionName, focus, setFocus, notesVersion, bumpNotesVersion }}>
       {children}
     </NotesCtx.Provider>
   );
