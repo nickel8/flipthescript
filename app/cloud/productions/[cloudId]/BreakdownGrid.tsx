@@ -398,7 +398,7 @@ export default function BreakdownGrid({
 
       {/* ── Grid ── */}
       <div className="flex-1 overflow-auto select-none">
-        <table className="border-collapse text-sm" style={{ tableLayout: "fixed" }}>
+        <table className="border-collapse text-sm text-black" style={{ tableLayout: "fixed" }}>
           <colgroup>
             <col style={{ width: COL_CHECK }} />
             <col style={{ width: COL_SCENE }} />
