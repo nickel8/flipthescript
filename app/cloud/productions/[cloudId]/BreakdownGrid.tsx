@@ -324,7 +324,6 @@ export default function BreakdownGrid({
 
   const filterCount = activeFilterCount(columnFilters);
   const showSynopsis = visibleCols.has("synopsis");
-  const showNotes = visibleCols.has("notes");
   const visibleCatCols = colOrder.filter((c) => visibleCols.has(c));
 
   function persistColOrder(order: string[]) {
@@ -405,10 +404,10 @@ export default function BreakdownGrid({
             <col style={{ width: COL_SCENE }} />
             <col style={{ width: colWidths.location }} />
             {showSynopsis && <col style={{ width: colWidths.synopsis }} />}
-            {showNotes && <col style={{ width: colWidths.notes ?? 200 }} />}
             {visibleCatCols.map((cat) => (
               <col key={cat} style={{ width: colWidths[cat] ?? 140 }} />
             ))}
+            <col style={{ width: colWidths.notes ?? 200 }} />
           </colgroup>
 
           <thead className="sticky top-0 z-20">
@@ -467,14 +466,6 @@ export default function BreakdownGrid({
                 />
               )}
 
-              {/* Notes column */}
-              {showNotes && (
-                <SortableTh
-                  label="Notes" col="notes"
-                  onStartResize={startResize}
-                />
-              )}
-
               {/* Category columns */}
               {visibleCatCols.map((cat) => (
                 <SortableTh
@@ -517,6 +508,13 @@ export default function BreakdownGrid({
                   }}
                 />
               ))}
+
+              {/* Notes — always rightmost */}
+              <SortableTh
+                label="Notes" col="notes"
+                borderLeft
+                onStartResize={startResize}
+              />
             </tr>
           </thead>
 
@@ -527,7 +525,6 @@ export default function BreakdownGrid({
                 scene={scene}
                 categories={visibleCatCols}
                 showSynopsis={showSynopsis}
-                showNotes={showNotes}
                 specialNotes={breakdownNotes.get(scene.id) ?? []}
                 productionElements={productionElements}
                 productionId={productionId}
@@ -929,10 +926,6 @@ function ColPicker({
         <span className="w-3 shrink-0 font-bold">{visibleCols.has("synopsis") ? "✓" : ""}</span>
         Synopsis
       </button>
-      <button onClick={() => toggleCol("notes")} className="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 hover:bg-black/5">
-        <span className="w-3 shrink-0 font-bold">{visibleCols.has("notes") ? "✓" : ""}</span>
-        Notes
-      </button>
       {catNames.map((cat) => (
         <button key={cat} onClick={() => toggleCol(cat)} className="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 hover:bg-black/5">
           <span className="w-3 shrink-0 font-bold">{visibleCols.has(cat) ? "✓" : ""}</span>
@@ -1041,10 +1034,10 @@ function SortableTh({
 // ── Grid row ──────────────────────────────────────────────────────────────────
 
 function GridRow({
-  scene, categories, showSynopsis, showNotes, specialNotes, productionElements, productionId,
+  scene, categories, showSynopsis, specialNotes, productionElements, productionId,
   locationLeft, flags, onCompleteToggle, onSheetChange, onElementCreated, readOnly,
 }: {
-  scene: SceneData; categories: string[]; showSynopsis: boolean; showNotes: boolean;
+  scene: SceneData; categories: string[]; showSynopsis: boolean;
   specialNotes: string[];
   productionElements: ProductionElement[]; productionId: string; locationLeft: number;
   flags: Map<string, FlagData>;
@@ -1129,17 +1122,6 @@ function GridRow({
         <SynopsisCell sceneId={scene.id} sheet={sheet} sheetRef={sheetRef}
           getOrCreateSheet={getOrCreateSheet} applySheet={applySheet} readOnly={readOnly} />
       )}
-      {showNotes && (
-        <td className="px-3 py-2 align-top border-l border-black/5 overflow-hidden">
-          {specialNotes.length > 0 ? (
-            <div className="max-h-16 overflow-hidden space-y-0.5">
-              {specialNotes.map((n, i) => (
-                <div key={i} className="text-xs text-black/60 leading-snug">{n}</div>
-              ))}
-            </div>
-          ) : null}
-        </td>
-      )}
       {categories.map((cat) => (
         <GridElementCell
           key={cat} category={cat}
@@ -1151,6 +1133,16 @@ function GridRow({
           readOnly={readOnly}
         />
       ))}
+      {/* Notes — always rightmost */}
+      <td className="px-3 py-2 align-top border-l border-black/5 overflow-hidden">
+        {specialNotes.length > 0 ? (
+          <div className="max-h-16 overflow-hidden space-y-0.5">
+            {specialNotes.map((n, i) => (
+              <div key={i} className="text-xs text-black/60 leading-snug">{n}</div>
+            ))}
+          </div>
+        ) : null}
+      </td>
     </tr>
   );
 }
