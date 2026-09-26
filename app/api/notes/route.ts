@@ -83,6 +83,7 @@ export async function GET(req: NextRequest) {
   const entityType   = searchParams.get("entityType") as EntityType | null;
   const entityId     = searchParams.get("entityId");
   const allBreakdown = searchParams.get("allBreakdown") === "true";
+  const allScenes    = searchParams.get("allScenes") === "true";
 
   if (!cloudId)
     return NextResponse.json({ error: "cloudId required" }, { status: 400 });
@@ -94,6 +95,15 @@ export async function GET(req: NextRequest) {
     const res = await db(
       `notes?production_id=eq.${productionId}&on_breakdown=eq.true&scene_id=not.is.null` +
       `&order=created_at.asc&select=scene_id,body,tag`
+    );
+    const rows = await res.json();
+    return NextResponse.json(Array.isArray(rows) ? rows : []);
+  }
+
+  if (allScenes) {
+    const res = await db(
+      `notes?production_id=eq.${productionId}&scene_id=not.is.null` +
+      `&order=created_at.asc&select=id,body,scene_id`
     );
     const rows = await res.json();
     return NextResponse.json(Array.isArray(rows) ? rows : []);

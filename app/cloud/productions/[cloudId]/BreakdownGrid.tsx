@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import type { SceneData, ProductionElement, SheetData, SceneElementData, FlagData, CategoryData } from "./types";
-import { updateSynopsis, updateSheetNotes, addElement, removeElement, toggleComplete, ensureSheet } from "./actions";
+import { updateSynopsis, addElement, removeElement, toggleComplete, ensureSheet } from "./actions";
 import { useNotesContext } from "./NotesContext";
 import { compareSceneNumbers } from "@/lib/sort-scenes";
 
@@ -130,6 +130,7 @@ export default function BreakdownGrid({
   onCategoryCreate,
   readOnly = false,
 }: Props) {
+  const { cloudId } = useNotesContext();
   const catNames = categories.map((c) => c.name);
 
   const [colOrder, setColOrder] = useState<string[]>(() => catNames);
@@ -141,6 +142,40 @@ export default function BreakdownGrid({
   useEffect(() => { colWidthsRef.current = colWidths; }, [colWidths]);
 
   const [visibleCols, setVisibleCols] = useState<Set<string>>(() => new Set(["synopsis", ...catNames]));
+
+  // Scene notes for the Notes column (all notes from the notes table, per scene)
+  type SceneNote = { id: string; body: string };
+  const [sceneNotesMap, setSceneNotesMap] = useState<Map<string, SceneNote[]>>(new Map());
+  useEffect(() => {
+    fetch(`/api/notes?cloudId=${cloudId}&allScenes=true`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!Array.isArray(data)) return;
+        const map = new Map<string, SceneNote[]>();
+        for (const n of data as (SceneNote & { scene_id: string })[]) {
+          if (!map.has(n.scene_id)) map.set(n.scene_id, []);
+          map.get(n.scene_id)!.push({ id: n.id, body: n.body });
+        }
+        setSceneNotesMap(map);
+      })
+      .catch(() => {});
+  }, [cloudId]);
+
+  function handleNoteAdded(sceneId: string, note: SceneNote) {
+    setSceneNotesMap((prev) => {
+      const next = new Map(prev);
+      next.set(sceneId, [...(next.get(sceneId) ?? []), note]);
+      return next;
+    });
+  }
+
+  function handleNoteRemoved(sceneId: string, noteId: string) {
+    setSceneNotesMap((prev) => {
+      const next = new Map(prev);
+      next.set(sceneId, (next.get(sceneId) ?? []).filter((n) => n.id !== noteId));
+      return next;
+    });
+  }
 
   const [sort, setSort] = useState<{ col: string | null; dir: "asc" | "desc" }>({ col: null, dir: "asc" });
   const [columnFilters, setColumnFilters] = useState<Record<string, ColumnFilter>>({});
@@ -508,6 +543,9 @@ export default function BreakdownGrid({
                 scene={scene}
                 categories={visibleCatCols}
                 showSynopsis={showSynopsis}
+                sceneNotes={sceneNotesMap.get(scene.id) ?? []}
+                onNoteAdded={(note) => handleNoteAdded(scene.id, note)}
+                onNoteRemoved={(noteId) => handleNoteRemoved(scene.id, noteId)}
                 productionElements={productionElements}
                 productionId={productionId}
                 locationLeft={locationLeft}
@@ -1016,10 +1054,14 @@ function SortableTh({
 // ── Grid row ──────────────────────────────────────────────────────────────────
 
 function GridRow({
-  scene, categories, showSynopsis, productionElements, productionId,
+  scene, categories, showSynopsis, sceneNotes, onNoteAdded, onNoteRemoved,
+  productionElements, productionId,
   locationLeft, flags, onCompleteToggle, onSheetChange, onElementCreated, readOnly,
 }: {
   scene: SceneData; categories: string[]; showSynopsis: boolean;
+  sceneNotes: { id: string; body: string }[];
+  onNoteAdded: (note: { id: string; body: string }) => void;
+  onNoteRemoved: (noteId: string) => void;
   productionElements: ProductionElement[]; productionId: string; locationLeft: number;
   flags: Map<string, FlagData>;
   onCompleteToggle: (sceneId: string, isComplete: boolean) => void;
@@ -1115,8 +1157,13 @@ function GridRow({
         />
       ))}
       {/* Notes — always rightmost */}
-      <NotesCell sheet={sheet} sheetRef={sheetRef}
-        getOrCreateSheet={getOrCreateSheet} applySheet={applySheet} readOnly={readOnly} />
+      <NotesCell
+        sceneId={scene.id}
+        notes={sceneNotes}
+        onNoteAdded={onNoteAdded}
+        onNoteRemoved={onNoteRemoved}
+        readOnly={readOnly}
+      />
     </tr>
   );
 }
@@ -1174,48 +1221,78 @@ function SynopsisCell({
 // ── Notes cell ────────────────────────────────────────────────────────────────
 
 function NotesCell({
-  sheet, sheetRef, getOrCreateSheet, applySheet, readOnly,
+  sceneId, notes, onNoteAdded, onNoteRemoved, readOnly,
 }: {
-  sheet: SheetData | null; sheetRef: React.RefObject<SheetData | null>;
-  getOrCreateSheet: () => Promise<string>; applySheet: (s: SheetData | null) => void; readOnly: boolean;
+  sceneId: string;
+  notes: { id: string; body: string }[];
+  onNoteAdded: (note: { id: string; body: string }) => void;
+  onNoteRemoved: (noteId: string) => void;
+  readOnly: boolean;
 }) {
-  const [editing, setEditing] = useState(false);
-  const [text, setText] = useState(sheet?.notes ?? "");
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { cloudId } = useNotesContext();
+  const [input, setInput] = useState("");
+  const [pending, setPending] = useState(false);
 
-  useEffect(() => { if (!editing) setText(sheet?.notes ?? ""); }, [sheet?.notes, editing]);
-
-  async function handleChange(val: string) {
-    setText(val);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(async () => {
-      const id = await getOrCreateSheet();
-      await updateSheetNotes(id, val);
-      const current = sheetRef.current;
-      if (current) applySheet({ ...current, notes: val });
-    }, 600);
+  async function addNote(body: string) {
+    const trimmed = body.trim();
+    if (!trimmed || pending) return;
+    setPending(true);
+    try {
+      const res = await fetch("/api/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cloudId, entityType: "scene", entityId: sceneId, body: trimmed }),
+      });
+      const note = await res.json();
+      if (note?.id) {
+        onNoteAdded({ id: note.id, body: note.body });
+        setInput("");
+      }
+    } finally {
+      setPending(false);
+    }
   }
 
-  if (readOnly) {
-    return (
-      <td className="px-3 py-2 align-top border-l border-black/5 overflow-hidden">
-        <div className="max-h-16 overflow-hidden text-xs leading-snug">
-          {text || <span className="opacity-40">—</span>}
-        </div>
-      </td>
-    );
+  async function removeNote(noteId: string) {
+    onNoteRemoved(noteId);
+    await fetch("/api/notes", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: noteId }),
+    });
   }
 
   return (
-    <td className="px-0 py-0 align-top border-l border-black/5 overflow-hidden" onClick={() => !editing && setEditing(true)}>
-      {editing ? (
-        <textarea autoFocus value={text} onChange={(e) => handleChange(e.target.value)}
-          onBlur={() => setEditing(false)} rows={4}
-          className="w-full h-full px-3 py-2 text-xs focus:outline-none resize-none bg-amber-50 leading-snug" />
-      ) : (
-        <div className="max-h-16 overflow-hidden px-3 py-2 text-xs leading-snug min-h-[36px] hover:bg-black/[0.03] cursor-text">
-          {text || <span className="text-black/50">Add notes…</span>}
+    <td className="px-2 py-1.5 align-top border-l border-black/5 relative overflow-hidden">
+      {notes.length > 0 && (
+        <div className="flex flex-wrap gap-0.5 mb-1 max-h-16 overflow-hidden">
+          {notes.map((note) => (
+            <span key={note.id} className="group/chip inline-flex items-center gap-0.5 text-[11px] border border-black/15 bg-white px-1.5 py-px whitespace-nowrap">
+              <span className="leading-none">{note.body}</span>
+              {!readOnly && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); removeNote(note.id); }}
+                  className="opacity-0 group-hover/chip:opacity-40 hover:!opacity-80 leading-none transition-opacity"
+                  aria-label="Remove note"
+                >×</button>
+              )}
+            </span>
+          ))}
         </div>
+      )}
+      {!readOnly && (
+        <input
+          type="text" value={input}
+          placeholder={notes.length === 0 ? "+" : ""}
+          onChange={(e) => setInput(e.target.value)}
+          onBlur={() => setTimeout(() => setInput(""), 150)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && input.trim()) { e.preventDefault(); addNote(input); }
+            else if (e.key === "Escape") setInput("");
+          }}
+          disabled={pending}
+          className="text-xs border-0 border-b border-black/30 focus:outline-none focus:border-black/60 placeholder:text-black/40 bg-transparent w-5 focus:w-full transition-[width] duration-150 disabled:opacity-40"
+        />
       )}
     </td>
   );
