@@ -989,22 +989,19 @@ function GridRow({
   }
 
   return (
-    <tr className={`border-b border-black/5 transition-colors ${isComplete ? "opacity-40" : "hover:bg-black/[0.015]"}`}>
-      <td className="sticky left-0 z-10 bg-white px-2 border-r border-black/10">
+    <tr
+      className={`border-b border-black/5 transition-colors cursor-pointer ${isComplete ? "opacity-40" : "hover:bg-black/[0.015]"}`}
+      onClick={() => setFocus("scene", scene.id, `Scene ${scene.scene_number} — ${scene.location ?? ""}`)}
+    >
+      <td className="sticky left-0 z-10 bg-white px-2 border-r border-black/10" onClick={(e) => e.stopPropagation()}>
         <input type="checkbox" checked={isComplete} onChange={handleToggleComplete}
           disabled={readOnly} className="cursor-pointer disabled:cursor-default" />
       </td>
-      <td className="sticky z-10 bg-white px-0 py-0 align-top" style={{ left: COL_CHECK }}>
-        <button
-          onClick={() => setFocus("scene", scene.id, `Scene ${scene.scene_number} — ${scene.location ?? ""}`)}
-          title="Note on this scene"
-          className="w-full h-full px-2 py-2 text-left hover:bg-black/5 transition-colors"
-        >
-          <div className="font-mono text-xs font-bold opacity-50 leading-none truncate">{scene.scene_number}</div>
-          <div className={`text-[9px] font-bold mt-1 ${
-            scene.int_ext === "EXT" ? "text-green-700" : scene.int_ext === "INT/EXT" ? "text-orange-600" : "text-blue-700"
-          }`}>{scene.int_ext || "INT"}</div>
-        </button>
+      <td className="sticky z-10 bg-white px-2 py-2 align-top" style={{ left: COL_CHECK }}>
+        <div className="font-mono text-xs font-bold opacity-50 leading-none truncate">{scene.scene_number}</div>
+        <div className={`text-[9px] font-bold mt-1 ${
+          scene.int_ext === "EXT" ? "text-green-700" : scene.int_ext === "INT/EXT" ? "text-orange-600" : "text-blue-700"
+        }`}>{scene.int_ext || "INT"}</div>
       </td>
       <td className="sticky z-10 bg-white px-3 py-2 align-top border-r border-black/15 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.06)] overflow-hidden" style={{ left: locationLeft }}>
         <div className="max-h-16 overflow-hidden">
@@ -1131,7 +1128,7 @@ function GridElementCell({
             return (
               <span key={se.id} className={`group/chip inline-flex items-center gap-0.5 text-[11px] border px-1.5 py-px whitespace-nowrap ${flagged ? "border-amber-400 bg-amber-50" : "border-black/15 bg-white"}`}>
                 <button
-                  onClick={() => setFocus("element", se.element.id, `${se.element.name} (${category})`)}
+                  onClick={(e) => { e.stopPropagation(); setFocus("element", se.element.id, `${se.element.name} (${category})`); }}
                   className="hover:underline underline-offset-2 leading-none"
                   title={`Note on ${se.element.name}`}
                 >
