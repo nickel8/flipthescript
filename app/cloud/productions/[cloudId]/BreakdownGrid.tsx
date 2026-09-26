@@ -414,8 +414,8 @@ export default function BreakdownGrid({
         </div>
       </div>
 
-      {/* ── Grid ── */}
-      <div className="flex-1 overflow-auto select-none">
+      {/* ── Grid (desktop) ── */}
+      <div className="hidden md:block flex-1 overflow-auto select-none">
         <table className="border-collapse text-sm text-black" style={{ tableLayout: "fixed" }}>
           <colgroup>
             <col style={{ width: COL_CHECK }} />
@@ -558,6 +558,27 @@ export default function BreakdownGrid({
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* ── Accordion (mobile) ── */}
+      <div className="md:hidden flex-1 overflow-auto">
+        {processedScenes.map((scene) => (
+          <MobileSceneCard
+            key={scene.id}
+            scene={scene}
+            categories={visibleCatCols}
+            sceneNotes={sceneNotesMap.get(scene.id) ?? []}
+            productionElements={productionElements}
+            productionId={productionId}
+            flags={flags}
+            onCompleteToggle={onCompleteToggle}
+            onSheetChange={onSheetChange}
+            onElementCreated={onElementCreated}
+            onNoteAdded={(note) => handleNoteAdded(scene.id, note)}
+            onNoteRemoved={(noteId) => handleNoteRemoved(scene.id, noteId)}
+            readOnly={readOnly}
+          />
+        ))}
       </div>
 
       {/* ── Filter popover (fixed, outside overflow container) ── */}
@@ -1402,5 +1423,288 @@ function GridElementCell({
         </div>
       )}
     </td>
+  );
+}
+
+// ── Mobile accordion ──────────────────────────────────────────────────────────
+
+function MobileSceneCard({
+  scene, categories, sceneNotes, productionElements, productionId,
+  flags, onCompleteToggle, onSheetChange, onElementCreated,
+  onNoteAdded, onNoteRemoved, readOnly,
+}: {
+  scene: SceneData; categories: string[];
+  sceneNotes: { id: string; body: string }[];
+  productionElements: ProductionElement[]; productionId: string;
+  flags: Map<string, FlagData>;
+  onCompleteToggle: (sceneId: string, isComplete: boolean) => void;
+  onSheetChange: (sceneId: string, sheet: SheetData | null) => void;
+  onElementCreated: (el: ProductionElement) => void;
+  onNoteAdded: (note: { id: string; body: string }) => void;
+  onNoteRemoved: (noteId: string) => void;
+  readOnly: boolean;
+}) {
+  const { setFocus } = useNotesContext();
+  const [open, setOpen] = useState(false);
+  const [sheet, setSheet] = useState<SheetData | null>(scene.sheet);
+  const sheetRef = useRef<SheetData | null>(scene.sheet);
+  const [isComplete, setIsComplete] = useState(scene.is_complete);
+
+  useEffect(() => {
+    sheetRef.current = scene.sheet;
+    setSheet(scene.sheet);
+    setIsComplete(scene.is_complete);
+  }, [scene.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function applySheet(next: SheetData | null) {
+    sheetRef.current = next;
+    setSheet(next);
+    onSheetChange(scene.id, next);
+  }
+
+  async function getOrCreateSheet(): Promise<string> {
+    if (sheetRef.current?.id) return sheetRef.current.id;
+    const id = await ensureSheet(scene.id);
+    const newSheet: SheetData = { id, synopsis: "", notes: "", is_reviewed: false, scene_elements: [] };
+    applySheet(newSheet);
+    return id;
+  }
+
+  async function handleToggleComplete() {
+    const next = !isComplete;
+    setIsComplete(next);
+    onCompleteToggle(scene.id, next);
+    await toggleComplete(scene.id, next);
+  }
+
+  async function handleAddElement(category: string, name: string) {
+    const sheetId = await getOrCreateSheet();
+    const result = await addElement(sheetId, productionId, name, category);
+    const newSE: SceneElementData = { id: result.sceneElementId, element: { id: result.elementId, name: result.name, category } };
+    const current = sheetRef.current;
+    if (!current || current.scene_elements.some((se) => se.id === newSE.id)) return;
+    applySheet({ ...current, scene_elements: [...current.scene_elements, newSE] });
+    onElementCreated({ id: result.elementId, name: result.name, category });
+  }
+
+  async function handleRemoveElement(sceneElementId: string) {
+    const current = sheetRef.current;
+    if (!current) return;
+    applySheet({ ...current, scene_elements: current.scene_elements.filter((se) => se.id !== sceneElementId) });
+    await removeElement(sceneElementId);
+  }
+
+  const intExtColor = scene.int_ext === "EXT" ? "text-green-700" : scene.int_ext === "INT/EXT" ? "text-orange-600" : "text-blue-700";
+
+  return (
+    <div className={`border-b border-black/10 ${isComplete ? "opacity-50" : ""}`}>
+      {/* Header row — always visible */}
+      <div
+        className="flex items-center gap-2.5 px-3 py-3 cursor-pointer active:bg-black/[0.04]"
+        onClick={() => {
+          setOpen((p) => !p);
+          setFocus("scene", scene.id, `Scene ${scene.scene_number} — ${scene.location ?? ""}`);
+        }}
+      >
+        <input
+          type="checkbox" checked={isComplete} onChange={handleToggleComplete}
+          onClick={(e) => e.stopPropagation()}
+          disabled={readOnly}
+          className="shrink-0 cursor-pointer disabled:cursor-default"
+        />
+        <span className="font-mono text-sm font-bold shrink-0 w-7 text-black">{scene.scene_number}</span>
+        <span className={`text-[9px] font-bold shrink-0 ${intExtColor}`}>{scene.int_ext || "INT"}</span>
+        <span className="flex-1 text-sm font-semibold text-black truncate">{scene.location}</span>
+        {scene.time_of_day && scene.time_of_day !== "UNSPECIFIED" && (
+          <span className="text-[10px] opacity-40 shrink-0">{scene.time_of_day}</span>
+        )}
+        <span className="text-xs opacity-25 shrink-0">{open ? "↑" : "↓"}</span>
+      </div>
+
+      {/* Expanded breakdown */}
+      {open && (
+        <div className="px-4 pb-5 space-y-4 border-t border-black/5 bg-black/[0.01]">
+          <MobileSynopsisSection
+            sheet={sheet} sheetRef={sheetRef}
+            getOrCreateSheet={getOrCreateSheet} applySheet={applySheet} readOnly={readOnly}
+          />
+          {categories.map((cat) => (
+            <MobileCategorySection
+              key={cat}
+              category={cat}
+              sceneElements={(sheet?.scene_elements ?? []).filter((se) => se.element.category === cat)}
+              flags={flags}
+              onAdd={(name) => handleAddElement(cat, name)}
+              onRemove={handleRemoveElement}
+              readOnly={readOnly}
+            />
+          ))}
+          <MobileNotesSection
+            sceneId={scene.id}
+            notes={sceneNotes}
+            onNoteAdded={onNoteAdded}
+            onNoteRemoved={onNoteRemoved}
+            readOnly={readOnly}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MobileSynopsisSection({
+  sheet, sheetRef, getOrCreateSheet, applySheet, readOnly,
+}: {
+  sheet: SheetData | null; sheetRef: React.RefObject<SheetData | null>;
+  getOrCreateSheet: () => Promise<string>; applySheet: (s: SheetData | null) => void; readOnly: boolean;
+}) {
+  const [text, setText] = useState(sheet?.synopsis ?? "");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => { setText(sheet?.synopsis ?? ""); }, [sheet?.synopsis]);
+
+  async function handleChange(val: string) {
+    setText(val);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      const id = await getOrCreateSheet();
+      await updateSynopsis(id, val);
+      const current = sheetRef.current;
+      if (current) applySheet({ ...current, synopsis: val });
+    }, 600);
+  }
+
+  return (
+    <div className="pt-3">
+      <div className="text-[9px] font-bold uppercase tracking-widest opacity-30 mb-1.5">Synopsis</div>
+      {readOnly ? (
+        <p className="text-sm leading-snug text-black">{text || <span className="opacity-30">—</span>}</p>
+      ) : (
+        <textarea
+          value={text} onChange={(e) => handleChange(e.target.value)}
+          rows={2} placeholder="Add synopsis…"
+          className="w-full text-sm border border-black/20 px-2.5 py-2 focus:outline-none focus:border-black/50 resize-none placeholder:opacity-30"
+        />
+      )}
+    </div>
+  );
+}
+
+function MobileCategorySection({
+  category, sceneElements, flags, onAdd, onRemove, readOnly,
+}: {
+  category: string;
+  sceneElements: SceneElementData[];
+  flags: Map<string, FlagData>;
+  onAdd: (name: string) => Promise<void>;
+  onRemove: (sceneElementId: string) => Promise<void>;
+  readOnly: boolean;
+}) {
+  const [input, setInput] = useState("");
+  const [adding, setAdding] = useState(false);
+
+  async function handleAdd() {
+    const trimmed = input.trim();
+    if (!trimmed || adding) return;
+    setAdding(true);
+    setInput("");
+    try { await onAdd(trimmed); } finally { setAdding(false); }
+  }
+
+  if (sceneElements.length === 0 && readOnly) return null;
+
+  return (
+    <div>
+      <div className="text-[9px] font-bold uppercase tracking-widest opacity-30 mb-1.5">{category}</div>
+      <div className="flex flex-wrap gap-1 items-center">
+        {sceneElements.map((se) => {
+          const flagged = flags.has(se.id);
+          return (
+            <span key={se.id} className={`inline-flex items-center gap-1 text-xs border px-2 py-1 ${flagged ? "border-amber-400 bg-amber-50" : "border-black/20 bg-white"}`}>
+              <span className="font-medium text-black">{se.element.name}</span>
+              {!readOnly && (
+                <button onClick={() => onRemove(se.id)} className="opacity-30 hover:opacity-70 leading-none ml-0.5">×</button>
+              )}
+            </span>
+          );
+        })}
+        {!readOnly && (
+          <input
+            type="text" value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAdd(); } }}
+            placeholder="Add…"
+            disabled={adding}
+            className="text-xs border border-black/20 px-2 py-1 focus:outline-none focus:border-black/50 placeholder:opacity-30 min-w-[60px] w-16 focus:w-32 transition-[width] disabled:opacity-40"
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MobileNotesSection({
+  sceneId, notes, onNoteAdded, onNoteRemoved, readOnly,
+}: {
+  sceneId: string;
+  notes: { id: string; body: string }[];
+  onNoteAdded: (note: { id: string; body: string }) => void;
+  onNoteRemoved: (noteId: string) => void;
+  readOnly: boolean;
+}) {
+  const { cloudId } = useNotesContext();
+  const [input, setInput] = useState("");
+  const [adding, setAdding] = useState(false);
+
+  async function handleAdd() {
+    const trimmed = input.trim();
+    if (!trimmed || adding) return;
+    setAdding(true);
+    try {
+      const res = await fetch("/api/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cloudId, entityType: "scene", entityId: sceneId, body: trimmed }),
+      });
+      const note = await res.json();
+      if (note?.id) { onNoteAdded({ id: note.id, body: note.body }); setInput(""); }
+    } finally { setAdding(false); }
+  }
+
+  async function removeNote(noteId: string) {
+    onNoteRemoved(noteId);
+    await fetch("/api/notes", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: noteId }),
+    });
+  }
+
+  if (notes.length === 0 && readOnly) return null;
+
+  return (
+    <div>
+      <div className="text-[9px] font-bold uppercase tracking-widest opacity-30 mb-1.5">Notes</div>
+      <div className="flex flex-wrap gap-1 items-center">
+        {notes.map((note) => (
+          <span key={note.id} className="inline-flex items-center gap-1 text-xs border border-black/20 bg-white px-2 py-1">
+            <span className="text-black">{note.body}</span>
+            {!readOnly && (
+              <button onClick={() => removeNote(note.id)} className="opacity-30 hover:opacity-70 leading-none ml-0.5">×</button>
+            )}
+          </span>
+        ))}
+        {!readOnly && (
+          <input
+            type="text" value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAdd(); } }}
+            placeholder="Add note…"
+            disabled={adding}
+            className="text-xs border border-black/20 px-2 py-1 focus:outline-none focus:border-black/50 placeholder:opacity-30 min-w-[80px] w-24 focus:w-40 transition-[width] disabled:opacity-40"
+          />
+        )}
+      </div>
+    </div>
   );
 }
