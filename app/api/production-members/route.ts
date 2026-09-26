@@ -11,9 +11,9 @@ const HEADERS = {
 
 function dbFetch(path: string, opts?: RequestInit) {
   return fetch(`${SB_URL}/rest/v1/${path}`, {
+    ...opts,
     headers: { ...HEADERS, ...(opts?.headers as Record<string, string>) },
     cache: "no-store",
-    ...opts,
   });
 }
 
